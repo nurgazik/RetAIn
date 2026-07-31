@@ -1,0 +1,38 @@
+{
+  "global_voices": {
+    "enabled": true,
+    "license": "CC BY 3.0",
+    "attribution": "Global Voices",
+    "feeds": {
+      "main": "https://globalvoices.org/feed/",
+      "technology": "https://globalvoices.org/-/topics/technology/feed/",
+      "arts-culture": "https://globalvoices.org/-/topics/arts-culture/feed/",
+      "environment": "https://globalvoices.org/-/topics/environment/feed/",
+      "travel": "https://globalvoices.org/-/topics/travel/feed/",
+      "education": "https://globalvoices.org/-/topics/education/feed/",
+      "media-journalism": "https://globalvoices.org/-/topics/media-journalism/feed/"
+    },
+    "skip_categories": [
+      "Disaster",
+      "War & Conflict",
+      "Humanitarian Response",
+      "Refugees",
+      "Migration & Immigration",
+      "Human Rights"
+    ]
+  },
+  "voa": {
+    "enabled": false,
+    "_note": "Dormant since 2025-03 (VOA operations halted by USAGM). Feeds kept in case it revives; the public-domain archive remains a potential evergreen pool.",
+    "license": "Public domain (VOA-original only)",
+    "attribution": "Voice of America",
+    "exclude_author_patterns": ["Agence France-Presse", "Associated Press", "Reuters", "AFP"],
+    "feeds": {
+      "technology": "https://www.voanews.com/api/zyritl-vomx-tpettmq",
+      "economy": "https://www.voanews.com/api/zyboql-vomx-tpetvmi",
+      "science-health": "https://www.voanews.com/api/ztbopl-vomx-tpekvmm",
+      "arts-culture": "https://www.voanews.com/api/zpbovl-vomx-tpe_vmr",
+      "all-about-america": "https://www.voanews.com/api/zb__qtl-vomx-tpeqrtqq"
+    }
+  }
+}

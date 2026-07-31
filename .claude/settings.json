@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git init *)",
+      "Bash(python3 -)",
+      "Bash(python3 src/fetch_century_news.py)",
+      "Bash(python3 src/generate.py \"onthisday-07-25\" \"onthisday.md\" \"galvanize,quagmire,scathing,adamant,impasse,panacea,disparage\" \"2026-07-25-onthisday.html\")",
+      "Bash(python3 src/generate.py \"century-news-1926-07-25-cric\" \"century.md\" \"affable,shrewd,placate,flounder,belabor,acumen,convoluted,assuage\" \"2026-07-25-century.html\")"
+    ]
+  }
+}

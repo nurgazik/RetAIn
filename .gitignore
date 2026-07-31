@@ -1,0 +1,14 @@
+# Secrets — never commit
+.env.local
+.env*
+
+# Local data & generated artifacts
+data/retain.db
+output/
+
+# OS / editor noise
+.DS_Store
+__pycache__/
+
+# Claude Code local settings (machine-specific)
+.claude/settings.local.json
