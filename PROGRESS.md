@@ -6,21 +6,36 @@ first. Decisions live in PRD.md's log (D1–D27); this file is the narrative tim
 
 ---
 
-## NOW (as of 2026-07-26 session end)
+## NOW (as of 2026-07-31 session end)
 
 **Phase:** PoC build — pipeline works end to end (fetch → pantry → generate → render),
-model selection is settled, digest experience is fully designed. Not yet started: the
-14-day daily reading run.
+model selection is settled, digest experience is fully designed, **code is on GitHub**
+(github.com/nurgazik/RetAIn, private). Not yet started: the 14-day daily reading run.
 
 **Next up (in order):**
-1. **First git commit** — repo is initialized but NOTHING IS COMMITTED yet (standing
-   offer, repeatedly deferred — do this!)
-2. **NASA + Stack Exchange fetchers** — widen the pantry beyond Global Voices + calendar
-3. Digest assembly + word scheduler (expanding intervals, D27 frequency caps)
-4. Start the 14-day PoC reading run (checklist in PRD §7)
+1. **NASA + Stack Exchange fetchers** — widen the pantry beyond Global Voices + calendar
+2. Digest assembly + word scheduler (expanding intervals, D27 frequency caps)
+3. Start the 14-day PoC reading run (checklist in PRD §7)
+
+**Machine setup note:** work laptop pushes via SSH alias `github.com-retain`
+(dedicated personal key `~/.ssh/id_ed25519_retain` — revoke from GitHub settings when
+vacation coding ends). Home Mac: clone normally with personal credentials; recreate
+`.env.local` (4 API keys — gitignored, never on GitHub) and `data/retain.db` refills
+itself via the fetchers.
 
 *(QC gate descoped 2026-07-31 by founder — Flash-Lite's clean record made it PoC-optional;
 design retained in D19 with explicit revisit triggers, incl. before any MVP build.)*
+
+### 2026-07-31 — QC descoped; first commit; GitHub connected
+
+- Founder descoped the QC gate for PoC (D19 re-amended with revisit triggers) — evidence
+  was Haiku-era; Flash-Lite runs 14/16 clean. Assistant close-reads remain the only
+  misuse detector; a hard Flash-Lite misuse re-opens the decision.
+- PROGRESS.md created (this file) as the standing catch-up log.
+- **First git commit** (b9a7ec0, 24 files) after a week untracked; pushed to
+  github.com/nurgazik/RetAIn over a fresh personal SSH key (work deploy key untouched),
+  wiping a 4-month-old unfilled SpecKit template after inspection confirmed it held
+  no product content.
 
 **Open items on founder:** none blocking — word list curation in `data/words.json`
 ongoing (30 seed words in; founder knows few of them, ideal for PoC).
