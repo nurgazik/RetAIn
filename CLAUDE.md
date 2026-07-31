@@ -34,6 +34,12 @@ source. Go/no-go criteria in PRD.md §7.
 
 ## Working conventions
 
+- **Fundamentals demand research + joint decisions.** For anything foundational
+  (content sources, digest model, core UX, model choice), the founder wants meticulous
+  investigation with tangible evidence of existing patterns — never a quick unilateral
+  call by the assistant. (Lesson learned: prematurely accepting a single news source;
+  a founder-pushed research sweep proved 6 sources existed.) Quick pragmatic calls are
+  fine for implementation details. Log agreed decisions in the PRD decisions log.
 - Product decisions get discussed before implementation; the founder thinks in
   PoC → MVP → Future-state horizons — scope suggestions accordingly.
 - Rewrite quality bar: words only where genuinely idiomatic (awkward collocations teach
