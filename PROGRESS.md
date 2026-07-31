@@ -14,8 +14,14 @@ model selection is settled, digest experience is fully designed, **code is on Gi
 
 **Next up (in order):**
 1. **NASA + Stack Exchange fetchers** — widen the pantry beyond Global Voices + calendar
-2. Digest assembly + word scheduler (expanding intervals, D27 frequency caps)
-3. Start the 14-day PoC reading run (checklist in PRD §7)
+2. **Proprietary piece generator** (PoC Source 4 — PRD §7): fully GENERATED content, no
+   source article — dialogues, flash fiction, workplace vignettes built around due words.
+   Needs its own wrapper prompt. Why it matters: it's the *register vehicle* (words shown
+   in the professional register the founder wants to speak in), the digest's never-empty
+   floor, and MVP's narrative slot. DO NOT FORGET — founder flagged this explicitly
+   before the machine switch.
+3. Digest assembly + word scheduler (expanding intervals, D27 frequency caps)
+4. Start the 14-day PoC reading run (checklist in PRD §7)
 
 **Machine setup note:** work laptop pushes via SSH alias `github.com-retain`
 (dedicated personal key `~/.ssh/id_ed25519_retain` — revoke from GitHub settings when
