@@ -9,6 +9,7 @@ Usage: python3 src/fetch_rss.py
 import email.utils
 import json
 import pathlib
+import re
 import sys
 import urllib.request
 import xml.etree.ElementTree as ET
@@ -47,6 +48,19 @@ def is_wire_content(author: str, patterns: list) -> bool:
     return any(p.lower() in author_lower for p in patterns)
 
 
+def extract_paragraphs(html: str) -> str:
+    """Keep only substantial prose <p> blocks — drops WordPress nav/link cruft
+    that some sources (NASA) ship inside content:encoded."""
+    kept = []
+    for p in re.findall(r"<p[^>]*>.*?</p>", html, flags=re.S):
+        text = re.sub(r"<[^>]+>", "", p).strip()
+        link_text = sum(len(re.sub(r"<[^>]+>", "", a)) for a in
+                        re.findall(r"<a[^>]*>.*?</a>", p, flags=re.S))
+        if len(text) >= 60 and link_text / max(len(text), 1) < 0.5:
+            kept.append(p)
+    return "\n".join(kept)
+
+
 def parse_feed(xml_bytes: bytes) -> list:
     root = ET.fromstring(xml_bytes)
     parsed = []
@@ -80,6 +94,9 @@ def run() -> None:
         if not source.get("enabled"):
             print(f"[skip] {source_name} (disabled)")
             continue
+        if source.get("type", "rss") != "rss":
+            print(f"[skip] {source_name} (type {source['type']} — has its own fetcher)")
+            continue
         wire_patterns = source.get("exclude_author_patterns", [])
         for section, feed_url in source["feeds"].items():
             try:
@@ -89,6 +106,8 @@ def run() -> None:
                 continue
             added = rejected = 0
             for item in items:
+                if source.get("content_filter") == "paragraphs_only":
+                    item["content_html"] = extract_paragraphs(item["content_html"])
                 wire = is_wire_content(item["author"], wire_patterns)
                 inserted = store.upsert_item(
                     con,

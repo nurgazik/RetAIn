@@ -81,6 +81,15 @@ def unlisted_marks(body: str, defs: dict) -> list:
             if not any(s.startswith(w[:6].lower()) for w in defs)]
 
 
+def invented_numbers(item, parsed: dict) -> list:
+    """Numbers in the piece that appear nowhere in the source — a cheap
+    hallucination tripwire for fact-bearing wrappers. (Numbers the source
+    spells out in words can false-positive; that only costs a retry.)"""
+    def nums(text):
+        return set(re.findall(r"\d+(?:[.,]\d+)*", re.sub(r"<[^>]+>", " ", text)))
+    return sorted(nums(parsed["body"]) - nums(item["content_html"] or ""))
+
+
 def missing_years(item, parsed: dict) -> list:
     """Coverage check for calendar sources: every <h3>year</h3> event in the
     source must surface as a bolded year block in the piece."""
@@ -174,6 +183,11 @@ def attribution_for(item) -> str:
     if item["source"] == "wikipedia_onthisday":
         return (f'Adapted from <a href="{url}">Wikipedia\'s On This Day</a> '
                 f"(CC BY-SA 4.0); this adaptation is likewise shared under CC BY-SA.")
+    if item["source"] == "stack_exchange":
+        return (f'Adapted from "<a href="{url}">{html_mod.escape(item["title"])}</a>" '
+                f'on {html_mod.escape(item["section"])}.stackexchange.com — '
+                f'{html_mod.escape(item["author"])} (CC BY-SA 4.0); this adaptation '
+                f"is likewise shared under CC BY-SA.")
     if item["source"] == "chronicling_america":
         return (f'Source: {html_mod.escape(item["author"])}, {item["published"]} — '
                 f'public domain, via <a href="{url}">Chronicling America</a> '
@@ -213,20 +227,22 @@ def run() -> None:
             f"SOURCE (title: {item['title']}):\n\n{source_text}")
 
     def attempt_score(parsed):
-        """Rank attempts: format first, then coverage, clean marks, density, mark count."""
+        """Rank attempts: format first, then coverage, clean marks, facts, density, marks."""
         return (format_ok(parsed), not missing_years(item, parsed),
                 not unlisted_marks(parsed["body"], defs),
+                not invented_numbers(item, parsed),
                 not density_low(parsed), parsed["marks"])
 
     env = load_env()
     print(f"[gen] {item['id']} via {PRIMARY['model']}...")
     raw, model_used = call_model(system, user, env)
     parsed = parse_output(raw)
-    if not all(attempt_score(parsed)[:4]):
+    if not all(attempt_score(parsed)[:5]):
         # one validation retry, mirroring pipeline QC; keep the better attempt
         print(f"[gen] validation failed on attempt 1 (marks={parsed['marks']}, "
               f"missing years={missing_years(item, parsed) or 'none'}, "
               f"unlisted={unlisted_marks(parsed['body'], defs) or 'none'}, "
+              f"invented numbers={invented_numbers(item, parsed) or 'none'}, "
               f"density_low={density_low(parsed)}), retrying once...")
         raw2, model2 = call_model(system, user, env)
         parsed2 = parse_output(raw2)
@@ -238,6 +254,10 @@ def run() -> None:
         print(f"[warn] piece still missing source events after retry: {missing}")
     if unlisted:
         print(f"[warn] unlisted marks after retry (will unwrap): {unlisted}")
+    invented = invented_numbers(item, parsed)
+    if invented:
+        print(f"[warn] numbers not found in source after retry (verify by hand): "
+              f"{invented}")
     if density_low(parsed):
         print(f"[warn] density below floor after retry: {parsed['marks']} marks "
               f"in {parsed['word_count']} words")

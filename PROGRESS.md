@@ -10,21 +10,21 @@ first. Decisions live in PRD.md's log (D1–D28); this file is the narrative tim
 
 **Phase:** PoC build — pipeline works end to end (fetch → pantry → generate → render),
 model selection is settled, digest experience is fully designed, **code is on GitHub**
-(github.com/nurgazik/RetAIn, private). Calendar-piece output format is hardened
-(per-event blocks, full event coverage, mechanical validation with one retry), word
-density is fixed at the user-message lever with a mechanical floor (D28), and the
-QC gate is live (D19). Not yet started: the 14-day daily reading run.
+(github.com/nurgazik/RetAIn, private). Calendar-piece output format is hardened,
+word density is fixed with a mechanical floor (D28), the QC gate is live (D19), and
+the pantry now has **five sources**: Global Voices, the calendar pair, NASA, and
+Stack Exchange (7 sites, advice-column wrapper). Validation also tripwires invented
+numbers. Not yet started: the 14-day daily reading run.
 
 **Next up (in order):**
-1. **NASA + Stack Exchange fetchers** — widen the pantry beyond Global Voices + calendar
-2. **Proprietary piece generator** (PoC Source 4 — PRD §7): fully GENERATED content, no
+1. **Proprietary piece generator** (PoC Source 4 — PRD §7): fully GENERATED content, no
    source article — dialogues, flash fiction, workplace vignettes built around due words.
    Needs its own wrapper prompt. Why it matters: it's the *register vehicle* (words shown
    in the professional register the founder wants to speak in), the digest's never-empty
    floor, and MVP's narrative slot. DO NOT FORGET — founder flagged this explicitly
    before the machine switch.
-3. Digest assembly + word scheduler (expanding intervals, D27 frequency caps)
-4. Start the 14-day PoC reading run (checklist in PRD §7)
+2. Digest assembly + word scheduler (expanding intervals, D27 frequency caps)
+3. Start the 14-day PoC reading run (checklist in PRD §7)
 
 **Machine setup note:** work laptop pushes via SSH alias `github.com-retain`
 (dedicated personal key `~/.ssh/id_ed25519_retain` — revoke from GitHub settings when
@@ -34,6 +34,24 @@ itself via the fetchers.
 
 *(QC gate re-shipped 2026-08-01 alongside the density push — see D19/D28. The 07-31
 descoping lasted one day; density strain was the predicted trigger.)*
+
+### 2026-08-01 (night) — Pantry widened: NASA + Stack Exchange live; fact tripwire added
+
+- NASA: pure config addition to `fetch_rss.py` sources + a generic `paragraphs_only`
+  content filter (its feeds ship whole-page WordPress markup; prose lives in `<p>` tags).
+  Two feeds live (breaking news + science), 15 items in pantry.
+- Stack Exchange: new `src/fetch_stackexchange.py` (API, 2 requests/site, anonymous
+  quota 300/day) — top-voted evergreen classics + each question's top answer as one
+  pantry item. 7 sites from the licensing research, 84 items in. New `prompts/qa.md`
+  advice-column wrapper; SE attribution branch (both authors, share-alike note).
+- End-to-end verified on both: the classic "automated my job" Workplace piece (advice
+  shape lands, counsel faithful to the top answer) and a NASA Starship piece — which
+  close-read caught inventing "1.2% scale model" (source says only "scale models").
+  QC checks words, not facts → added `invented_numbers` tripwire to validation:
+  every digit sequence in a piece must exist in the source, else retry + loud warn.
+  news.md also hardened ("if the source gives no figure, give none").
+- Density floor observed working live: technical NASA content ran 3 marks/400 words,
+  retried, warned. Watch list: number-dense technical pieces may stay below floor.
 
 ### 2026-08-01 (later) — Density fixed at the right lever; QC gate shipped (D28; D19 re-amended)
 

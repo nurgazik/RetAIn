@@ -21,6 +21,26 @@
       "Human Rights"
     ]
   },
+  "nasa": {
+    "enabled": true,
+    "license": "Public domain (US federal work)",
+    "attribution": "NASA",
+    "content_filter": "paragraphs_only",
+    "_note": "Watch for contractor co-productions (docs/content-sources.md). Feeds carry full page markup; paragraphs_only strips nav cruft.",
+    "feeds": {
+      "news": "https://www.nasa.gov/rss/dyn/breaking_news.rss",
+      "science": "https://science.nasa.gov/feed/"
+    }
+  },
+  "stack_exchange": {
+    "enabled": true,
+    "type": "stackexchange",
+    "license": "CC BY-SA 4.0",
+    "attribution": "Stack Exchange",
+    "_note": "Fetched by src/fetch_stackexchange.py (API, not RSS). Sites per docs/content-sources.md; top-voted evergreen classics.",
+    "sites": ["workplace", "history", "cooking", "money", "scifi", "travel", "english"],
+    "questions_per_site": 12
+  },
   "voa": {
     "enabled": false,
     "_note": "Dormant since 2025-03 (VOA operations halted by USAGM). Feeds kept in case it revives; the public-domain archive remains a potential evergreen pool.",
