@@ -21,6 +21,9 @@ definitions, (3) a source-type wrapper with genre-specific rules.
 - Awkward collocations are the worst failure mode: they teach the reader *wrong* usage.
   When in doubt, leave the word out.
 - Each embedded word appears exactly once.
+- Only words from the candidate list may be marked. Never wrap any other word
+  in `<mark>` tags, however fitting it seems — an unlisted word has no
+  definition to reveal.
 - Wrap every embedded target word in `<mark>` tags: `<mark>corroborate</mark>`.
   Inflected forms are fine and should be marked as used: `<mark>corroborated</mark>`.
 - Never define, explain, or call attention to a target word in the text. It must sit

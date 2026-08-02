@@ -62,6 +62,28 @@ POP_JS = """
 """
 
 
+def format_ok(parsed: dict) -> bool:
+    """Cheap mechanical checks the prompt demands: marks present, HTML body, no markdown."""
+    return (parsed["marks"] > 0 and "<p>" in parsed["body"]
+            and "**" not in parsed["body"])
+
+
+def unlisted_marks(body: str, defs: dict) -> list:
+    """Marked words that aren't on the candidate list — nothing to reveal on tap."""
+    stems = [re.sub(r"<[^>]+>", "", s).strip().lower()
+             for s in re.findall(r"<mark>(.*?)</mark>", body, flags=re.S)]
+    return [s for s in stems
+            if not any(s.startswith(w[:6].lower()) for w in defs)]
+
+
+def missing_years(item, parsed: dict) -> list:
+    """Coverage check for calendar sources: every <h3>year</h3> event in the
+    source must surface as a bolded year block in the piece."""
+    years = re.findall(r"<h3>(-?\d+)</h3>", item["content_html"] or "")
+    want = [f"{y[1:]} BC" if y.startswith("-") else y for y in years]
+    return [y for y in want if f"<b>{y}</b>" not in parsed["body"]]
+
+
 def call_model(system: str, user: str, env: dict) -> tuple:
     """Primary model with automatic fallback (D5). Returns (text, model_name)."""
     try:
@@ -79,6 +101,8 @@ def annotate_marks(body: str, defs: dict) -> str:
         word = m.group(1)
         stem = re.sub(r"<[^>]+>", "", word).lower()
         definition = next((d for w, d in defs.items() if stem.startswith(w[:6].lower())), "")
+        if not definition:  # unlisted mark survived the retry: unwrap, never show an empty popup
+            return word
         return f'<mark data-def="{html_mod.escape(definition)}">{word}</mark>'
     return re.sub(r"<mark>(.*?)</mark>", repl, body, flags=re.S)
 
@@ -137,10 +161,21 @@ def run() -> None:
     print(f"[gen] {item['id']} via {PRIMARY['model']}...")
     raw, model_used = call_model(system, user, env)
     parsed = parse_output(raw)
-    if parsed["marks"] == 0:  # one validation retry, mirroring pipeline QC
-        print("[gen] no marks on attempt 1, retrying once...")
+    missing = missing_years(item, parsed)
+    unlisted = unlisted_marks(parsed["body"], defs)
+    if not format_ok(parsed) or missing or unlisted:  # one validation retry, mirroring pipeline QC
+        print(f"[gen] validation failed on attempt 1 (marks={parsed['marks']}, "
+              f"html={'<p>' in parsed['body']}, md={'**' in parsed['body']}, "
+              f"missing years={missing or 'none'}, unlisted marks={unlisted or 'none'}), "
+              f"retrying once...")
         raw, model_used = call_model(system, user, env)
         parsed = parse_output(raw)
+        missing = missing_years(item, parsed)
+        unlisted = unlisted_marks(parsed["body"], defs)
+    if missing:
+        print(f"[warn] piece still missing source events after retry: {missing}")
+    if unlisted:
+        print(f"[warn] unlisted marks after retry (will unwrap): {unlisted}")
 
     title = re.sub(r"[*#]+", "", parsed["title"]).strip()
     body = annotate_marks(parsed["body"], defs)
@@ -154,7 +189,7 @@ def run() -> None:
     store.set_status(con, item["id"], "selected",
                      f"generated {datetime.now(timezone.utc).date()}")
 
-    kicker = f"Daily Digest · {datetime.now(timezone.utc).strftime('%B %d')}"
+    kicker = f"Daily Digest · {datetime.now().strftime('%B %d')}"  # reader-local date, not UTC
     out_path.write_text(render(kicker, title, body, attribution_for(item)))
     print(f"[ok] {parsed['marks']} words embedded, {parsed['word_count']} words long")
     print(f"[ok] wrote {out_path}")

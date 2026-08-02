@@ -15,5 +15,16 @@ artifacts, broken words, and jumbled column order.
   <paper name> woke up to..." — affectionate time-capsule tone, never mocking
   the past. Where the paper's own wording is delightful, quote it briefly.
 - Target **350-500 words**.
+- **Body format: HTML paragraphs, exactly this shape** — one `<p>` per
+  paragraph, nothing else:
+
+  ```
+  <p>One hundred years ago today, readers of the <em>Intelligencer</em> woke
+  up to... (a few sentences).</p>
+  <p>The next story... </p>
+  ```
+
+  Output HTML only (`<p>`, `<em>`, `<mark>`); plain-text paragraphs or any
+  `**` in the body are a failure.
 - The renderer adds attribution (paper name, date, public domain via the
   Library of Congress).

@@ -6,11 +6,13 @@ first. Decisions live in PRD.md's log (D1–D27); this file is the narrative tim
 
 ---
 
-## NOW (as of 2026-07-31 session end)
+## NOW (as of 2026-08-01 session end)
 
 **Phase:** PoC build — pipeline works end to end (fetch → pantry → generate → render),
 model selection is settled, digest experience is fully designed, **code is on GitHub**
-(github.com/nurgazik/RetAIn, private). Not yet started: the 14-day daily reading run.
+(github.com/nurgazik/RetAIn, private). Calendar-piece output format is now hardened
+(per-event blocks, full event coverage, mechanical validation with one retry).
+Not yet started: the 14-day daily reading run.
 
 **Next up (in order):**
 1. **NASA + Stack Exchange fetchers** — widen the pantry beyond Global Voices + calendar
@@ -32,6 +34,31 @@ itself via the fetchers.
 *(QC gate descoped 2026-07-31 by founder — Flash-Lite's clean record made it PoC-optional;
 design retained in D19 with explicit revisit triggers, incl. before any MVP build.)*
 
+### 2026-08-01 — Calendar format hardened; validation closes the empty-popup gap
+
+- Prompt work (started evening of 08-01, verified + committed just after midnight):
+  onthisday rebuilt as one block per source event (year line, 40-70 words each, full
+  coverage mandatory, BC years humanized); century + core mandate HTML-only bodies;
+  core adds "only candidate-list words may be marked."
+- `generate.py` grew mechanical validation (marks present / HTML / no `**` / all
+  source years covered) with one retry, mirroring the descoped QC gate's shape.
+- Close-read of the evening's pieces caught a real reader-facing bug: Flash-Lite marked
+  `corroborate` when it wasn't on the candidate list → empty tap-to-reveal popup.
+  Fixed twice over: unlisted marks now trigger the validation retry, and any that
+  survive are unwrapped to plain text (never an empty popup). Kicker date switched
+  from UTC to local (pieces after 5pm local were stamped tomorrow's date).
+- Verified live: fresh onthisday + century runs both passed validation on attempt 1 —
+  all 9 events covered incl. 30 BC, every mark defined, no markdown leakage. Word
+  usage clean on close-read (two borderline-but-defensible: "deft sense of urgency,"
+  "diplomatic impasse" for a policy dilemma). Not a D19 re-open trigger.
+
+**Open items on founder:** none blocking — word list curation in `data/words.json`
+ongoing (30 seed words in; founder knows few of them, ideal for PoC).
+
+---
+
+## Log (newest first)
+
 ### 2026-07-31 — QC descoped; first commit; GitHub connected
 
 - Founder descoped the QC gate for PoC (D19 re-amended with revisit triggers) — evidence
@@ -42,13 +69,6 @@ design retained in D19 with explicit revisit triggers, incl. before any MVP buil
   github.com/nurgazik/RetAIn over a fresh personal SSH key (work deploy key untouched),
   wiping a 4-month-old unfilled SpecKit template after inspection confirmed it held
   no product content.
-
-**Open items on founder:** none blocking — word list curation in `data/words.json`
-ongoing (30 seed words in; founder knows few of them, ideal for PoC).
-
----
-
-## Log (newest first)
 
 ### 2026-07-26 — Model question settled: Flash-Lite wins; density design corrected
 
