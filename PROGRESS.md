@@ -2,7 +2,7 @@
 
 Catch-up file for founder and assistant alike. **Convention: update the "Now / Next"
 block and append a dated entry at the end of every working session.** Newest entries
-first. Decisions live in PRD.md's log (D1–D27); this file is the narrative timeline.
+first. Decisions live in PRD.md's log (D1–D28); this file is the narrative timeline.
 
 ---
 
@@ -10,9 +10,10 @@ first. Decisions live in PRD.md's log (D1–D27); this file is the narrative tim
 
 **Phase:** PoC build — pipeline works end to end (fetch → pantry → generate → render),
 model selection is settled, digest experience is fully designed, **code is on GitHub**
-(github.com/nurgazik/RetAIn, private). Calendar-piece output format is now hardened
-(per-event blocks, full event coverage, mechanical validation with one retry).
-Not yet started: the 14-day daily reading run.
+(github.com/nurgazik/RetAIn, private). Calendar-piece output format is hardened
+(per-event blocks, full event coverage, mechanical validation with one retry), word
+density is fixed at the user-message lever with a mechanical floor (D28), and the
+QC gate is live (D19). Not yet started: the 14-day daily reading run.
 
 **Next up (in order):**
 1. **NASA + Stack Exchange fetchers** — widen the pantry beyond Global Voices + calendar
@@ -31,8 +32,25 @@ vacation coding ends). Home Mac: clone normally with personal credentials; recre
 `.env.local` (4 API keys — gitignored, never on GitHub) and `data/retain.db` refills
 itself via the fetchers.
 
-*(QC gate descoped 2026-07-31 by founder — Flash-Lite's clean record made it PoC-optional;
-design retained in D19 with explicit revisit triggers, incl. before any MVP build.)*
+*(QC gate re-shipped 2026-08-01 alongside the density push — see D19/D28. The 07-31
+descoping lasted one day; density strain was the predicted trigger.)*
+
+### 2026-08-01 (later) — Density fixed at the right lever; QC gate shipped (D28; D19 re-amended)
+
+- Founder: density too low — people come to retain words, and some blocks had none.
+  A/B found the root cause: the hardcoded "use 3-6" in `generate.py`'s user message
+  anchored every piece at ~5 marks; wrapper-prompt density rules did nothing (and once
+  misplaced a word into the 1946 pogrom block — D14 violation). The same rule in the
+  user message: 5–7/7 eligible blocks filled, zero D14 violations across 6 trials.
+- Shipped (D28): strong density instruction in the user message; density floor
+  (≥1 mark/~100 words) added to mechanical validation; retry now keeps the better
+  of two attempts. Tragedy blocks stay word-free by design — density can't fill them.
+- Shipped (D19 ON): per-word QC judge on the production model chain, demote-don't-
+  delete (bad marks un-highlighted, text intact), fail-open. Validated on planted
+  failures: caught both real ones incl. a D14 placement; passed transitive
+  *coalesce* — correctly (MW attests it; assistant's flag was over-strict).
+- Live verification: both calendar wrappers pass attempt 1, all embeds clean on
+  close-read, no false demotions. Cost adds ~$0.0005/piece.
 
 ### 2026-08-01 — Calendar format hardened; validation closes the empty-popup gap
 

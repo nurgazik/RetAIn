@@ -68,6 +68,11 @@ def format_ok(parsed: dict) -> bool:
             and "**" not in parsed["body"])
 
 
+def density_low(parsed: dict) -> bool:
+    """D28 floor: at least one embedded word per ~100 words of body."""
+    return parsed["word_count"] > 0 and parsed["marks"] / parsed["word_count"] < 0.01
+
+
 def unlisted_marks(body: str, defs: dict) -> list:
     """Marked words that aren't on the candidate list — nothing to reveal on tap."""
     stems = [re.sub(r"<[^>]+>", "", s).strip().lower()
@@ -82,6 +87,50 @@ def missing_years(item, parsed: dict) -> list:
     years = re.findall(r"<h3>(-?\d+)</h3>", item["content_html"] or "")
     want = [f"{y[1:]} BC" if y.startswith("-") else y for y in years]
     return [y for y in want if f"<b>{y}</b>" not in parsed["body"]]
+
+
+QC_SYSTEM = """You are a native-English-speaker usage checker for an advanced ESL reading app.
+You receive reader-facing text in which target vocabulary words are wrapped in <mark> tags,
+plus the word list with definitions.
+
+Judge each MARKED word's usage on two tests:
+1. Idiomatic fit: is this exactly how an educated native writer would use the word in this
+   sentence — natural collocation, correct meaning, correct register? Marginal, strained, or
+   nonstandard usage fails (an awkward collocation teaches the learner wrong usage).
+2. Placement taste: is the word embedded in a passage recounting tragedy, atrocity, or
+   violence? If so it fails regardless of grammar.
+
+Output STRICT JSON only — no prose, no code fences:
+{"verdicts": [{"word": "<marked word as it appears>", "ok": true},
+              {"word": "...", "ok": false, "reason": "<short reason>"}]}
+Every marked word gets exactly one verdict. When genuinely unsure, fail it — the app
+silently un-highlights failed words; a false demotion costs little, a bad usage costs trust."""
+
+
+def qc_gate(body: str, defs: dict, env: dict) -> list:
+    """D19 gate: per-word native-writer check (~$0.0005/piece). Returns marked
+    words to demote. Fails open — a judge error demotes nothing."""
+    word_list = "\n".join(f"- {w}: {d}" for w, d in defs.items())
+    try:
+        raw, _ = call_model(QC_SYSTEM, f"WORD LIST:\n{word_list}\n\nTEXT:\n{body}", env)
+        raw = re.sub(r"^```(json)?\s*|\s*```$", "", raw.strip(), flags=re.M).strip()
+        bad = [v for v in json.loads(raw)["verdicts"] if not v.get("ok")]
+        for v in bad:
+            print(f"[qc] demote '{v['word']}': {v.get('reason', 'no reason given')}")
+        return [v["word"] for v in bad]
+    except Exception as exc:
+        print(f"[warn] QC gate failed open ({exc}); no demotions")
+        return []
+
+
+def demote_marks(body: str, words: list) -> str:
+    """Unwrap <mark> tags for demoted words — text stays, highlight goes
+    (demote-don't-delete)."""
+    lowers = {w.strip().lower() for w in words}
+    def repl(m):
+        inner = re.sub(r"<[^>]+>", "", m.group(1)).strip().lower()
+        return m.group(1) if inner in lowers else m.group(0)
+    return re.sub(r"<mark>(.*?)</mark>", repl, body, flags=re.S)
 
 
 def call_model(system: str, user: str, env: dict) -> tuple:
@@ -154,28 +203,49 @@ def run() -> None:
               + (ROOT / "prompts" / wrapper_file).read_text())
     source_text = re.sub(r"<[^>]+>", " ", item["content_html"])
     source_text = html_mod.unescape(re.sub(r"[ \t]+", " ", source_text)).strip()
-    user = (f"CANDIDATE TARGET WORDS (use 3-6, only where genuinely idiomatic):\n"
-            f"{word_list}\n\nSOURCE (title: {item['title']}):\n\n{source_text}")
+    # D28: density instruction lives HERE, not in the wrapper — A/B showed the
+    # user message is what the model actually obeys (3-trial variance study 08-01)
+    user = (f"CANDIDATE TARGET WORDS — embed one in EVERY event block or paragraph "
+            f"where one sits naturally (two per block is fine when both are "
+            f"genuinely idiomatic; never force an awkward fit). EXCEPTION: any "
+            f"passage recounting tragedy, atrocity, or violence must contain NO "
+            f"candidate words at all:\n{word_list}\n\n"
+            f"SOURCE (title: {item['title']}):\n\n{source_text}")
+
+    def attempt_score(parsed):
+        """Rank attempts: format first, then coverage, clean marks, density, mark count."""
+        return (format_ok(parsed), not missing_years(item, parsed),
+                not unlisted_marks(parsed["body"], defs),
+                not density_low(parsed), parsed["marks"])
 
     env = load_env()
     print(f"[gen] {item['id']} via {PRIMARY['model']}...")
     raw, model_used = call_model(system, user, env)
     parsed = parse_output(raw)
+    if not all(attempt_score(parsed)[:4]):
+        # one validation retry, mirroring pipeline QC; keep the better attempt
+        print(f"[gen] validation failed on attempt 1 (marks={parsed['marks']}, "
+              f"missing years={missing_years(item, parsed) or 'none'}, "
+              f"unlisted={unlisted_marks(parsed['body'], defs) or 'none'}, "
+              f"density_low={density_low(parsed)}), retrying once...")
+        raw2, model2 = call_model(system, user, env)
+        parsed2 = parse_output(raw2)
+        if attempt_score(parsed2) > attempt_score(parsed):
+            parsed, model_used = parsed2, model2
     missing = missing_years(item, parsed)
     unlisted = unlisted_marks(parsed["body"], defs)
-    if not format_ok(parsed) or missing or unlisted:  # one validation retry, mirroring pipeline QC
-        print(f"[gen] validation failed on attempt 1 (marks={parsed['marks']}, "
-              f"html={'<p>' in parsed['body']}, md={'**' in parsed['body']}, "
-              f"missing years={missing or 'none'}, unlisted marks={unlisted or 'none'}), "
-              f"retrying once...")
-        raw, model_used = call_model(system, user, env)
-        parsed = parse_output(raw)
-        missing = missing_years(item, parsed)
-        unlisted = unlisted_marks(parsed["body"], defs)
     if missing:
         print(f"[warn] piece still missing source events after retry: {missing}")
     if unlisted:
         print(f"[warn] unlisted marks after retry (will unwrap): {unlisted}")
+    if density_low(parsed):
+        print(f"[warn] density below floor after retry: {parsed['marks']} marks "
+              f"in {parsed['word_count']} words")
+
+    demoted = qc_gate(parsed["body"], defs, env)  # D19 gate, re-shipped 2026-08-01
+    if demoted:
+        parsed["body"] = demote_marks(parsed["body"], demoted)
+        parsed["marks"] = len(re.findall(r"<mark>", parsed["body"]))
 
     title = re.sub(r"[*#]+", "", parsed["title"]).strip()
     body = annotate_marks(parsed["body"], defs)
