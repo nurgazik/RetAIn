@@ -49,6 +49,11 @@ descoping lasted one day; density strain was the predicted trigger.)*
   (NULL = test piece); words_used now records actually-marked words, not the
   model's self-declaration. `generate.py` refactored: `generate_piece()` is a
   library function.
+- Founder feature request, shipped same session: word-pill strip at the top of
+  every edition — all 30 words as pills, today's served ones highlighted and
+  tappable for definitions. Fixing it exposed a rebuild bug: --force after a
+  fresh fetch could swap slot picks and orphan same-day ledger rows (phantom
+  servings) → rebuilds now keep the original lineup and orphans are cleaned.
 - **Edition 1 (2026-08-02): 4 pieces, ~6 min, 18 servings, 9 distinct words,
   0 empty popups.** QC earned its keep in one build: caught words placed in a
   martyr story (D14), killed a wrong `corroborate`; two `candor`s hit the

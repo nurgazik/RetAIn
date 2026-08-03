@@ -48,7 +48,7 @@ CSS = """
 
 POP_JS = """
   const pop = document.getElementById('pop');
-  document.querySelectorAll('mark').forEach(m => {
+  document.querySelectorAll('mark, .pill[data-def]').forEach(m => {
     m.addEventListener('click', e => {
       e.stopPropagation();
       pop.innerHTML = '<b>' + m.textContent.trim() + '</b> — ' + m.dataset.def;

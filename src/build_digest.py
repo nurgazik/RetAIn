@@ -101,7 +101,9 @@ def taste_ok(item, skip: list) -> bool:
 
 
 def pick_items(con, today: str) -> list:
-    """Today's slots: calendar pair + newest tasteful GV pick + SE/NASA rotation."""
+    """Today's slots: calendar pair + newest tasteful GV pick + SE/NASA rotation.
+    Rebuilds keep the original lineup: items already generated for today win
+    their slot, so a --force never swaps content or orphans ledger rows."""
     d = date.fromisoformat(today)
     mmdd = d.strftime("%m-%d")
     config = json.loads((ROOT / "config" / "sources.json").read_text())
@@ -109,21 +111,28 @@ def pick_items(con, today: str) -> list:
     served = {r["item_id"] for r in con.execute(
         "SELECT DISTINCT item_id FROM generated_pieces WHERE digest_date IS NOT NULL "
         "AND digest_date != ?", (today,))}
+    existing = {}
+    for r in con.execute("SELECT DISTINCT item_id FROM generated_pieces "
+                         "WHERE digest_date=?", (today,)):
+        it = con.execute("SELECT * FROM items WHERE id=?", (r["item_id"],)).fetchone()
+        if it is not None and it["source"] not in existing:
+            existing[it["source"]] = it
 
-    otd = con.execute(
+    otd = existing.get("wikipedia_onthisday") or con.execute(
         "SELECT * FROM items WHERE source='wikipedia_onthisday' AND id LIKE ?",
         (f"%{mmdd}-{d.year}%",)).fetchone()
-    century = con.execute(
+    century = existing.get("internet_archive_newspapers") or con.execute(
         "SELECT * FROM items WHERE source='internet_archive_newspapers' AND id LIKE ?",
         (f"%{d.year - 100}-{mmdd}%",)).fetchone()
-    gv = next((r for r in con.execute(
+    gv = existing.get("global_voices") or next((r for r in con.execute(
         "SELECT * FROM items WHERE source='global_voices' AND status='fetched' "
         "ORDER BY published DESC")
         if r["id"] not in served and taste_ok(r, skip)), None)
     rotation = "stack_exchange" if d.day % 2 == 0 else "nasa"
-    extra = next((r for r in con.execute(
-        "SELECT * FROM items WHERE source=? AND status='fetched' ORDER BY RANDOM()",
-        (rotation,)) if r["id"] not in served), None)
+    extra = (existing.get("stack_exchange") or existing.get("nasa")
+             or next((r for r in con.execute(
+                 "SELECT * FROM items WHERE source=? AND status='fetched' "
+                 "ORDER BY RANDOM()", (rotation,)) if r["id"] not in served), None))
 
     slots = []
     for it in (otd, century, gv, extra):
@@ -166,6 +175,27 @@ def pantry_menu(con, today: str, exclude: set) -> list:
     return out
 
 
+def word_pills(pieces: list) -> str:
+    """All tracked words as pills; the ones served in this edition highlighted
+    (and tappable for their definition)."""
+    import html as html_mod
+    words = json.loads((ROOT / "data" / "words.json").read_text())["words"]
+    served = {w for p in pieces for w in p["words_used"]}
+    pills = []
+    for w in words:
+        if w.get("status", "learning") == "archived":
+            continue
+        if w["word"] in served:
+            pills.append(f'<span class="pill served" '
+                         f'data-def="{html_mod.escape(w["definition"])}">'
+                         f'{w["word"]}</span>')
+        else:
+            pills.append(f'<span class="pill">{w["word"]}</span>')
+    return (f'<div class="words"><div class="wcount">{len(served)} of '
+            f'{len(pills)} words in today\'s edition — tap a highlighted pill '
+            f'for its meaning</div>{"".join(pills)}</div>')
+
+
 def assemble(today: str, edition_no: int, pieces: list, menu: list) -> str:
     d = date.fromisoformat(today)
     total_words = sum(len(re.sub(r"<[^>]+>", " ", p["body"]).split()) for p in pieces)
@@ -203,6 +233,14 @@ def assemble(today: str, edition_no: int, pieces: list, menu: list) -> str:
   .menu li {{ margin: .45rem 0; }}
   .mtag {{ color: #8a6d3b; font-size: .75rem; text-transform: uppercase;
           letter-spacing: .06em; margin-right: .3rem; }}
+  .words {{ margin: 0 0 2.5rem; text-align: center; }}
+  .wcount {{ font-family: -apple-system, sans-serif; font-size: .72rem;
+            color: #6d675e; margin-bottom: .7rem; letter-spacing: .04em; }}
+  .pill {{ display: inline-block; font-family: -apple-system, sans-serif;
+          font-size: .78rem; color: #a49c8f; border: 1px solid #e5ddd0;
+          border-radius: 999px; padding: .12em .65em; margin: .18em .12em; }}
+  .pill.served {{ color: #26221c; border-color: #e8c96a; cursor: pointer;
+                 background: linear-gradient(transparent 55%, #ffe08a 55%); }}
 </style></head>
 <body><div class="sheet">
   <div class="masthead">
@@ -210,6 +248,7 @@ def assemble(today: str, edition_no: int, pieces: list, menu: list) -> str:
     <div class="edition">Edition {edition_no} · {d.strftime('%A, %B %d, %Y')} ·
       {len(pieces)} pieces · ~{minutes} min</div>
   </div>
+  {word_pills(pieces)}
   {''.join(sections)}
   <div class="fin">
     <div class="big">That's today's edition — you're caught up.</div>
@@ -278,6 +317,14 @@ def run() -> None:
     if not pieces:
         print("[error] no pieces generated — no digest written")
         return
+
+    keep = {p["item"]["id"] for p in pieces}
+    cur = con.execute(
+        "DELETE FROM generated_pieces WHERE digest_date=? AND item_id NOT IN "
+        f"({','.join('?' * len(keep))})", (today, *keep))
+    if cur.rowcount:
+        print(f"[clean] removed {cur.rowcount} orphaned same-day piece(s) from ledger")
+    con.commit()
 
     edition_no = 1 + con.execute(
         "SELECT COUNT(DISTINCT digest_date) FROM generated_pieces "
