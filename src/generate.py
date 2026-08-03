@@ -90,6 +90,11 @@ def invented_numbers(item, parsed: dict) -> list:
     return sorted(nums(parsed["body"]) - nums(item["content_html"] or ""))
 
 
+def normalize_bc_years(body: str) -> str:
+    """The wrapper wants '30 BC'; models sometimes emit '-30' or '-30 BC'."""
+    return re.sub(r"<b>-(\d+)(?:\s*BC)?</b>", r"<b>\1 BC</b>", body)
+
+
 def missing_years(item, parsed: dict) -> list:
     """Coverage check for calendar sources: every <h3>year</h3> event in the
     source must surface as a bolded year block in the piece."""
@@ -211,20 +216,26 @@ def run() -> None:
     words = json.loads((ROOT / "data" / "words.json").read_text())["words"]
     chosen = [w.strip() for w in words_csv.split(",")]
     defs = {w["word"]: w["definition"] for w in words if w["word"] in chosen}
-    word_list = "\n".join(f"- {w}: {d}" for w, d in defs.items())
 
     system = ((ROOT / "prompts" / "core.md").read_text() + "\n\n---\n\n"
               + (ROOT / "prompts" / wrapper_file).read_text())
     source_text = re.sub(r"<[^>]+>", " ", item["content_html"])
     source_text = html_mod.unescape(re.sub(r"[ \t]+", " ", source_text)).strip()
-    # D28: density instruction lives HERE, not in the wrapper — A/B showed the
-    # user message is what the model actually obeys (3-trial variance study 08-01)
-    user = (f"CANDIDATE TARGET WORDS — embed one in EVERY event block or paragraph "
-            f"where one sits naturally (two per block is fine when both are "
-            f"genuinely idiomatic; never force an awkward fit). EXCEPTION: any "
-            f"passage recounting tragedy, atrocity, or violence must contain NO "
-            f"candidate words at all:\n{word_list}\n\n"
-            f"SOURCE (title: {item['title']}):\n\n{source_text}")
+
+    def build_user(menu: dict, avoid: list = ()) -> str:
+        # D28: density instruction lives HERE, not in the wrapper — A/B showed
+        # the user message is what the model actually obeys (3-trial study 08-01)
+        word_list = "\n".join(f"- {w}: {d}" for w, d in menu.items())
+        ban = (f"FORBIDDEN WORDS — do not use these anywhere in the piece, in any "
+               f"form, marked or unmarked: {', '.join(avoid)}.\n\n") if avoid else ""
+        return (f"{ban}CANDIDATE TARGET WORDS — embed one in EVERY event block or "
+                f"paragraph where one sits naturally (two per block is fine when "
+                f"both are genuinely idiomatic; never force an awkward fit). "
+                f"EXCEPTION: any passage recounting tragedy, atrocity, or violence "
+                f"must contain NO candidate words at all:\n{word_list}\n\n"
+                f"SOURCE (title: {item['title']}):\n\n{source_text}")
+
+    user = build_user(defs)
 
     def attempt_score(parsed):
         """Rank attempts: format first, then coverage, clean marks, facts, density, marks."""
@@ -233,10 +244,15 @@ def run() -> None:
                 not invented_numbers(item, parsed),
                 not density_low(parsed), parsed["marks"])
 
+    def parse(raw: str) -> dict:
+        p = parse_output(raw)
+        p["body"] = normalize_bc_years(p["body"])
+        return p
+
     env = load_env()
     print(f"[gen] {item['id']} via {PRIMARY['model']}...")
     raw, model_used = call_model(system, user, env)
-    parsed = parse_output(raw)
+    parsed = parse(raw)
     if not all(attempt_score(parsed)[:5]):
         # one validation retry, mirroring pipeline QC; keep the better attempt
         print(f"[gen] validation failed on attempt 1 (marks={parsed['marks']}, "
@@ -245,7 +261,7 @@ def run() -> None:
               f"invented numbers={invented_numbers(item, parsed) or 'none'}, "
               f"density_low={density_low(parsed)}), retrying once...")
         raw2, model2 = call_model(system, user, env)
-        parsed2 = parse_output(raw2)
+        parsed2 = parse(raw2)
         if attempt_score(parsed2) > attempt_score(parsed):
             parsed, model_used = parsed2, model2
     missing = missing_years(item, parsed)
@@ -262,9 +278,38 @@ def run() -> None:
         print(f"[warn] density below floor after retry: {parsed['marks']} marks "
               f"in {parsed['word_count']} words")
 
-    demoted = qc_gate(parsed["body"], defs, env)  # D19 gate, re-shipped 2026-08-01
+    # D19 gate + D29 UX: a QC-rejected word must not appear in the text at all —
+    # the reader knows their words, so unhighlighted misuse still teaches wrong
+    # usage AND confuses. Regenerate without the failed words; un-highlighting
+    # is only the last-resort floor.
+    demoted = qc_gate(parsed["body"], defs, env)
     if demoted:
-        parsed["body"] = demote_marks(parsed["body"], demoted)
+        print(f"[qc] regenerating without {demoted}...")
+        keep = {w: d for w, d in defs.items()
+                if not any(s.strip().lower().startswith(w[:6].lower())
+                           for s in demoted)}
+        raw2, model2 = call_model(system, build_user(keep, avoid=demoted), env)
+        parsed2 = parse(raw2)
+        stems = [s.strip().lower()[:6] for s in demoted]
+        reappeared = any(st in parsed2["body"].lower() for st in stems)
+        if (format_ok(parsed2) and not missing_years(item, parsed2)
+                and not invented_numbers(item, parsed2) and not reappeared):
+            parsed, model_used, defs = parsed2, model2, keep
+            residual = qc_gate(parsed["body"], defs, env)
+            if residual:
+                print(f"[warn] QC failures persist ({residual}); "
+                      f"un-highlighting as last resort")
+                parsed["body"] = demote_marks(parsed["body"], residual)
+        else:
+            why = ([] if format_ok(parsed2) else ["format"]) \
+                + ([f"missing years {missing_years(item, parsed2)}"]
+                   if missing_years(item, parsed2) else []) \
+                + ([f"invented numbers {invented_numbers(item, parsed2)}"]
+                   if invented_numbers(item, parsed2) else []) \
+                + (["demoted word reappeared"] if reappeared else [])
+            print(f"[warn] regeneration failed validation ({'; '.join(why)}); "
+                  f"keeping original, un-highlighting {demoted} as last resort")
+            parsed["body"] = demote_marks(parsed["body"], demoted)
         parsed["marks"] = len(re.findall(r"<mark>", parsed["body"]))
 
     title = re.sub(r"[*#]+", "", parsed["title"]).strip()

@@ -2,7 +2,7 @@
 
 Catch-up file for founder and assistant alike. **Convention: update the "Now / Next"
 block and append a dated entry at the end of every working session.** Newest entries
-first. Decisions live in PRD.md's log (D1–D28); this file is the narrative timeline.
+first. Decisions live in PRD.md's log (D1–D30); this file is the narrative timeline.
 
 ---
 
@@ -14,7 +14,9 @@ model selection is settled, digest experience is fully designed, **code is on Gi
 word density is fixed with a mechanical floor (D28), the QC gate is live (D19), and
 the pantry now has **five sources**: Global Voices, the calendar pair, NASA, and
 Stack Exchange (7 sites, advice-column wrapper). Validation also tripwires invented
-numbers. Not yet started: the 14-day daily reading run.
+numbers. QC rejections regenerate rather than un-highlight (D29); a house voice is
+live in core.md (D30 — voice text awaiting founder ratification via
+`output/compare-voice.html`). Not yet started: the 14-day daily reading run.
 
 **Next up (in order):**
 1. **Proprietary piece generator** (PoC Source 4 — PRD §7): fully GENERATED content, no
@@ -34,6 +36,22 @@ itself via the fetchers.
 
 *(QC gate re-shipped 2026-08-01 alongside the density push — see D19/D28. The 07-31
 descoping lasted one day; density strain was the predicted trigger.)*
+
+### 2026-08-02 — QC UX fixed (D29); house voice created (D30)
+
+- Founder caught the demote-don't-delete flaw: readers *know their words* — a
+  QC-rejected word left unhighlighted in text is out of context and confusingly
+  untappable. **D29:** QC failure now regenerates the piece with the word removed
+  from the menu and explicitly forbidden; un-highlighting is only the last-resort
+  floor. Verified with a forced-failure test (word absent from final piece; the
+  regenerated piece gets its own QC pass). MVP note: QC + regen complete behind
+  the streaming moment.
+- **D30 house voice** in core.md (founder: chameleon rewriting undermines the
+  register vehicle; ESL constraint — support, don't compete): one publication,
+  slot inflections. A/B on 3 slots at `output/compare-voice.html` — awaiting
+  founder ratification of the voice text. Also fixed stale "3 or 4 words" line
+  in core.md contradicting D28.
+- BC years now normalized in code (`-30 BC` → `30 BC`; prompt-only was flaky).
 
 ### 2026-08-01 (night) — Pantry widened: NASA + Stack Exchange live; fact tripwire added
 
