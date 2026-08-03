@@ -201,20 +201,11 @@ def attribution_for(item) -> str:
             f'by {html_mod.escape(item["author"] or "unknown")} ({item["license"]}).')
 
 
-def run() -> None:
-    item_like, wrapper_file, words_csv = sys.argv[1], sys.argv[2], sys.argv[3]
-    out_path = ROOT / "output" / (sys.argv[4] if len(sys.argv) > 4
-                                  else f"{item_like}.html")
-
-    con = store.connect()
-    item = con.execute("SELECT * FROM items WHERE id LIKE ?",
-                       (f"%{item_like}%",)).fetchone()
-    if not item:
-        print(f"[error] no pantry item matching '{item_like}'")
-        return
-
+def generate_piece(con, item, wrapper_file: str, chosen: list, env: dict,
+                   digest_date: str = None) -> dict:
+    """Full pipeline for one piece: prompt build, validation retry, QC with
+    regeneration (D29), annotation. Records the piece; returns it."""
     words = json.loads((ROOT / "data" / "words.json").read_text())["words"]
-    chosen = [w.strip() for w in words_csv.split(",")]
     defs = {w["word"]: w["definition"] for w in words if w["word"] in chosen}
 
     system = ((ROOT / "prompts" / "core.md").read_text() + "\n\n---\n\n"
@@ -249,7 +240,6 @@ def run() -> None:
         p["body"] = normalize_bc_years(p["body"])
         return p
 
-    env = load_env()
     print(f"[gen] {item['id']} via {PRIMARY['model']}...")
     raw, model_used = call_model(system, user, env)
     parsed = parse(raw)
@@ -315,18 +305,40 @@ def run() -> None:
     title = re.sub(r"[*#]+", "", parsed["title"]).strip()
     body = annotate_marks(parsed["body"], defs)
 
+    # record the words actually marked in the final body (post-QC), not the
+    # model's self-declaration — the scheduler's serving stats depend on this
+    marked = [re.sub(r"<[^>]+>", "", m).strip().lower()
+              for m in re.findall(r"<mark>(.*?)</mark>", parsed["body"], flags=re.S)]
+    used = sorted({w for w in defs
+                   if any(m.startswith(w[:6].lower()) for m in marked)})
+
     con.execute(
-        "INSERT INTO generated_pieces (item_id, created_at, model, words_used, title, body_html) "
-        "VALUES (?, ?, ?, ?, ?, ?)",
+        "INSERT INTO generated_pieces (item_id, created_at, model, words_used, "
+        "title, body_html, digest_date) VALUES (?, ?, ?, ?, ?, ?, ?)",
         (item["id"], datetime.now(timezone.utc).isoformat(), model_used,
-         json.dumps([w for w in re.split(r"[\s,•-]+", parsed["words_used"]) if w]),
-         title, body))
+         json.dumps(used), title, body, digest_date))
     store.set_status(con, item["id"], "selected",
                      f"generated {datetime.now(timezone.utc).date()}")
-
-    kicker = f"Daily Digest · {datetime.now().strftime('%B %d')}"  # reader-local date, not UTC
-    out_path.write_text(render(kicker, title, body, attribution_for(item)))
     print(f"[ok] {parsed['marks']} words embedded, {parsed['word_count']} words long")
+    return {"item": item, "title": title, "body": body, "model": model_used,
+            "marks": parsed["marks"], "words_used": used}
+
+
+def run() -> None:
+    item_like, wrapper_file, words_csv = sys.argv[1], sys.argv[2], sys.argv[3]
+    out_path = ROOT / "output" / (sys.argv[4] if len(sys.argv) > 4
+                                  else f"{item_like}.html")
+    con = store.connect()
+    item = con.execute("SELECT * FROM items WHERE id LIKE ?",
+                       (f"%{item_like}%",)).fetchone()
+    if not item:
+        print(f"[error] no pantry item matching '{item_like}'")
+        return
+    piece = generate_piece(con, item, wrapper_file,
+                           [w.strip() for w in words_csv.split(",")], load_env())
+    kicker = f"Daily Digest · {datetime.now().strftime('%B %d')}"  # reader-local date
+    out_path.write_text(render(kicker, piece["title"], piece["body"],
+                               attribution_for(item)))
     print(f"[ok] wrote {out_path}")
 
 

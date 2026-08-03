@@ -6,27 +6,26 @@ first. Decisions live in PRD.md's log (D1–D30); this file is the narrative tim
 
 ---
 
-## NOW (as of 2026-08-01 session end)
+## NOW (as of 2026-08-02 session end)
 
-**Phase:** PoC build — pipeline works end to end (fetch → pantry → generate → render),
-model selection is settled, digest experience is fully designed, **code is on GitHub**
-(github.com/nurgazik/RetAIn, private). Calendar-piece output format is hardened,
-word density is fixed with a mechanical floor (D28), the QC gate is live (D19), and
-the pantry now has **five sources**: Global Voices, the calendar pair, NASA, and
-Stack Exchange (7 sites, advice-column wrapper). Validation also tripwires invented
-numbers. QC rejections regenerate rather than un-highlight (D29); the house voice
-is live in core.md (D30, ratified by founder 2026-08-02). Not yet started: the
-14-day daily reading run.
+**Phase:** PoC — **the 14-day reading run has STARTED (Edition 1: 2026-08-02).**
+Pipeline works end to end (fetch → pantry → generate → render), model selection is
+settled, **code is on GitHub** (github.com/nurgazik/RetAIn, private). Calendar
+formats hardened, density floor live (D28), QC gate live with regenerate-on-reject
+(D19/D29), house voice ratified (D30). Pantry has **five sources**: Global Voices,
+the calendar pair, NASA, Stack Exchange (7 sites, advice-column wrapper).
+Daily ritual: `python3 src/build_digest.py`, read `output/digest/latest.html`,
+feedback in session.
 
 **Next up (in order):**
-1. **Proprietary piece generator** (PoC Source 4 — PRD §7): fully GENERATED content, no
-   source article — dialogues, flash fiction, workplace vignettes built around due words.
-   Needs its own wrapper prompt. Why it matters: it's the *register vehicle* (words shown
-   in the professional register the founder wants to speak in), the digest's never-empty
-   floor, and MVP's narrative slot. DO NOT FORGET — founder flagged this explicitly
-   before the machine switch.
-2. Digest assembly + word scheduler (expanding intervals, D27 frequency caps)
-3. Start the 14-day PoC reading run (checklist in PRD §7)
+1. **The 14-day PoC reading run — STARTED 2026-08-02 (Edition 1).** Daily:
+   `python3 src/build_digest.py`, founder reads `output/digest/latest.html`,
+   gives feedback in session; PROGRESS logs notable feedback.
+2. **Proprietary piece generator** (PoC Source 4 — PRD §7): fully designed in
+   `docs/proprietary-generator.md` (two-stage premise-bank architecture, freshness
+   mechanics) — build gated on founder inputs: interest areas + recurring-cast
+   yes/no. DO NOT FORGET — founder flagged this explicitly, twice.
+3. Gutenberg classics fetcher (PRD §7 build order item 3 — parked, not forgotten)
 
 **Machine setup note:** work laptop pushes via SSH alias `github.com-retain`
 (dedicated personal key `~/.ssh/id_ed25519_retain` — revoke from GitHub settings when
@@ -36,6 +35,25 @@ itself via the fetchers.
 
 *(QC gate re-shipped 2026-08-01 alongside the density push — see D19/D28. The 07-31
 descoping lasted one day; density strain was the predicted trigger.)*
+
+### 2026-08-02 (later) — Digest builder shipped; Edition 1 built; 14-day run begins
+
+- Founder reprioritized: habit test first, proprietary generator after (design
+  captured in docs/proprietary-generator.md so nothing is lost).
+- `src/build_digest.py`: one command → today's edition. Refreshes pantry
+  (fetch never blocks), schedules words (expanding intervals [1,1,2,4,7,12,20],
+  D27 stage caps: new 3/day, mature 1/day), fills slots (calendar pair + tasteful
+  GV pick + SE/NASA rotation), assembles a finite edition (D22 "you're caught up")
+  with a 6-headline pantry menu for tomorrow (D17 founder-picks). Idempotent per
+  day; failed slots degrade gracefully. Serving stats: `generated_pieces.digest_date`
+  (NULL = test piece); words_used now records actually-marked words, not the
+  model's self-declaration. `generate.py` refactored: `generate_piece()` is a
+  library function.
+- **Edition 1 (2026-08-02): 4 pieces, ~6 min, 18 servings, 9 distinct words,
+  0 empty popups.** QC earned its keep in one build: caught words placed in a
+  martyr story (D14), killed a wrong `corroborate`; two `candor`s hit the
+  last-resort unwrap floor. Watch: if last-resort fires often, D29's regen may
+  need a second attempt.
 
 ### 2026-08-02 — QC UX fixed (D29); house voice created (D30)
 

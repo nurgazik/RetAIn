@@ -35,7 +35,8 @@ CREATE TABLE IF NOT EXISTS generated_pieces (
     model        TEXT NOT NULL,
     words_used   TEXT,               -- JSON array (the WordServing join, PoC-simple)
     title        TEXT,
-    body_html    TEXT NOT NULL
+    body_html    TEXT NOT NULL,
+    digest_date  TEXT                -- YYYY-MM-DD when served in a digest; NULL = test piece
 );
 """
 
@@ -44,6 +45,10 @@ def connect() -> sqlite3.Connection:
     DB_PATH.parent.mkdir(exist_ok=True)
     con = sqlite3.connect(DB_PATH)
     con.executescript(SCHEMA)
+    try:  # migration for dbs created before digest_date existed
+        con.execute("ALTER TABLE generated_pieces ADD COLUMN digest_date TEXT")
+    except sqlite3.OperationalError:
+        pass
     con.row_factory = sqlite3.Row
     return con
 
