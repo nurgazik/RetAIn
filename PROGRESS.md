@@ -14,9 +14,9 @@ model selection is settled, digest experience is fully designed, **code is on Gi
 word density is fixed with a mechanical floor (D28), the QC gate is live (D19), and
 the pantry now has **five sources**: Global Voices, the calendar pair, NASA, and
 Stack Exchange (7 sites, advice-column wrapper). Validation also tripwires invented
-numbers. QC rejections regenerate rather than un-highlight (D29); a house voice is
-live in core.md (D30 — voice text awaiting founder ratification via
-`output/compare-voice.html`). Not yet started: the 14-day daily reading run.
+numbers. QC rejections regenerate rather than un-highlight (D29); the house voice
+is live in core.md (D30, ratified by founder 2026-08-02). Not yet started: the
+14-day daily reading run.
 
 **Next up (in order):**
 1. **Proprietary piece generator** (PoC Source 4 — PRD §7): fully GENERATED content, no
