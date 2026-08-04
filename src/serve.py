@@ -259,7 +259,7 @@ def read_shell(item_id: str) -> str:
   <div class="back"><a href="/">&larr; Back to today's edition</a></div>
   <div class="magic" id="magic">
     <div class="spin">✦</div>
-    <p>Working the magic — rewriting this just for you...</p>
+    <p id="magictext">Working the magic — rewriting this just for you...</p>
   </div>
   <div id="piece"></div>"""
     js = """
@@ -292,6 +292,7 @@ def read_shell(item_id: str) -> str:
   function load() {
     if (done || inflight) return;
     inflight = true;
+    const t0 = Date.now();
     const ctl = new AbortController();
     const timer = setTimeout(() => ctl.abort(), 90000);
     fetch('/api/rewrite?id=__QID__', {signal: ctl.signal})
@@ -299,8 +300,13 @@ def read_shell(item_id: str) -> str:
       .then(p => { clearTimeout(timer); inflight = false; if (p) render(p); })
       .catch(() => {
         clearTimeout(timer); inflight = false; tries++;
-        if (tries < 40) setTimeout(load, 4000);
-        else render({error: 'This one is taking too long. Go back and try again.'});
+        // fast failure = can't reach the Mac at all (tunnel down);
+        // slow failure = server busy. Never give up — retry until it lands.
+        document.getElementById('magictext').textContent =
+          (Date.now() - t0 < 3000)
+          ? "Can't reach your Mac — is the Tailscale toggle on? Retrying..."
+          : 'Still working — this one needs a moment...';
+        setTimeout(load, 4000);
       });
   }
   document.addEventListener('visibilitychange', () => {
