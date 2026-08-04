@@ -2,20 +2,23 @@
 
 Catch-up file for founder and assistant alike. **Convention: update the "Now / Next"
 block and append a dated entry at the end of every working session.** Newest entries
-first. Decisions live in PRD.md's log (D1–D30); this file is the narrative timeline.
+first. Decisions live in PRD.md's log (D1–D31); this file is the narrative timeline.
 
 ---
 
 ## NOW (as of 2026-08-02 session end)
 
 **Phase:** PoC — **the 14-day reading run has STARTED (Edition 1: 2026-08-02).**
-Pipeline works end to end (fetch → pantry → generate → render), model selection is
-settled, **code is on GitHub** (github.com/nurgazik/RetAIn, private). Calendar
-formats hardened, density floor live (D28), QC gate live with regenerate-on-reject
-(D19/D29), house voice ratified (D30). Pantry has **five sources**: Global Voices,
-the calendar pair, NASA, Stack Exchange (7 sites, advice-column wrapper).
-Daily ritual: `python3 src/build_digest.py`, read `output/digest/latest.html`,
-feedback in session.
+Pipeline works end to end, model selection is settled, **code is on GitHub**
+(github.com/nurgazik/RetAIn, private). Calendar formats hardened, density floor
+live (D28), QC gate live with regenerate-on-reject (D19/D29), house voice ratified
+(D30). Pantry has **five sources**: Global Voices, the calendar pair, NASA, Stack
+Exchange (7 sites, advice-column wrapper).
+**Daily ritual (D17 hybrid): `python3 src/serve.py` → http://localhost:8484** —
+word pills, calendar pair pre-rewritten, tap a headline → real-time rewrite with
+the "working the magic" moment; only clicked pieces count as servings. Phone on
+same wifi works via the Mac's LAN IP. (`build_digest.py` remains as the static
+fallback.)
 
 **Next up (in order):**
 1. **The 14-day PoC reading run — STARTED 2026-08-02 (Edition 1).** Daily:
@@ -35,6 +38,41 @@ itself via the fetchers.
 
 *(QC gate re-shipped 2026-08-01 alongside the density push — see D19/D28. The 07-31
 descoping lasted one day; density strain was the predicted trigger.)*
+
+### 2026-08-03 — D31: On This Day renders only word-bearing blocks
+
+- Founder call: every rendered block should earn its place. Implemented as a
+  render-time filter after QC (model still covers all events — no incentive to
+  force words; wordless and QC-emptied blocks drop at render). Tested on Aug 3:
+  9 generated → 6 rendered, one word each. Flagged + accepted consequence:
+  D14 + D31 means tragedy events never appear in this slot.
+- Git permissions: assistant blocked (correctly) from self-granting; rules given
+  to founder to add via /permissions. Commit batching adopted — milestone/session
+  commits instead of per-feature. serve.py + D31 currently uncommitted, pending.
+- Mobile access decided: **Tailscale to the Mac** (over Fly.io deploy and a static
+  Vercel archive — founder pick; full live experience, free, private). Vercel's
+  limitation noted: static hosting can't run the tap-to-rewrite core.
+- **Mobile access LIVE (2026-08-04):** Tailscale installed + signed in (needed the
+  classic extension-approval reboot); phone URL:
+  `http://rays-mac-mini.tailb493b3.ts.net:8484` (fallback `http://100.69.114.50:8484`).
+  Server now runs as a launchd agent (`com.retain.server`, auto-start on boot,
+  KeepAlive, logs at ~/Library/Logs/retain-server.log). Mac mini never sleeps
+  (verified pmset) — it's now the always-on PoC appliance.
+
+### 2026-08-02 (even later) — The real D17 experience: reading server with on-click rewrites
+
+- Founder course-correct: the static 4-piece digest had the algorithm picking his
+  reading — D17 explicitly decided the opposite (calendar pair pre-rewritten +
+  headline menu; tapping triggers the rewrite in real time). Assistant under-built;
+  no PRD change needed, just the correct implementation.
+- `src/serve.py` (stdlib, port 8484): edition page (pills + calendar pair inline +
+  12 taste-filtered headlines across GV/SE/NASA), `/read` shell with the "working
+  the magic" moment, `/api/rewrite` runs the full pipeline (validation, QC, D29
+  regen) on click in ~7s and records the read. **Serving semantics improved:
+  only clicked pieces count** — words served == words actually read. Background
+  pantry refresh when news is >20h stale. Read items show ✓ and stay listed.
+- Verified live: click → 6.9s → 5 clean embeds, ledger row written, pills and
+  ✓ markers update on return to the edition page.
 
 ### 2026-08-02 (later) — Digest builder shipped; Edition 1 built; 14-day run begins
 

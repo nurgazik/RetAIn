@@ -302,6 +302,19 @@ def generate_piece(con, item, wrapper_file: str, chosen: list, env: dict,
             parsed["body"] = demote_marks(parsed["body"], demoted)
         parsed["marks"] = len(re.findall(r"<mark>", parsed["body"]))
 
+    # D31: calendar event blocks render only if a highlight survived QC — the
+    # model still covers every event (no incentive to force words); the filter
+    # is purely at render time
+    if item["source"] == "wikipedia_onthisday":
+        blocks = re.findall(r"<p><b>[^<]+</b><br>.*?</p>", parsed["body"], flags=re.S)
+        kept = [b for b in blocks if "<mark>" in b]
+        if blocks and kept:
+            dropped = len(blocks) - len(kept)
+            if dropped:
+                print(f"[render] dropped {dropped} wordless event block(s) (D31)")
+            parsed["body"] = "\n".join(kept)
+            parsed["marks"] = len(re.findall(r"<mark>", parsed["body"]))
+
     title = re.sub(r"[*#]+", "", parsed["title"]).strip()
     body = annotate_marks(parsed["body"], defs)
 
