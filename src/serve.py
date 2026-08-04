@@ -145,13 +145,23 @@ def ensure_calendar(con, env, today: str) -> list:
 
 def generate_and_record(con, item, env, today: str):
     """Menu from the due pool under D27 caps, then the full piece pipeline."""
-    with _gen_lock:
+    def reuse():
         existing = con.execute(
             "SELECT * FROM generated_pieces WHERE item_id=? AND digest_date=? "
             "ORDER BY id DESC", (item["id"], today)).fetchone()
         if existing:
             return {"title": existing["title"], "body": existing["body_html"],
                     "words_used": json.loads(existing["words_used"] or "[]")}
+
+    done = reuse()  # fast path: finished pieces return instantly, no lock
+    if done:
+        return done
+    if not _gen_lock.acquire(timeout=300):
+        return None  # something is badly wedged; client will retry
+    try:
+        done = reuse()  # re-check: another thread may have generated it
+        if done:
+            return done
         stats = word_stats(con)
         today_served = {}
         for r in con.execute(
@@ -173,6 +183,8 @@ def generate_and_record(con, item, env, today: str):
         except Exception as exc:
             print(f"[error] generation failed for {item['id']}: {exc}")
             return None
+    finally:
+        _gen_lock.release()
 
 
 def headline_menu(con, today: str) -> str:
@@ -250,19 +262,23 @@ def read_shell(item_id: str) -> str:
     <p>Working the magic — rewriting this just for you...</p>
   </div>
   <div id="piece"></div>"""
-    js = f"""
-  fetch('/api/rewrite?id={qid}').then(r => r.json()).then(p => {{
+    js = """
+  // Mobile browsers kill in-flight fetches on app-switch/lock; the server
+  // returns finished pieces instantly, so retrying is cheap and safe.
+  let done = false, inflight = false, tries = 0;
+  function render(p) {
+    done = true;
     document.getElementById('magic').style.display = 'none';
-    if (p.error) {{
+    if (p.error) {
       document.getElementById('piece').innerHTML = '<p>' + p.error + '</p>';
       return;
-    }}
+    }
     document.getElementById('piece').innerHTML =
       '<div class="kicker">' + p.label + '</div><h1>' + p.title + '</h1>' +
       p.body + '<div class="attrib">' + p.attrib + '</div>' +
       '<div class="foot"><a style="color:#8a6d3b" href="/">&larr; Back for more</a></div>';
-    document.querySelectorAll('#piece mark').forEach(m => {{
-      m.addEventListener('click', e => {{
+    document.querySelectorAll('#piece mark').forEach(m => {
+      m.addEventListener('click', e => {
         e.stopPropagation();
         const pop = document.getElementById('pop');
         pop.innerHTML = '<b>' + m.textContent.trim() + '</b> — ' + m.dataset.def;
@@ -270,10 +286,28 @@ def read_shell(item_id: str) -> str:
         const r = m.getBoundingClientRect();
         pop.style.left = Math.min(r.left + window.scrollX, window.innerWidth - 300) + 'px';
         pop.style.top = (r.bottom + window.scrollY + 8) + 'px';
-      }});
-    }});
-  }});"""
-    return page("RetAIn · rewriting...", inner, js)
+      });
+    });
+  }
+  function load() {
+    if (done || inflight) return;
+    inflight = true;
+    const ctl = new AbortController();
+    const timer = setTimeout(() => ctl.abort(), 90000);
+    fetch('/api/rewrite?id=__QID__', {signal: ctl.signal})
+      .then(r => r.json())
+      .then(p => { clearTimeout(timer); inflight = false; if (p) render(p); })
+      .catch(() => {
+        clearTimeout(timer); inflight = false; tries++;
+        if (tries < 40) setTimeout(load, 4000);
+        else render({error: 'This one is taking too long. Go back and try again.'});
+      });
+  }
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden) load();
+  });
+  load();"""
+    return page("RetAIn · rewriting...", inner, js.replace("__QID__", qid))
 
 
 def api_rewrite(item_id: str) -> dict:
