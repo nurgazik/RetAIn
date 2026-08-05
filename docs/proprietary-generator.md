@@ -59,6 +59,16 @@ mechanical, not a prompt asking the model to behave.
 4. **Taps as signal** (MVP, not PoC) — reading/tap logs per topic/angle weight
    the sampler toward what the reader actually enjoys. PoC: log only.
 
+## Starving-words input (added 2026-08-05)
+
+The scheduler's least-served-first menus concentrate hard-to-place words over
+time (observed live: day-5 menus were mostly leftovers; density collapsed to
+~4 marks and `corroborate` failed QC three runs straight). Mitigated short-term
+by menu mixing (8 neediest + 4 random). The real fix belongs here: **premises
+should be sampled to fit the starving words** — offered-but-never-embedded
+words become a first-class input to the premise sampler, so the register
+vehicle doubles as the safety net for exactly the words rewrites can't place.
+
 ## Open founder inputs (gate to building)
 
 1. Interest areas → topics axis.

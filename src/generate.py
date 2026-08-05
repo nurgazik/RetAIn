@@ -107,12 +107,10 @@ QC_SYSTEM = """You are a native-English-speaker usage checker for an advanced ES
 You receive reader-facing text in which target vocabulary words are wrapped in <mark> tags,
 plus the word list with definitions.
 
-Judge each MARKED word's usage on two tests:
-1. Idiomatic fit: is this exactly how an educated native writer would use the word in this
-   sentence — natural collocation, correct meaning, correct register? Marginal, strained, or
-   nonstandard usage fails (an awkward collocation teaches the learner wrong usage).
-2. Placement taste: is the word embedded in a passage recounting tragedy, atrocity, or
-   violence? If so it fails regardless of grammar.
+Judge each MARKED word's usage on one test — idiomatic fit: is this exactly how an
+educated native writer would use the word in this sentence — natural collocation,
+correct meaning, correct register? Marginal, strained, or nonstandard usage fails
+(an awkward collocation teaches the learner wrong usage).
 
 Output STRICT JSON only — no prose, no code fences:
 {"verdicts": [{"word": "<marked word as it appears>", "ok": true},
@@ -221,9 +219,8 @@ def generate_piece(con, item, wrapper_file: str, chosen: list, env: dict,
                f"form, marked or unmarked: {', '.join(avoid)}.\n\n") if avoid else ""
         return (f"{ban}CANDIDATE TARGET WORDS — embed one in EVERY event block or "
                 f"paragraph where one sits naturally (two per block is fine when "
-                f"both are genuinely idiomatic; never force an awkward fit). "
-                f"EXCEPTION: any passage recounting tragedy, atrocity, or violence "
-                f"must contain NO candidate words at all:\n{word_list}\n\n"
+                f"both are genuinely idiomatic; never force an awkward fit):\n"
+                f"{word_list}\n\n"
                 f"SOURCE (title: {item['title']}):\n\n{source_text}")
 
     user = build_user(defs)
@@ -243,17 +240,22 @@ def generate_piece(con, item, wrapper_file: str, chosen: list, env: dict,
     print(f"[gen] {item['id']} via {PRIMARY['model']}...")
     raw, model_used = call_model(system, user, env)
     parsed = parse(raw)
-    if not all(attempt_score(parsed)[:5]):
-        # one validation retry, mirroring pipeline QC; keep the better attempt
-        print(f"[gen] validation failed on attempt 1 (marks={parsed['marks']}, "
+    attempts = 1
+    while not all(attempt_score(parsed)[:5]) and attempts < 3:
+        # up to 3 attempts, keep the best — mark-count variance between rolls
+        # is large (measured 4-8 on identical prompts), so extra rolls are the
+        # cheapest density lever ($0.002 each)
+        print(f"[gen] validation failed on attempt {attempts} "
+              f"(marks={parsed['marks']}, "
               f"missing years={missing_years(item, parsed) or 'none'}, "
               f"unlisted={unlisted_marks(parsed['body'], defs) or 'none'}, "
               f"invented numbers={invented_numbers(item, parsed) or 'none'}, "
-              f"density_low={density_low(parsed)}), retrying once...")
+              f"density_low={density_low(parsed)}), retrying...")
         raw2, model2 = call_model(system, user, env)
         parsed2 = parse(raw2)
         if attempt_score(parsed2) > attempt_score(parsed):
             parsed, model_used = parsed2, model2
+        attempts += 1
     missing = missing_years(item, parsed)
     unlisted = unlisted_marks(parsed["body"], defs)
     if missing:

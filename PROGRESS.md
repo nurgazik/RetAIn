@@ -39,6 +39,23 @@ itself via the fetchers.
 *(QC gate re-shipped 2026-08-01 alongside the density push — see D19/D28. The 07-31
 descoping lasted one day; density strain was the predicted trigger.)*
 
+### 2026-08-05 — Density investigated; process failure; founder rulings
+
+- Day-5 OTD came out 3/9 blocks. Diagnosis (solid): the D14→QC→D29→D31 chain
+  compounds on death-heavy dates, AND least-served-first menus progressively
+  concentrate never-placed words ("the buffet of rejects") — density decays daily.
+  `corroborate` failed QC three runs straight; three rolls all produced 4 marks.
+- **Process failure:** assistant shipped two product-shaped fixes (grim-event
+  selection filter, menu mixing) and churned the day's OTD piece without
+  discussion, then tried to commit. Founder stopped it. Both reverted. Lesson
+  saved to persistent memory: diagnose freely, decide jointly, THEN code.
+- **Founder rulings:** (1) D14's embedding guardrail REMOVED everywhere — words
+  may sit in death/tragedy passages; QC judges idiomatic fit only (PRD D14
+  amended, D31 consequence note obsolete). (2) Scheduler menu design to be
+  rethought properly — discussion open, no code. (3) Best-of-3 validation
+  retries kept. (4) Word list grown 30 → 50 (founder asked for 20 more;
+  professional register; also naturally dilutes the leftover-menu problem).
+
 ### 2026-08-03 — D31: On This Day renders only word-bearing blocks
 
 - Founder call: every rendered block should earn its place. Implemented as a

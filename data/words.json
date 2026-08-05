@@ -1,35 +1,355 @@
 {
   "_readme": "RetAIn target word list. Edit freely: add/remove entries, fix definitions. Required fields: word, pos (verb|noun|adjective), definition. 'added' is the capture date; 'status' is 'learning' or 'retained'. The pipeline fills in serving stats later — don't add them by hand.",
   "words": [
-    { "word": "galvanize", "pos": "verb", "definition": "to shock or excite someone into taking action", "added": "2026-07-22", "status": "learning" },
-    { "word": "squander", "pos": "verb", "definition": "to waste something valuable (money, time, an opportunity) carelessly", "added": "2026-07-22", "status": "learning" },
-    { "word": "corroborate", "pos": "verb", "definition": "to confirm or support a claim with additional evidence", "added": "2026-07-22", "status": "learning" },
-    { "word": "assuage", "pos": "verb", "definition": "to make an unpleasant feeling (fear, guilt, grief) less intense", "added": "2026-07-22", "status": "learning" },
-    { "word": "coalesce", "pos": "verb", "definition": "to come together and form one whole (of ideas, groups, forces)", "added": "2026-07-22", "status": "learning" },
-    { "word": "disparage", "pos": "verb", "definition": "to speak about someone or something as if it has little worth", "added": "2026-07-22", "status": "learning" },
-    { "word": "eschew", "pos": "verb", "definition": "to deliberately avoid or abstain from something", "added": "2026-07-22", "status": "learning" },
-    { "word": "placate", "pos": "verb", "definition": "to calm someone's anger, usually by concessions or soothing words", "added": "2026-07-22", "status": "learning" },
-    { "word": "flounder", "pos": "verb", "definition": "to struggle clumsily; to be in serious difficulty without making progress", "added": "2026-07-22", "status": "learning" },
-    { "word": "belabor", "pos": "verb", "definition": "to explain or dwell on a point far longer than necessary", "added": "2026-07-22", "status": "learning" },
-    { "word": "candor", "pos": "noun", "definition": "honest, open, and sincere expression; frankness", "added": "2026-07-22", "status": "learning" },
-    { "word": "conundrum", "pos": "noun", "definition": "a confusing and difficult problem with no easy answer", "added": "2026-07-22", "status": "learning" },
-    { "word": "gravitas", "pos": "noun", "definition": "seriousness and dignity of manner that commands respect", "added": "2026-07-22", "status": "learning" },
-    { "word": "impasse", "pos": "noun", "definition": "a deadlock; a situation where no progress or agreement is possible", "added": "2026-07-22", "status": "learning" },
-    { "word": "panacea", "pos": "noun", "definition": "a supposed cure-all; a single solution for all problems (often used skeptically)", "added": "2026-07-22", "status": "learning" },
-    { "word": "windfall", "pos": "noun", "definition": "an unexpected piece of good fortune, especially a sudden gain of money", "added": "2026-07-22", "status": "learning" },
-    { "word": "linchpin", "pos": "noun", "definition": "the person or thing holding a whole arrangement together; the essential element", "added": "2026-07-22", "status": "learning" },
-    { "word": "acumen", "pos": "noun", "definition": "sharpness of judgment and quick insight, especially in business or practical matters", "added": "2026-07-22", "status": "learning" },
-    { "word": "quagmire", "pos": "noun", "definition": "a complicated, entangling situation that is hard to escape (literally: a bog)", "added": "2026-07-22", "status": "learning" },
-    { "word": "zeitgeist", "pos": "noun", "definition": "the defining spirit or mood of a particular period in history", "added": "2026-07-22", "status": "learning" },
-    { "word": "astute", "pos": "adjective", "definition": "sharp at accurately assessing situations and turning them to advantage", "added": "2026-07-22", "status": "learning" },
-    { "word": "perfunctory", "pos": "adjective", "definition": "done as a routine duty, with minimal effort or care", "added": "2026-07-22", "status": "learning" },
-    { "word": "tenuous", "pos": "adjective", "definition": "very weak, thin, or slight; barely holding (of a connection, argument, grip)", "added": "2026-07-22", "status": "learning" },
-    { "word": "ubiquitous", "pos": "adjective", "definition": "present or found everywhere at once", "added": "2026-07-22", "status": "learning" },
-    { "word": "scathing", "pos": "adjective", "definition": "harshly and wittily critical (of a remark, review, report)", "added": "2026-07-22", "status": "learning" },
-    { "word": "affable", "pos": "adjective", "definition": "friendly, warm, and easy to talk to", "added": "2026-07-22", "status": "learning" },
-    { "word": "shrewd", "pos": "adjective", "definition": "having sharp practical judgment, often with a hint of cunning", "added": "2026-07-22", "status": "learning" },
-    { "word": "convoluted", "pos": "adjective", "definition": "excessively intricate and hard to follow (of arguments, plots, processes)", "added": "2026-07-22", "status": "learning" },
-    { "word": "adamant", "pos": "adjective", "definition": "refusing absolutely to change one's mind or position", "added": "2026-07-22", "status": "learning" },
-    { "word": "deft", "pos": "adjective", "definition": "skillful and quick, whether with the hands or in handling situations", "added": "2026-07-22", "status": "learning" }
+    {
+      "word": "galvanize",
+      "pos": "verb",
+      "definition": "to shock or excite someone into taking action",
+      "added": "2026-07-22",
+      "status": "learning"
+    },
+    {
+      "word": "squander",
+      "pos": "verb",
+      "definition": "to waste something valuable (money, time, an opportunity) carelessly",
+      "added": "2026-07-22",
+      "status": "learning"
+    },
+    {
+      "word": "corroborate",
+      "pos": "verb",
+      "definition": "to confirm or support a claim with additional evidence",
+      "added": "2026-07-22",
+      "status": "learning"
+    },
+    {
+      "word": "assuage",
+      "pos": "verb",
+      "definition": "to make an unpleasant feeling (fear, guilt, grief) less intense",
+      "added": "2026-07-22",
+      "status": "learning"
+    },
+    {
+      "word": "coalesce",
+      "pos": "verb",
+      "definition": "to come together and form one whole (of ideas, groups, forces)",
+      "added": "2026-07-22",
+      "status": "learning"
+    },
+    {
+      "word": "disparage",
+      "pos": "verb",
+      "definition": "to speak about someone or something as if it has little worth",
+      "added": "2026-07-22",
+      "status": "learning"
+    },
+    {
+      "word": "eschew",
+      "pos": "verb",
+      "definition": "to deliberately avoid or abstain from something",
+      "added": "2026-07-22",
+      "status": "learning"
+    },
+    {
+      "word": "placate",
+      "pos": "verb",
+      "definition": "to calm someone's anger, usually by concessions or soothing words",
+      "added": "2026-07-22",
+      "status": "learning"
+    },
+    {
+      "word": "flounder",
+      "pos": "verb",
+      "definition": "to struggle clumsily; to be in serious difficulty without making progress",
+      "added": "2026-07-22",
+      "status": "learning"
+    },
+    {
+      "word": "belabor",
+      "pos": "verb",
+      "definition": "to explain or dwell on a point far longer than necessary",
+      "added": "2026-07-22",
+      "status": "learning"
+    },
+    {
+      "word": "candor",
+      "pos": "noun",
+      "definition": "honest, open, and sincere expression; frankness",
+      "added": "2026-07-22",
+      "status": "learning"
+    },
+    {
+      "word": "conundrum",
+      "pos": "noun",
+      "definition": "a confusing and difficult problem with no easy answer",
+      "added": "2026-07-22",
+      "status": "learning"
+    },
+    {
+      "word": "gravitas",
+      "pos": "noun",
+      "definition": "seriousness and dignity of manner that commands respect",
+      "added": "2026-07-22",
+      "status": "learning"
+    },
+    {
+      "word": "impasse",
+      "pos": "noun",
+      "definition": "a deadlock; a situation where no progress or agreement is possible",
+      "added": "2026-07-22",
+      "status": "learning"
+    },
+    {
+      "word": "panacea",
+      "pos": "noun",
+      "definition": "a supposed cure-all; a single solution for all problems (often used skeptically)",
+      "added": "2026-07-22",
+      "status": "learning"
+    },
+    {
+      "word": "windfall",
+      "pos": "noun",
+      "definition": "an unexpected piece of good fortune, especially a sudden gain of money",
+      "added": "2026-07-22",
+      "status": "learning"
+    },
+    {
+      "word": "linchpin",
+      "pos": "noun",
+      "definition": "the person or thing holding a whole arrangement together; the essential element",
+      "added": "2026-07-22",
+      "status": "learning"
+    },
+    {
+      "word": "acumen",
+      "pos": "noun",
+      "definition": "sharpness of judgment and quick insight, especially in business or practical matters",
+      "added": "2026-07-22",
+      "status": "learning"
+    },
+    {
+      "word": "quagmire",
+      "pos": "noun",
+      "definition": "a complicated, entangling situation that is hard to escape (literally: a bog)",
+      "added": "2026-07-22",
+      "status": "learning"
+    },
+    {
+      "word": "zeitgeist",
+      "pos": "noun",
+      "definition": "the defining spirit or mood of a particular period in history",
+      "added": "2026-07-22",
+      "status": "learning"
+    },
+    {
+      "word": "astute",
+      "pos": "adjective",
+      "definition": "sharp at accurately assessing situations and turning them to advantage",
+      "added": "2026-07-22",
+      "status": "learning"
+    },
+    {
+      "word": "perfunctory",
+      "pos": "adjective",
+      "definition": "done as a routine duty, with minimal effort or care",
+      "added": "2026-07-22",
+      "status": "learning"
+    },
+    {
+      "word": "tenuous",
+      "pos": "adjective",
+      "definition": "very weak, thin, or slight; barely holding (of a connection, argument, grip)",
+      "added": "2026-07-22",
+      "status": "learning"
+    },
+    {
+      "word": "ubiquitous",
+      "pos": "adjective",
+      "definition": "present or found everywhere at once",
+      "added": "2026-07-22",
+      "status": "learning"
+    },
+    {
+      "word": "scathing",
+      "pos": "adjective",
+      "definition": "harshly and wittily critical (of a remark, review, report)",
+      "added": "2026-07-22",
+      "status": "learning"
+    },
+    {
+      "word": "affable",
+      "pos": "adjective",
+      "definition": "friendly, warm, and easy to talk to",
+      "added": "2026-07-22",
+      "status": "learning"
+    },
+    {
+      "word": "shrewd",
+      "pos": "adjective",
+      "definition": "having sharp practical judgment, often with a hint of cunning",
+      "added": "2026-07-22",
+      "status": "learning"
+    },
+    {
+      "word": "convoluted",
+      "pos": "adjective",
+      "definition": "excessively intricate and hard to follow (of arguments, plots, processes)",
+      "added": "2026-07-22",
+      "status": "learning"
+    },
+    {
+      "word": "adamant",
+      "pos": "adjective",
+      "definition": "refusing absolutely to change one's mind or position",
+      "added": "2026-07-22",
+      "status": "learning"
+    },
+    {
+      "word": "deft",
+      "pos": "adjective",
+      "definition": "skillful and quick, whether with the hands or in handling situations",
+      "added": "2026-07-22",
+      "status": "learning"
+    },
+    {
+      "word": "bolster",
+      "pos": "verb",
+      "definition": "to strengthen or support something so it holds up better",
+      "added": "2026-08-05",
+      "status": "learning"
+    },
+    {
+      "word": "mitigate",
+      "pos": "verb",
+      "definition": "to make something bad less severe or harmful",
+      "added": "2026-08-05",
+      "status": "learning"
+    },
+    {
+      "word": "curtail",
+      "pos": "verb",
+      "definition": "to reduce, restrict, or cut something short",
+      "added": "2026-08-05",
+      "status": "learning"
+    },
+    {
+      "word": "delineate",
+      "pos": "verb",
+      "definition": "to describe or mark out precisely where something begins and ends",
+      "added": "2026-08-05",
+      "status": "learning"
+    },
+    {
+      "word": "extrapolate",
+      "pos": "verb",
+      "definition": "to extend known facts into an estimate about the unknown",
+      "added": "2026-08-05",
+      "status": "learning"
+    },
+    {
+      "word": "underscore",
+      "pos": "verb",
+      "definition": "to emphasize; to show why something matters",
+      "added": "2026-08-05",
+      "status": "learning"
+    },
+    {
+      "word": "entrench",
+      "pos": "verb",
+      "definition": "to establish something so firmly it becomes hard to change",
+      "added": "2026-08-05",
+      "status": "learning"
+    },
+    {
+      "word": "caveat",
+      "pos": "noun",
+      "definition": "a warning or condition attached to a statement or agreement",
+      "added": "2026-08-05",
+      "status": "learning"
+    },
+    {
+      "word": "precedent",
+      "pos": "noun",
+      "definition": "an earlier case or decision used as a guide for later ones",
+      "added": "2026-08-05",
+      "status": "learning"
+    },
+    {
+      "word": "dichotomy",
+      "pos": "noun",
+      "definition": "a division into two sharply contrasting things",
+      "added": "2026-08-05",
+      "status": "learning"
+    },
+    {
+      "word": "propensity",
+      "pos": "noun",
+      "definition": "a natural tendency to behave in a particular way",
+      "added": "2026-08-05",
+      "status": "learning"
+    },
+    {
+      "word": "hindsight",
+      "pos": "noun",
+      "definition": "understanding of an event only after it has happened",
+      "added": "2026-08-05",
+      "status": "learning"
+    },
+    {
+      "word": "pitfall",
+      "pos": "noun",
+      "definition": "a hidden danger or easy-to-make mistake",
+      "added": "2026-08-05",
+      "status": "learning"
+    },
+    {
+      "word": "benchmark",
+      "pos": "noun",
+      "definition": "a standard point of reference for comparing or judging",
+      "added": "2026-08-05",
+      "status": "learning"
+    },
+    {
+      "word": "salient",
+      "pos": "adjective",
+      "definition": "most noticeable or most important; standing out",
+      "added": "2026-08-05",
+      "status": "learning"
+    },
+    {
+      "word": "pragmatic",
+      "pos": "adjective",
+      "definition": "dealing with things practically rather than idealistically",
+      "added": "2026-08-05",
+      "status": "learning"
+    },
+    {
+      "word": "meticulous",
+      "pos": "adjective",
+      "definition": "extremely careful and precise about details",
+      "added": "2026-08-05",
+      "status": "learning"
+    },
+    {
+      "word": "prudent",
+      "pos": "adjective",
+      "definition": "showing careful, sensible judgment about the future",
+      "added": "2026-08-05",
+      "status": "learning"
+    },
+    {
+      "word": "succinct",
+      "pos": "adjective",
+      "definition": "expressed briefly and clearly",
+      "added": "2026-08-05",
+      "status": "learning"
+    },
+    {
+      "word": "elusive",
+      "pos": "adjective",
+      "definition": "hard to find, catch, or pin down",
+      "added": "2026-08-05",
+      "status": "learning"
+    }
   ]
 }
