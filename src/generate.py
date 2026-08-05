@@ -219,8 +219,10 @@ def generate_piece(con, item, wrapper_file: str, chosen: list, env: dict,
                f"form, marked or unmarked: {', '.join(avoid)}.\n\n") if avoid else ""
         return (f"{ban}CANDIDATE TARGET WORDS — embed one in EVERY event block or "
                 f"paragraph where one sits naturally (two per block is fine when "
-                f"both are genuinely idiomatic; never force an awkward fit):\n"
-                f"{word_list}\n\n"
+                f"both are genuinely idiomatic; never force an awkward fit). The "
+                f"list is ordered most-wanted-first: when two words fit equally "
+                f"naturally, prefer the earlier one — but embed freely from "
+                f"anywhere in the list:\n{word_list}\n\n"
                 f"SOURCE (title: {item['title']}):\n\n{source_text}")
 
     user = build_user(defs)
@@ -329,9 +331,10 @@ def generate_piece(con, item, wrapper_file: str, chosen: list, env: dict,
 
     con.execute(
         "INSERT INTO generated_pieces (item_id, created_at, model, words_used, "
-        "title, body_html, digest_date) VALUES (?, ?, ?, ?, ?, ?, ?)",
+        "title, body_html, digest_date, offered_words) "
+        "VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
         (item["id"], datetime.now(timezone.utc).isoformat(), model_used,
-         json.dumps(used), title, body, digest_date))
+         json.dumps(used), title, body, digest_date, json.dumps(chosen)))
     store.set_status(con, item["id"], "selected",
                      f"generated {datetime.now(timezone.utc).date()}")
     print(f"[ok] {parsed['marks']} words embedded, {parsed['word_count']} words long")

@@ -51,10 +51,15 @@ descoping lasted one day; density strain was the predicted trigger.)*
   saved to persistent memory: diagnose freely, decide jointly, THEN code.
 - **Founder rulings:** (1) D14's embedding guardrail REMOVED everywhere — words
   may sit in death/tragedy passages; QC judges idiomatic fit only (PRD D14
-  amended, D31 consequence note obsolete). (2) Scheduler menu design to be
-  rethought properly — discussion open, no code. (3) Best-of-3 validation
-  retries kept. (4) Word list grown 30 → 50 (founder asked for 20 more;
-  professional register; also naturally dilutes the leftover-menu problem).
+  amended, D31 consequence note obsolete). (2) Best-of-3 validation retries
+  kept. (3) Word list grown 30 → 50 (founder asked for 20 more; professional
+  register; also naturally dilutes the leftover-menu problem).
+- **D32 (founder, same session):** menus = full active word list, soft-priority
+  ordered (due → fewest servings), D27 caps the only hard filter; offered menus
+  now logged per piece (skip-rate data); proprietary channel will take inverse
+  priority (hard words get engineered premises). Implemented in
+  build_digest.menu_for + serve + generate; today's calendar pair rebuilt under
+  D32 + new D14.
 
 ### 2026-08-03 — D31: On This Day renders only word-bearing blocks
 

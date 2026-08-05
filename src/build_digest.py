@@ -96,6 +96,30 @@ def due_pool(con, today: str) -> list:
     return [(w, c) for c, w in sorted(due)]
 
 
+def menu_for(con, today: str) -> list:
+    """D32 menu: every learning word except those at their D27 daily cap,
+    soft-priority ordered — due words first, then fewest lifetime servings.
+    The generator chooses freely; ordering only expresses want."""
+    words = json.loads((ROOT / "data" / "words.json").read_text())["words"]
+    stats = word_stats(con)
+    today_served = {}
+    for r in con.execute("SELECT words_used FROM generated_pieces "
+                         "WHERE digest_date=?", (today,)):
+        for w in json.loads(r["words_used"] or "[]"):
+            today_served[w] = today_served.get(w, 0) + 1
+    due = {w for w, _ in due_pool(con, today)}
+    ranked = []
+    for w in words:
+        if w.get("status", "learning") != "learning":
+            continue
+        name = w["word"]
+        count = stats.get(name, {"count": 0})["count"]
+        if today_served.get(name, 0) >= daily_cap(count):
+            continue
+        ranked.append((0 if name in due else 1, count, name))
+    return [name for _, _, name in sorted(ranked)]
+
+
 def taste_ok(item, skip: list) -> bool:
     return not (set(json.loads(item["categories"] or "[]")) & set(skip))
 
@@ -279,14 +303,7 @@ def run() -> None:
     con = store.connect()
     env = load_env()
 
-    pool = due_pool(con, today)
-    stats = word_stats(con)
-    today_served = {}
-    for r in con.execute("SELECT words_used FROM generated_pieces WHERE digest_date=?",
-                         (today,)):
-        for w in json.loads(r["words_used"] or "[]"):
-            today_served[w] = today_served.get(w, 0) + 1
-    print(f"[plan] {len(pool)} words due")
+    print(f"[plan] {len(due_pool(con, today))} words due")
 
     pieces = []
     for item in pick_items(con, today):
@@ -298,20 +315,13 @@ def run() -> None:
                            "body": reuse["body_html"],
                            "words_used": json.loads(reuse["words_used"] or "[]")})
             continue
-        menu = [w for w, c in pool
-                if today_served.get(w, 0) < daily_cap(stats.get(w, {}).get("count", 0))
-                ][:MENU_SIZE]
-        if not menu:
-            print("[warn] no due words under cap left; menu falls back to full pool")
-            menu = [w for w, _ in pool][:MENU_SIZE]
+        menu = menu_for(con, today) or [w for w, _ in due_pool(con, today)]
         try:
             piece = generate_piece(con, item, wrapper, menu, env, digest_date=today)
         except Exception as exc:
             print(f"[warn] {item['id']} failed ({exc}); slot dropped")
             continue
         con.commit()
-        for w in piece["words_used"]:
-            today_served[w] = today_served.get(w, 0) + 1
         pieces.append(piece)
 
     if not pieces:

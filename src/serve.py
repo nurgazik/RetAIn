@@ -28,12 +28,10 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
 import store
 from bakeoff import load_env
-from build_digest import (SLOT_LABELS, WRAPPERS, daily_cap, due_pool, taste_ok,
-                          word_stats)
+from build_digest import (SLOT_LABELS, WRAPPERS, due_pool, menu_for, taste_ok)
 from generate import CSS, POP_JS, attribution_for, generate_piece
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
-MENU_SIZE = 12
 HEADLINES = [("global_voices", 6), ("stack_exchange", 4), ("nasa", 2)]
 
 _refresh_lock = threading.Lock()
@@ -162,19 +160,8 @@ def generate_and_record(con, item, env, today: str):
         done = reuse()  # re-check: another thread may have generated it
         if done:
             return done
-        stats = word_stats(con)
-        today_served = {}
-        for r in con.execute(
-                "SELECT words_used FROM generated_pieces WHERE digest_date=?",
-                (today,)):
-            for w in json.loads(r["words_used"] or "[]"):
-                today_served[w] = today_served.get(w, 0) + 1
-        pool = due_pool(con, today)
-        menu = [w for w, c in pool
-                if today_served.get(w, 0) < daily_cap(stats.get(w, {}).get("count", 0))
-                ][:MENU_SIZE]
-        if not menu:
-            menu = [w for w, _ in pool][:MENU_SIZE]
+        # D32: full active list, soft-priority ordered; caps are the only filter
+        menu = menu_for(con, today) or [w for w, _ in due_pool(con, today)]
         try:
             piece = generate_piece(con, item, WRAPPERS.get(item["source"], "news.md"),
                                    menu, env, digest_date=today)
