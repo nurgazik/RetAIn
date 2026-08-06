@@ -362,6 +362,7 @@ class Handler(BaseHTTPRequestHandler):
     def do_GET(self):
         url = urllib.parse.urlparse(self.path)
         params = urllib.parse.parse_qs(url.query)
+        print(f"[in ] {self.client_address[0]} {self.path[:120]}")
         try:
             if url.path == "/":
                 self.send_page(edition_page())
