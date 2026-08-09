@@ -39,6 +39,24 @@ itself via the fetchers.
 *(QC gate re-shipped 2026-08-01 alongside the density push — see D19/D28. The 07-31
 descoping lasted one day; density strain was the predicted trigger.)*
 
+### 2026-08-08 — Coherence research sweep (founder-commissioned)
+
+- Founder: feed "feels incredibly random — not useful to anyone this way"; asked
+  for creative out-of-the-box research on sources + organization.
+- Two parallel research agents ran: (1) corpora sweep — 15 new sources verified
+  by fetching license pages (top finds: Public Domain Review CC BY-SA essays,
+  NOAA dive logs PD, Wiktionary etymologies — biography of the reader's own
+  words, NPS narratives, Wikipedia film plots; ruled out with receipts: Old
+  Bailey and Founders Online both CC BY-NC, ESA text no-derivatives) →
+  docs/content-sources.md sweep-2 section. (2) coherence patterns — 12 patterns
+  with evidence (Dracula Daily 1,600→200k subs serializing a PD novel on its
+  in-story dates; Espresso finishability; flagship-item products; recurring-cast
+  effects; content-denominated progress).
+- Synthesis: **docs/digest-structure-proposal.md** — named-rubric edition (cold
+  open, Anniversary spine, Serial with seasons, weekday Rotating Desk,
+  Conversation with recurring cast, demoted headline Shelf, designed ending).
+  All rulings pending founder; nothing built.
+
 ### 2026-08-07 — The reading finding; density-first locked for calendar slots (D33)
 
 - **Founder's core PoC finding after 2 days of reading:** he naturally skips

@@ -145,3 +145,68 @@ Shared core (all): due-word list with "use only where genuinely idiomatic — sk
 don't fit"; wrap used words in `<mark>`; advanced reading level (no simplification); target
 length. QC pass after generation: words present and marked; per-word naturalness check;
 facts preserved (news); regenerate on failure.
+
+## Research sweep 2 (2026-08-08, founder-commissioned): creative corpora
+
+Context: founder's feed-coherence critique ("feels incredibly random") + density-first
+direction (D33). All licenses below verified by fetching the cited page on 2026-08-08.
+
+### Top finds (high rewrite affordance, verified)
+
+- **The Public Domain Review** — ✅ CC BY-SA 4.0 (most essays; some book excerpts
+  stricter, check per item; https://publicdomainreview.org/legal/). Charming scholarly
+  essays on obscure history/art/science; RSS live at /rss.xml. Rubric: "The Cabinet."
+- **NOAA Ocean Exploration mission logs** — ✅ US-gov PD (oceanexplorer.noaa.gov
+  media-kit + FAQ pages). First-person dive logs: shipwrecks, new species. Archive to
+  2001 covers expedition gaps. No confirmed RSS — URL-pattern fetch. Rubric:
+  "Dispatch from the Deep."
+- **Wiktionary etymologies** — ✅ CC BY-SA 4.0 + GFDL
+  (en.wiktionary.org/wiki/Wiktionary:Copyrights). Word-origin stories via MediaWiki
+  API. Uniquely on-brand: the biography of one of the READER'S OWN target words.
+  Needs curation filter (many etymologies are boring). Rubric: "Where Words Come From."
+- **National Park Service API** — ✅ US-gov PD (nps.gov/aboutus/disclaimer.htm).
+  Narrative articles: park history, wildlife, biographical sketches; REST API at
+  api.nps.gov (api.data.gov key). Rubric: "Postcard from a Park."
+- **Wikipedia film plots + unusual articles** — ✅ CC BY-SA 4.0. Film-plot sections and
+  the "unusual articles" long tail via MediaWiki API. Avoid reproducing film dialogue
+  verbatim. Rubric: "One Strange Story" / "Tonight's Plot."
+
+### Second tier (verified, medium affordance)
+
+- **Office of the Historian** (history.state.gov) — ✅ PD (site FAQ + FRUS about page).
+  Milestones diplomatic-history essays; FRUS declassified cables. "The Back Channel."
+- **Smithsonian Open Access** — ✅ CC0 subset (github.com/Smithsonian/OpenAccess
+  LICENSE). api.si.edu; filter for records with substantial descriptions. "Object of
+  the Day."
+- **USPTO patents** — ✅ PD-typical (uspto.gov/terms-use-uspto-websites). Quirky
+  historical patents via PatentsView API; needs a curated weird-patents seed list.
+  "Somebody Patented That."
+- **Wikivoyage** — ✅ CC BY-SA (en.wikivoyage.org/wiki/Wikivoyage:Copyleft).
+  "Understand" sections only. "If You Were In..."
+- **The Met Open Access** — ✅ CC0 (github.com/metmuseum/openaccess). Free API; rich
+  prose only on highlight objects; pairs with existing Rijksmuseum slot.
+- **CIA World Factbook** — ✅ PD (archived copyright page; current page blocks bots).
+  Structured facts, LLM builds the narrative. "Country You'd Fail a Quiz On."
+- **govinfo Public Papers of the Presidents** — ✅ PD (govinfo.gov/about/policies).
+  api.govinfo.gov. Cleaner than Miller Center (whose terms page 404'd — do not use).
+- **Wikibooks Cookbook** — ✅ CC BY-SA. Ingredient-history pages only; patchy coverage.
+- **arXiv abstracts** — ⚠️ abstracts CC0, full text NOT (info.arxiv.org/help/api/tou.html).
+  Thin source material; hallucination risk when expanding; ranked low deliberately.
+- **Wikiquote** — ⚠️ editorial text CC BY-SA but quotes carry original copyright;
+  usable ONLY with a pre-1930/PD-era author filter. Weakest recommendation.
+
+### Ruled out this sweep (do not re-propose)
+
+- **Old Bailey Online** — ❌ CC BY-NC (would have been top-3 otherwise).
+- **Founders Online** — ❌ dataset CC BY-NC + UVA Press annotations; underlying
+  18th-c. text arguably PD but separation is legal gray — parked Horizon 3.
+- **ESA text** — ❌ terms forbid derivatives (esa.int/Services/Terms_and_conditions);
+  only their image/video terms are CC.
+- **Miller Center** — ❌ unverifiable terms (404); use govinfo PPP instead.
+- **NYPL Digital Collections** — images + metadata, little narrative text; low
+  affordance ("What's on the Menu" is charming but is data, not story).
+- **Etymonline** — ❌ proprietary; use Wiktionary for etymology.
+
+License-tier note: 11 of 15 finds are CC0/PD (zero attribution burden); the CC BY-SA
+tier (Wikimedia family + PDR) inherits the share-alike posture already accepted for
+Global Voices; Wikiquote's fair-use-adjacent tier is the only weak one.
