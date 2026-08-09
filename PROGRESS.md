@@ -39,6 +39,26 @@ itself via the fetchers.
 *(QC gate re-shipped 2026-08-01 alongside the density push — see D19/D28. The 07-31
 descoping lasted one day; density strain was the predicted trigger.)*
 
+### 2026-08-07 — The reading finding; density-first locked for calendar slots (D33)
+
+- **Founder's core PoC finding after 2 days of reading:** he naturally skips
+  content blocks without highlights and reads only highlight neighborhoods.
+  N=1 by design (D1) — density isn't a nice-to-have, it's the product. Also
+  implies the proprietary channel (engineered density) is the real main course;
+  rewrites can't fully get there (foreshadowed in docs/proprietary-generator.md).
+- Density-first A/B run at founder's request (same sources he'd read, same
+  offered menus, real QC): worst news piece 0.4→2.6 marks/100w; century
+  2.1→2.8. Costs measured honestly: ~30% forced-embed attempts under pressure
+  (QC absorbed), and 2 invented specifics on news content ("EUR 0.10/kg",
+  "Spain leading") — word-QC doesn't police facts. Compare page:
+  output/compare-density.html.
+- **D33 locked:** density-first prompts for On This Day + century wrappers
+  (free restructuring, adjacent common-knowledge context, facts sacred; century
+  target 250-400); news/GV stays source-close pending fact-QC; every piece's
+  attribution now carries an AI-rewrite disclaimer. Next up for discussion:
+  founder's "other things" — and the proprietary generator still gates on
+  interest areas + recurring-cast call.
+
 ### 2026-08-05 — Density investigated; process failure; founder rulings
 
 - Day-5 OTD came out 3/9 blocks. Diagnosis (solid): the D14→QC→D29→D31 chain

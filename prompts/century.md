@@ -14,7 +14,13 @@ artifacts, broken words, and jumbled column order.
 - Frame as a dispatch: "One hundred years ago today, readers of the
   <paper name> woke up to..." — affectionate time-capsule tone, never mocking
   the past. Where the paper's own wording is delightful, quote it briefly.
-- Target **350-500 words**.
+- Target **250-400 words**.
+- **Density-first slot (D33):** the reader reads the highlighted sentences.
+  Rewrite freely — restructure, compress, extend with adjacent context a
+  well-read friend could add (clearly common knowledge, e.g. what a sum was
+  worth; the page's own facts stay sacred per the rules above). Aim for **one
+  candidate word per 2-3 sentences**; a paragraph without one should be
+  restructured or cut. Awkward collocations remain the worst failure.
 - **Body format: HTML paragraphs, exactly this shape** — one `<p>` per
   paragraph, nothing else:
 

@@ -23,4 +23,12 @@ today's date, each with a year, a one-line description, and optional context.
 - Register within each block: the charm of a well-read friend saying "did you
   know that today, in..." — warm, curious, precise. Target **40-70 words per
   event block**.
+- **Density-first slot (D33):** the reader reads the highlighted sentences —
+  every block must earn its place. Rewrite each event freely: compress, or
+  extend with adjacent context a well-read friend could add (background,
+  parallels, consequences — genuinely common knowledge only, never invented
+  specifics; the event's own facts stay sacred). Aim for **1-2 candidate words
+  in every block**; a block where no word sits naturally even after
+  restructuring may stay wordless (the renderer drops it). An awkward
+  collocation is still the worst failure.
 - The renderer adds attribution ("Adapted from Wikipedia's On This Day, CC BY-SA").

@@ -181,22 +181,28 @@ def render(kicker: str, title: str, body: str, attrib: str) -> str:
 </div><div id="pop"></div><script>{POP_JS}</script></body></html>"""
 
 
+AI_DISCLAIMER = (" Rewritten with AI: we stay close to the source, but "
+                 "inconsistencies may slip through.")
+
+
 def attribution_for(item) -> str:
     url = html_mod.escape(item["url"])
     if item["source"] == "wikipedia_onthisday":
-        return (f'Adapted from <a href="{url}">Wikipedia\'s On This Day</a> '
+        base = (f'Adapted from <a href="{url}">Wikipedia\'s On This Day</a> '
                 f"(CC BY-SA 4.0); this adaptation is likewise shared under CC BY-SA.")
-    if item["source"] == "stack_exchange":
-        return (f'Adapted from "<a href="{url}">{html_mod.escape(item["title"])}</a>" '
+    elif item["source"] == "stack_exchange":
+        base = (f'Adapted from "<a href="{url}">{html_mod.escape(item["title"])}</a>" '
                 f'on {html_mod.escape(item["section"])}.stackexchange.com — '
                 f'{html_mod.escape(item["author"])} (CC BY-SA 4.0); this adaptation '
                 f"is likewise shared under CC BY-SA.")
-    if item["source"] == "chronicling_america":
-        return (f'Source: {html_mod.escape(item["author"])}, {item["published"]} — '
+    elif item["source"] == "chronicling_america":
+        base = (f'Source: {html_mod.escape(item["author"])}, {item["published"]} — '
                 f'public domain, via <a href="{url}">Chronicling America</a> '
                 f"(Library of Congress).")
-    return (f'Adapted from "<a href="{url}">{html_mod.escape(item["title"])}</a>" '
-            f'by {html_mod.escape(item["author"] or "unknown")} ({item["license"]}).')
+    else:
+        base = (f'Adapted from "<a href="{url}">{html_mod.escape(item["title"])}</a>" '
+                f'by {html_mod.escape(item["author"] or "unknown")} ({item["license"]}).')
+    return base + AI_DISCLAIMER
 
 
 def generate_piece(con, item, wrapper_file: str, chosen: list, env: dict,
