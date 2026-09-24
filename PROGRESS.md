@@ -20,11 +20,11 @@ the host for Spike S0's `/transform` route. Fetchers, calendar slots and edition
 retired but not deleted.
 
 **Next up (in order):**
-1. **S0 — server side DONE, Shortcut is the founder's move.** `/transform` +
-   `POST /api/transform` live on the always-on server; recipe for the "RetAInize" iOS
-   Shortcut in docs/poc2-transform.md §7 S0. Founder builds the Shortcut, tries it on
-   three apps (text selection → Share), and the 14-day "do I reach for it?" count starts.
-   Text only until the founder rules on URL fetching (S3 terms reading).
+1. **S0 — DONE end to end (2026-09-24).** `/transform` + `POST /api/transform` live on
+   the always-on server; the founder built the clipboard-based "RetAInize" Shortcut and
+   a real run from the phone produced a 3-word piece in the ledger. **The 14-day "do I
+   reach for it?" count starts today.** Recipe + the "Limit IP Address Tracking" gotcha
+   in docs/poc2-transform.md §7 S0. Text only until the founder rules on URL fetching.
 2. **S1** — word-fit on ~10 pieces the founder actually read: rewrite vs substitute vs
    hybrid, QC on, density floor off → compare page → founder rules engine mode (D35).
    **Needs founder input: paste ~10 real pieces.**
@@ -65,7 +65,13 @@ itself via the fetchers.
   source register wins), `transform_menu` (fewest-servings-first sort, no caps). One
   forum-style test post: 4 words placed, 1 correctly QC-rejected, length and facts
   preserved; test rows deleted afterwards. launchd server restarted; `/transform` answers
-  via Tailscale. iOS Shortcut recipe written for the founder (unverified action names).
+  via Tailscale.
+- **Shortcut built live with the founder** (five actions: Get Clipboard → Get Contents
+  of URL POST JSON → Get Dictionary Value read_url → Text → Open URLs). First run failed
+  with "Can't reach your Mac": the POST arrived but the page's fetch never left the
+  phone — iOS *Limit IP Address Tracking* routes insecure HTTP through Apple's relay
+  and drops it. Turned off per network; second run worked (639 chars → 3 words, 188
+  words, `section=shortcut`). Durable alternative noted: HTTPS via `tailscale serve`.
 
 ### 2026-08-08 — Coherence research sweep (founder-commissioned)
 

@@ -311,7 +311,7 @@ def read_shell(item_id: str) -> str:
         // slow failure = server busy. Never give up — retry until it lands.
         document.getElementById('magictext').textContent =
           (Date.now() - t0 < 3000)
-          ? "Can't reach your Mac — is the Tailscale toggle on? Retrying..."
+          ? "Can't reach your Mac — is Tailscale on, and is iOS 'Limit IP Address Tracking' off for this network? Retrying..."
           : 'Still working — this one needs a moment...';
         setTimeout(load, 4000);
       });
@@ -370,7 +370,7 @@ def register_user_text(con, text: str, title: str = "", url: str = "",
     text = text.strip()
     item_id = "user:" + hashlib.sha1(text.encode("utf-8")).hexdigest()[:16]
     if not title:
-        first = re.split(r"[.!?\n]", text, 1)[0].strip()
+        first = re.split(r"[.!?\n]", text, maxsplit=1)[0].strip()
         title = (first[:77] + "...") if len(first) > 80 else first or "Untitled"
     store.upsert_item(con, {
         "id": item_id, "source": "user_text", "section": source_app or None,

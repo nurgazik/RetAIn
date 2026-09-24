@@ -223,31 +223,37 @@ next step.**
 - Always-on server restarted (launchd `com.retain.server`); `/transform` answers on
   `http://rays-mac-mini.tailb493b3.ts.net:8484/transform` from the phone via Tailscale.
 
-**iOS Shortcut recipe ("RetAInize") — founder builds this on the phone, ~5 minutes.**
-From memory of the Shortcuts app; verify each action name on the phone.
+**iOS Shortcut "RetAInize" — built and verified on the founder's phone 2026-09-24.**
+Clipboard version (five actions, no Share Sheet yet):
 
-1. New shortcut, name **RetAInize**. In its settings turn on **Show in Share Sheet**;
-   under Share Sheet Types accept **Text**, **URLs**, **Safari web pages**.
-2. Action **Receive Text / URLs / Safari web pages input from Share Sheet**; set
-   "If there's no input" to **Get Clipboard** (so copy → run also works).
-3. Action **Get Details of Safari Web Page** → **Page Selection** (falls back to nothing
-   when the input isn't a Safari page). *Unverified: whether Page Contents returns
-   readable page text; if it does, that is a zero-Swift Safari full-page handoff and an
-   early S2 signal.*
-4. Action **Text**: the selection from step 3 if non-empty, otherwise the Shortcut Input
-   as text. (An **If** block on "has any value" does this.)
-5. Action **Get Contents of URL**: `http://rays-mac-mini.tailb493b3.ts.net:8484/api/transform`,
-   Method **POST**, Request Body **JSON** with `text` = the Text from step 4,
-   `source` = the app name if easy to type, otherwise `shortcut`.
-6. Action **Get Dictionary Value** `read_url` from Contents of URL.
-7. Action **Text**: `http://rays-mac-mini.tailb493b3.ts.net:8484` + Dictionary Value.
-8. Action **Open URLs** on that text. Safari opens the read page with the "working the
-   magic" moment; the piece streams in.
+1. **Get Clipboard**
+2. **Get Contents of URL** — `http://rays-mac-mini.tailb493b3.ts.net:8484/api/transform`,
+   Method POST, Request Body JSON, fields `text` = Clipboard, `source` = `shortcut`
+3. **Get Dictionary Value** — key `read_url` in Contents of URL
+4. **Text** — `http://rays-mac-mini.tailb493b3.ts.net:8484` immediately followed by the
+   Dictionary Value variable (no line break)
+5. **Open URLs** — the Text
 
-S0 text-only scope guard: sharing a *link* from Reddit/X/Safari sends a URL, not text —
-the server rejects anything under 200 characters, so the Shortcut should be run on a
-**text selection** (long-press → select → Share) until the founder rules on URL fetching
-(S3). The invocation log line `[transform] <ip> source=<app> chars=<n> id=<id>` in
+Use: copy a passage in any app → open Shortcuts → tap RetAInize (or ▶ in the editor).
+Safari opens the read page and the piece streams in. Because it reads the clipboard, it is
+app-agnostic — Reddit, X, Safari, Kindle all work the same way. Share Sheet (ⓘ in the
+editor → Show in Share Sheet, with a "Receive input" block) is an optional refinement.
+
+**Gotcha found during the first run — iOS "Limit IP Address Tracking".** The shortcut's
+POST arrived and the read page loaded, but the page's own `/api/rewrite` request never
+left the phone and the page showed "Can't reach your Mac". Cause: Safari routes insecure
+HTTP through Apple's relay when *Limit IP Address Tracking* is on (per Wi-Fi network and
+per cellular setting; it applies even with iCloud Private Relay off), and it drops the
+in-page fetch silently after showing a "This Connection Is Not Private" interstitial for
+the navigation. Fix applied: Settings → Wi-Fi → ⓘ → Limit IP Address Tracking off (and
+the same under Cellular → Cellular Data Options). Durable fix if this bites again: serve
+over HTTPS via `tailscale serve` (needs HTTPS certificates enabled in the tailnet admin
+console — currently off). Verified working run: 639 chars → 3 words placed, 188 words,
+ledger row with `section = shortcut`.
+
+S0 text-only scope guard: the server rejects anything under 200 characters, and the
+Shortcut sends text, never a link — URL fetching waits on the S3 terms reading. The
+invocation log line `[transform] <ip> source=<app> chars=<n> id=<id>` in
 `~/Library/Logs/retain-server.log` plus the `user_text` rows are the 14-day count.
 
 ### S1 — Word-fit on real content: substitute, rewrite, or hybrid?
