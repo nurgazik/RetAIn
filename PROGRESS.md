@@ -2,33 +2,37 @@
 
 Catch-up file for founder and assistant alike. **Convention: update the "Now / Next"
 block and append a dated entry at the end of every working session.** Newest entries
-first. Decisions live in PRD.md's log (D1–D31); this file is the narrative timeline.
+first. Decisions live in PRD.md's log (D1–D34); this file is the narrative timeline.
 
 ---
 
-## NOW (as of 2026-08-02 session end)
+## NOW (as of 2026-09-24 session end)
 
-**Phase:** PoC — **the 14-day reading run has STARTED (Edition 1: 2026-08-02).**
-Pipeline works end to end, model selection is settled, **code is on GitHub**
-(github.com/nurgazik/RetAIn, private). Calendar formats hardened, density floor
-live (D28), QC gate live with regenerate-on-reject (D19/D29), house voice ratified
-(D30). Pantry has **five sources**: Global Voices, the calendar pair, NASA, Stack
-Exchange (7 sites, advice-column wrapper).
-**Daily ritual (D17 hybrid): `python3 src/serve.py` → http://localhost:8484** —
-word pills, calendar pair pre-rewritten, tap a headline → real-time rewrite with
-the "working the magic" moment; only clicked pieces count as servings. Phone on
-same wifi works via the Mac's LAN IP. (`build_digest.py` remains as the static
-fallback.)
+**Phase:** **PoC 2 — on-demand transform (D34).** PoC 1 (the daily digest) is CLOSED:
+it ran 7 of 14 days (08-02 → 08-08), usage decayed 29→2 pieces/day, criterion 1 failed.
+Founder's diagnosis: a daily digest is a content business he doesn't want to be in.
+New shape: the user captures words as before, reads wherever they already read, and on
+demand runs the piece in front of them through RetAIn to read it with their words placed.
+No scheduler, no digest. Spec + spikes + backlog: **docs/poc2-transform.md**.
+
+**Digest server status:** `src/serve.py` still runs (launchd agent, Tailscale) and becomes
+the host for Spike S0's `/transform` route. Fetchers, calendar slots and editions are
+retired but not deleted.
 
 **Next up (in order):**
-1. **The 14-day PoC reading run — STARTED 2026-08-02 (Edition 1).** Daily:
-   `python3 src/build_digest.py`, founder reads `output/digest/latest.html`,
-   gives feedback in session; PROGRESS logs notable feedback.
-2. **Proprietary piece generator** (PoC Source 4 — PRD §7): fully designed in
-   `docs/proprietary-generator.md` (two-stage premise-bank architecture, freshness
-   mechanics) — build gated on founder inputs: interest areas + recurring-cast
-   yes/no. DO NOT FORGET — founder flagged this explicitly, twice.
-3. Gutenberg classics fetcher (PRD §7 build order item 3 — parked, not forgotten)
+1. **S0** — `/transform` text-intake route in serve.py + an iOS Shortcut that shares text
+   from any app to it. Founder starts the 14-day "do I reach for it?" self-test.
+   Text only until the founder rules on URL fetching (S3 terms reading).
+2. **S1** — word-fit on ~10 pieces the founder actually read: rewrite vs substitute vs
+   hybrid, QC on, density floor off → compare page → founder rules engine mode (D35).
+   **Needs founder input: paste ~10 real pieces.**
+3. **S2 → S3 → S4** — Xcode spikes (Safari action extension w/ JS preprocessing; what
+   native apps hand over via share; streaming in an extension). Findings appended to
+   docs/poc2-transform.md §7. Xcode 26.4 is installed on this Mac.
+4. Founder rulings: success-criteria thresholds N and X (spec §6), engine mode, which
+   entry points make the MVP → then rewrite PRD §8.
+5. Parked, not forgotten: proprietary generator (Horizon 3 now), competitive scan
+   (Toucan/Fluent first), monetization (credits / BYO key / subscription — undecided).
 
 **Machine setup note:** work laptop pushes via SSH alias `github.com-retain`
 (dedicated personal key `~/.ssh/id_ed25519_retain` — revoke from GitHub settings when
@@ -36,8 +40,25 @@ vacation coding ends). Home Mac: clone normally with personal credentials; recre
 `.env.local` (4 API keys — gitignored, never on GitHub) and `data/retain.db` refills
 itself via the fetchers.
 
-*(QC gate re-shipped 2026-08-01 alongside the density push — see D19/D28. The 07-31
-descoping lasted one day; density strain was the predicted trigger.)*
+### 2026-09-24 — PoC 1 closed; pivot to on-demand transform (D34)
+
+- Founder returned after ~6 weeks away: never formed the habit during PoC 1; first
+  framing was "a feed each user finds interesting is Meta's billion-dollar problem".
+  Assistant pushed back on that half (finite rituals like Espresso/Wordle/Dracula Daily
+  work without personalization) — founder's sharper reason landed: **those are content
+  businesses, and he doesn't want to be in one.** Agreed as the true root cause.
+- Data pulled from `generated_pieces`: 7 days, 29/10/6/2/7/3/2 pieces. Criterion 1
+  failed; retention mechanism never tested.
+- Pivot conversation: "RetAInize" whatever the user is reading, on demand, no scheduler.
+  Founder deferred engine mode (substitute vs rewrite) and monetization; asked for UX +
+  technical feasibility on iOS. Assistant's read: iOS has no in-place hook for other apps
+  (unlike Android); share sheet is the universal entry; Safari action extension with JS
+  preprocessing is the strong case; native Reddit/X are fair, Facebook/Kindle poor.
+  All unverified against Apple docs — that is spike S2/S3.
+- Written this session: docs/poc2-transform.md (spec, hypothesis v2, entry-point table,
+  success criteria, spikes S0–S5, backlog epics A–E), PRD §2 v2 hypothesis, §7 outcome
+  block, §7b, §8 supersession note, §9 browser-plugin item, D34. CLAUDE.md phase updated.
+- Nothing built yet; S0 is next.
 
 ### 2026-08-08 — Coherence research sweep (founder-commissioned)
 

@@ -17,7 +17,11 @@ The founding user is the owner: advanced English speaker (Russian mother tongue)
 
 ## 2. Core hypothesis
 
-> Repeated exposure to a target word, in varied and genuinely interesting contexts, on a daily basis — with a light retrieval moment at each encounter — produces durable retention where flashcards fail.
+**v2 (2026-09-24, PoC 2 — see D34 and docs/poc2-transform.md):**
+
+> Repeated exposure to a target word, inside content the user chose to read anyway, with a tap-to-reveal retrieval moment at each encounter, produces durable retention. Exposure frequency is driven by how often the user invokes the transform, not by a schedule.
+
+~~v1: Repeated exposure to a target word, in varied and genuinely interesting contexts, on a daily basis — with a light retrieval moment at each encounter — produces durable retention where flashcards fail.~~ (The "spaced/daily" half was carried by the digest, which PoC 1 closed.)
 
 Learning-science backing: incidental vocabulary acquisition through reading requires ~8–12 exposures in varied contexts (Nation, Krashen). Tap-to-reveal highlighting adds retrieval practice. The app is effectively **spaced repetition hidden inside content people want to read**.
 
@@ -137,6 +141,8 @@ manufactures a backlog manufactures pure guilt (see the inbox-model evidence in 
 
 | D33 | **Calendar slots go density-first (2026-08-07, founder); every piece carries an AI-rewrite disclaimer.** On This Day + century news wrappers now instruct free restructuring with adjacent common-knowledge context (source facts sacred), aiming 1-2 words per event block / one word per 2-3 sentences; century length drops to 250-400. News/GV rewrites stay source-close pending a fact-QC. Attribution on every piece appends: "Rewritten with AI: we stay close to the source, but inconsistencies may slip through" | Founder's day-6/7 reading finding: he naturally skips unhighlighted mass and reads highlight neighborhoods — density is the product, for the primary user. A/B (2026-08-07, real QC): density-first took the worst piece 0.4→2.6 marks/100w; century 2.1→2.8 with clean survivors. Known costs accepted with eyes open: ~30% of attempted embeds get QC-rejected under pressure (absorbed by D29 regen), and adjacent-context freedom produced 2 invented specifics on NEWS content (why news keeps the old rules); the disclaimer makes the residual risk honest to the reader |
 
+| D34 | **PoC 2 pivot (2026-09-24, founder): RetAIn is an on-demand transform of content the user chose, not a feed.** Word capture, the rewrite engine, QC gate, house voice, tap-to-reveal and the served ledger carry over; fetchers, pantry, calendar slots, editions, the scheduler and all "due" logic are dropped. Word ordering survives only as a sort (fewest servings first, D32) — no intervals. The digest-era decisions D15, D17, D18, D20, D21, D22, D25, D27, D28, D31, D33 are **superseded for PoC 2** (kept as record; D33's disclaimer and D29's reject-means-absent still apply to transformed pieces). Spec: docs/poc2-transform.md | PoC 1 evidence: 7/14 days, usage decayed 29→2 pieces/day, criterion 1 failed. Founder's diagnosis: a readable daily digest is a content business he doesn't want to run; content built to carry words loses to what the reader already wanted. Going where the reader already is removes the feed problem entirely; the open risks move to invocation habit, iOS handoff friction, and word-fit on arbitrary content — each has a spike |
+
 ## 6. Risks & open questions
 
 - **Engagement risk (top risk):** will the user open it daily after the novelty fades? PoC measures this directly on the founder.
@@ -149,7 +155,9 @@ manufactures a backlog manufactures pure guilt (see the inbox-model evidence in 
 
 ---
 
-## 7. Horizon 1 — PoC (now)
+## 7. Horizon 1 — PoC 1: the daily digest (CLOSED 2026-09-24)
+
+**Outcome:** ran 7 of 14 days (2026-08-02 → 08-08); pieces generated per day 29, 10, 6, 2, 7, 3, 2. Success criterion 1 (read willingly ≥10/14) **failed**; criteria 2 and 3 never reached — the retention mechanism is untested, not disproven. Diagnosis (founder): a digest people read daily is a content business (editorial commitment, media economics) and the founder declines to be in one; content built to carry words is structurally second-rate against what the reader already wanted to read. Verdict: close the digest, pivot to on-demand transform of the reader's own content (D34, §7b). The section below is kept as the historical record.
 
 **Goal:** prove (a) the digest is genuinely enjoyable to read daily, (b) digest words are retained better than captured-but-not-served words, and (c) determine the right digest size — pieces per day and minutes to read (D11). No app — a script producing a daily HTML digest, read for two weeks.
 
@@ -192,7 +200,15 @@ manufactures a backlog manufactures pure guilt (see the inbox-model evidence in 
 
 ---
 
+## 7b. Horizon 1b — PoC 2: on-demand transform (now)
+
+RetAIn stops constructing a feed. The user captures words as before; reading happens wherever they already read (Safari, Reddit, X, anywhere). Whenever they want, they run the piece in front of them through RetAIn and read it back with their words placed where they fit — no scheduler, no digest, no "due" words. iOS app is the MVP surface; browser plugin later.
+
+Full spec, iOS entry-point feasibility, success criteria, technical spikes (S0–S5) and the user-story backlog: **docs/poc2-transform.md**. Spikes run first; MVP scope (§8) is rewritten only after they land. Monetization (credits / BYO key / subscription) is deliberately undecided until usage data exists.
+
 ## 8. Horizon 2 — MVP (iOS app)
+
+> **2026-09-24: superseded in part.** The Capture and Learning-loop blocks carry over; the Digest block describes the closed PoC 1 model and will be replaced by the PoC 2 invoke/read flow once spikes S0–S4 land (docs/poc2-transform.md §7). Left intact until then.
 
 Built only if PoC passes. Scope:
 
@@ -230,5 +246,6 @@ Built only if PoC passes. Scope:
 - **Siri / App Intents:** "Hey Siri, add *X* to RetAIn" for physical-book and conversation captures.
 - **In-digest lookup & capture:** tap any unknown word in a digest piece to look it up and add it to the list (Kindle-style reading loop inside the app).
 - **"Read more" long tail:** optional extra content beyond the daily digest, lazily generated on demand (this is where rewrite-on-click belongs).
+- **Browser plugin — in-place substitution:** Safari/Chrome web extension that swaps the user's words into the page itself (PoC 2 story B6). Also the Android route (accessibility / `ACTION_PROCESS_TEXT`) if Android is ever pursued.
 - **Personalized fiction serials:** multi-day proprietary stories in the user's interest areas — retention hook + word vehicle.
 - **Story continuity:** deliberate follow-ups on developing news stories the user already read ("here's what happened next") — engagement hook; distinct from accidental duplication (see §4).
