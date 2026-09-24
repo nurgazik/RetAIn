@@ -199,6 +199,10 @@ def attribution_for(item) -> str:
         base = (f'Source: {html_mod.escape(item["author"])}, {item["published"]} — '
                 f'public domain, via <a href="{url}">Chronicling America</a> '
                 f"(Library of Congress).")
+    elif item["source"] == "user_text":
+        link = (f' <a href="{url}">Original</a>.' if item["url"].startswith("http")
+                else "")
+        base = f"Your own read, transformed with your words.{link}"
     else:
         base = (f'Adapted from "<a href="{url}">{html_mod.escape(item["title"])}</a>" '
                 f'by {html_mod.escape(item["author"] or "unknown")} ({item["license"]}).')

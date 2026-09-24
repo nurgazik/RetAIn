@@ -20,8 +20,10 @@ the host for Spike S0's `/transform` route. Fetchers, calendar slots and edition
 retired but not deleted.
 
 **Next up (in order):**
-1. **S0** — `/transform` text-intake route in serve.py + an iOS Shortcut that shares text
-   from any app to it. Founder starts the 14-day "do I reach for it?" self-test.
+1. **S0 — server side DONE, Shortcut is the founder's move.** `/transform` +
+   `POST /api/transform` live on the always-on server; recipe for the "RetAInize" iOS
+   Shortcut in docs/poc2-transform.md §7 S0. Founder builds the Shortcut, tries it on
+   three apps (text selection → Share), and the 14-day "do I reach for it?" count starts.
    Text only until the founder rules on URL fetching (S3 terms reading).
 2. **S1** — word-fit on ~10 pieces the founder actually read: rewrite vs substitute vs
    hybrid, QC on, density floor off → compare page → founder rules engine mode (D35).
@@ -58,7 +60,12 @@ itself via the fetchers.
 - Written this session: docs/poc2-transform.md (spec, hypothesis v2, entry-point table,
   success criteria, spikes S0–S5, backlog epics A–E), PRD §2 v2 hypothesis, §7 outcome
   block, §7b, §8 supersession note, §9 browser-plugin item, D34. CLAUDE.md phase updated.
-- Nothing built yet; S0 is next.
+- **S0 built and smoke-tested** the same session: `/transform` page, `POST /api/transform`
+  (JSON or form), `user_text` items, `prompts/transform.md` (fidelity first, keep shape,
+  source register wins), `transform_menu` (fewest-servings-first sort, no caps). One
+  forum-style test post: 4 words placed, 1 correctly QC-rejected, length and facts
+  preserved; test rows deleted afterwards. launchd server restarted; `/transform` answers
+  via Tailscale. iOS Shortcut recipe written for the founder (unverified action names).
 
 ### 2026-08-08 — Coherence research sweep (founder-commissioned)
 

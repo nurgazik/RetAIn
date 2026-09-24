@@ -9,11 +9,19 @@ GET /api/rewrite generates the piece on demand (validation + QC + D29 regen),
                  JSON. Only clicked pieces count as servings — words served ==
                  words actually read.
 
+PoC 2 (D34, spike S0) — the reader's own content, on demand:
+GET /transform   paste box + list of previous reads ("RetAInize this").
+POST /api/transform  {text, title?, url?, source?} as JSON or form → stores the
+                 text as a user_text item and returns {"id", "read_url"}; a form
+                 post redirects straight to the read page. The iOS Shortcut posts
+                 here from the share sheet, then opens read_url.
+
 Stdlib only. Binds 0.0.0.0 so a phone on the same network can read too.
 
 Usage: python3 src/serve.py [port]     (default 8484)
 """
 
+import hashlib
 import html as html_mod
 import json
 import pathlib
@@ -28,7 +36,8 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
 import store
 from bakeoff import load_env
-from build_digest import (SLOT_LABELS, WRAPPERS, due_pool, menu_for, taste_ok)
+from build_digest import (SLOT_LABELS, WRAPPERS, due_pool, menu_for, taste_ok,
+                          word_stats)
 from generate import CSS, POP_JS, attribution_for, generate_piece
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
@@ -71,6 +80,12 @@ EXTRA_CSS = """
            color: #6d675e; }
   .magic .spin { font-size: 2rem; animation: pulse 1.2s ease-in-out infinite; }
   @keyframes pulse { 0%,100% { opacity: .3 } 50% { opacity: 1 } }
+  .tf textarea, .tf input { width: 100%; box-sizing: border-box; font: inherit;
+        font-size: 1rem; padding: .6rem .8rem; margin: .35rem 0; border: 1px solid #ddd5c8;
+        border-radius: 8px; background: #fff; color: inherit; }
+  .tf button { width: 100%; font-family: -apple-system, sans-serif; font-size: 1rem;
+        padding: .8rem; margin-top: .5rem; border: 0; border-radius: 8px;
+        background: #8a6d3b; color: #faf8f4; }
   .back { font-family: -apple-system, sans-serif; font-size: .85rem; }
   .back a { color: #8a6d3b; text-decoration: none; }
 """
@@ -160,8 +175,11 @@ def generate_and_record(con, item, env, today: str):
         done = reuse()  # re-check: another thread may have generated it
         if done:
             return done
-        # D32: full active list, soft-priority ordered; caps are the only filter
-        menu = menu_for(con, today) or [w for w, _ in due_pool(con, today)]
+        if item["source"] == "user_text":
+            menu = transform_menu(con)  # D34: a sort, not a scheduler
+        else:
+            # D32: full active list, soft-priority ordered; caps are the only filter
+            menu = menu_for(con, today) or [w for w, _ in due_pool(con, today)]
         try:
             piece = generate_piece(con, item, WRAPPERS.get(item["source"], "news.md"),
                                    menu, env, digest_date=today)
@@ -242,8 +260,10 @@ def edition_page() -> str:
 
 def read_shell(item_id: str) -> str:
     qid = urllib.parse.quote(item_id, safe="")
+    back = ("/transform", "Back to your reads") if item_id.startswith("user:") \
+        else ("/", "Back to today's edition")
     inner = f"""
-  <div class="back"><a href="/">&larr; Back to today's edition</a></div>
+  <div class="back"><a href="{back[0]}">&larr; {back[1]}</a></div>
   <div class="magic" id="magic">
     <div class="spin">✦</div>
     <p id="magictext">Working the magic — rewriting this just for you...</p>
@@ -263,7 +283,7 @@ def read_shell(item_id: str) -> str:
     document.getElementById('piece').innerHTML =
       '<div class="kicker">' + p.label + '</div><h1>' + p.title + '</h1>' +
       p.body + '<div class="attrib">' + p.attrib + '</div>' +
-      '<div class="foot"><a style="color:#8a6d3b" href="/">&larr; Back for more</a></div>';
+      '<div class="foot"><a style="color:#8a6d3b" href="__BACK__">&larr; Back for more</a></div>';
     document.querySelectorAll('#piece mark').forEach(m => {
       m.addEventListener('click', e => {
         e.stopPropagation();
@@ -300,7 +320,8 @@ def read_shell(item_id: str) -> str:
     if (!document.hidden) load();
   });
   load();"""
-    return page("RetAIn · rewriting...", inner, js.replace("__QID__", qid))
+    return page("RetAIn · rewriting...", inner,
+                js.replace("__QID__", qid).replace("__BACK__", back[0]))
 
 
 def api_rewrite(item_id: str) -> dict:
@@ -317,6 +338,105 @@ def api_rewrite(item_id: str) -> dict:
     return {"title": piece["title"], "body": piece["body"],
             "label": SLOT_LABELS.get(item["source"], "Today's Pick"),
             "attrib": attribution_for(item)}
+
+
+# ---------------------------------------------------------------- PoC 2 (D34)
+
+TRANSFORM_MIN_CHARS = 200
+TRANSFORM_MAX_CHARS = 24000  # ~4k words; bounds cost and model context per call
+
+
+def transform_menu(con) -> list:
+    """D34: every learning word, fewest lifetime servings first. A sort that
+    expresses want — no daily caps, no due dates, no intervals."""
+    words = json.loads((ROOT / "data" / "words.json").read_text())["words"]
+    stats = word_stats(con)
+    learning = [w["word"] for w in words if w.get("status", "learning") == "learning"]
+    return sorted(learning, key=lambda w: stats.get(w, {"count": 0})["count"])
+
+
+def text_to_html(text: str) -> str:
+    text = text.replace("\r\n", "\n").replace("\r", "\n").strip()
+    paras = [p.strip() for p in re.split(r"\n\s*\n", text) if p.strip()]
+    if len(paras) == 1 and "\n" in text:  # single-newline paragraphs (Reddit, X)
+        paras = [p.strip() for p in text.split("\n") if p.strip()]
+    return "\n".join(f"<p>{html_mod.escape(p)}</p>" for p in paras)
+
+
+def register_user_text(con, text: str, title: str = "", url: str = "",
+                       source_app: str = "") -> str:
+    """Store the reader's own text as a user_text item; returns its id. Same
+    text → same id, so a re-share of the same piece reuses today's rewrite."""
+    text = text.strip()
+    item_id = "user:" + hashlib.sha1(text.encode("utf-8")).hexdigest()[:16]
+    if not title:
+        first = re.split(r"[.!?\n]", text, 1)[0].strip()
+        title = (first[:77] + "...") if len(first) > 80 else first or "Untitled"
+    store.upsert_item(con, {
+        "id": item_id, "source": "user_text", "section": source_app or None,
+        "url": url if url.startswith("http") else item_id, "title": title,
+        "author": None, "published": None,
+        "fetched_at": datetime.now(timezone.utc).isoformat(),
+        "content_html": text_to_html(text), "categories": [],
+        "license": "user-supplied", "notes": f"via {source_app or 'paste'}"})
+    con.commit()
+    return item_id
+
+
+def api_transform(body: dict, client_ip: str) -> dict:
+    text = (body.get("text") or "").strip()
+    if len(text) < TRANSFORM_MIN_CHARS:
+        return {"error": f"That's too short to work with — share at least "
+                         f"{TRANSFORM_MIN_CHARS} characters."}
+    if len(text) > TRANSFORM_MAX_CHARS:
+        text = text[:TRANSFORM_MAX_CHARS]
+    con = store.connect()
+    item_id = register_user_text(con, text, (body.get("title") or "").strip(),
+                                 (body.get("url") or "").strip(),
+                                 (body.get("source") or "").strip())
+    con.close()
+    print(f"[transform] {client_ip} source={body.get('source') or 'paste'} "
+          f"chars={len(text)} id={item_id}")
+    return {"id": item_id,
+            "read_url": f"/read?id={urllib.parse.quote(item_id, safe='')}"}
+
+
+def transform_page() -> str:
+    today = date.today().isoformat()
+    con = store.connect()
+    reads = []
+    for r in con.execute(
+            "SELECT i.id, i.title, i.fetched_at, i.section, "
+            "(SELECT words_used FROM generated_pieces g WHERE g.item_id=i.id "
+            " ORDER BY g.id DESC LIMIT 1) AS words_used "
+            "FROM items i WHERE i.source='user_text' "
+            "ORDER BY i.fetched_at DESC LIMIT 30"):
+        qid = urllib.parse.quote(r["id"], safe="")
+        n = len(json.loads(r["words_used"] or "[]")) if r["words_used"] else None
+        status = f"{n} words" if n is not None else "not read yet"
+        via = f" · via {html_mod.escape(r['section'])}" if r["section"] else ""
+        reads.append(f'<a class="hl" href="/read?id={qid}">'
+                     f'<div class="tag">{r["fetched_at"][:10]}{via} · {status}</div>'
+                     f'<div class="t">{html_mod.escape(r["title"] or "")}</div></a>')
+    pills = pills_html(con, today)
+    con.close()
+    inner = f"""
+  <div class="masthead">
+    <div class="brand">RETAIN</div>
+    <div class="edition">RetAInize what you're reading</div>
+  </div>
+  {pills}
+  <form method="post" action="/api/transform" class="tf">
+    <textarea name="text" rows="9" placeholder="Paste the article, post, or thread you're reading..."></textarea>
+    <input name="title" placeholder="Title (optional)">
+    <input name="url" placeholder="Link (optional)">
+    <input type="hidden" name="source" value="web-form">
+    <button type="submit">Work the magic ✦</button>
+  </form>
+  <div class="menu-h">Your reads</div>
+  {"".join(reads) or '<p class="foot">Nothing yet. Share something from any app, or paste it above.</p>'}
+  <div class="foot">The more you read, the more words we serve.</div>"""
+    return page("RetAIn · your reads", inner)
 
 
 def maybe_refresh_pantry(con) -> None:
@@ -366,6 +486,8 @@ class Handler(BaseHTTPRequestHandler):
         try:
             if url.path == "/":
                 self.send_page(edition_page())
+            elif url.path == "/transform":
+                self.send_page(transform_page())
             elif url.path == "/read" and params.get("id"):
                 self.send_page(read_shell(params["id"][0]))
             elif url.path == "/api/rewrite" and params.get("id"):
@@ -378,6 +500,41 @@ class Handler(BaseHTTPRequestHandler):
             pass
         except Exception as exc:
             print(f"[error] {url.path}: {exc}")
+            try:
+                self.send_response(500)
+                self.end_headers()
+            except Exception:
+                pass
+
+
+    def do_POST(self):
+        url = urllib.parse.urlparse(self.path)
+        print(f"[in ] {self.client_address[0]} POST {self.path[:120]}")
+        try:
+            if url.path != "/api/transform":
+                self.send_response(404)
+                self.end_headers()
+                return
+            length = int(self.headers.get("Content-Length") or 0)
+            raw = self.rfile.read(length).decode("utf-8", "replace")
+            ctype = self.headers.get("Content-Type", "")
+            if "json" in ctype:
+                body = json.loads(raw or "{}")
+                is_form = False
+            else:
+                body = {k: v[0] for k, v in urllib.parse.parse_qs(raw).items()}
+                is_form = True
+            result = api_transform(body, self.client_address[0])
+            if is_form and "read_url" in result:
+                self.send_response(303)
+                self.send_header("Location", result["read_url"])
+                self.end_headers()
+                return
+            self.send_page(json.dumps(result), "application/json")
+        except BrokenPipeError:
+            pass
+        except Exception as exc:
+            print(f"[error] POST {url.path}: {exc}")
             try:
                 self.send_response(500)
                 self.end_headers()

@@ -34,12 +34,14 @@ MENU_SIZE = 12
 
 WRAPPERS = {"wikipedia_onthisday": "onthisday.md",
             "internet_archive_newspapers": "century.md",
-            "stack_exchange": "qa.md"}
+            "stack_exchange": "qa.md",
+            "user_text": "transform.md"}  # PoC 2 (D34)
 SLOT_LABELS = {"wikipedia_onthisday": "On This Day",
                "internet_archive_newspapers": "News From 100 Years Ago",
                "global_voices": "From the World",
                "stack_exchange": "The Advice Column",
-               "nasa": "Science Desk"}
+               "nasa": "Science Desk",
+               "user_text": "Your Read"}
 
 FETCHERS = ["fetch_onthisday.py", "fetch_century_news.py",
             "fetch_rss.py", "fetch_stackexchange.py"]

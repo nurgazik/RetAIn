@@ -202,6 +202,54 @@ features. Findings are appended under each spike as they land.
 - **Done when:** route + shortcut work from the phone on three apps; the 14-day count is
   running.
 
+**S0 status (2026-09-24): server side built and smoke-tested; Shortcut is the founder's
+next step.**
+
+- Built: `GET /transform` (paste box + "Your reads" list + today's word pills),
+  `POST /api/transform` (JSON or form; form redirects to the read page), `user_text` items
+  in the store with `section` = source app and `license` = user-supplied, a `transform.md`
+  wrapper (fidelity first, keep shape and length, source register wins over house voice),
+  `transform_menu` = all learning words sorted fewest-servings-first (D34: a sort, no caps).
+  The existing `/read` + `/api/rewrite` streaming shell and QC path are reused unchanged.
+- Smoke test (one 260-word forum-style post, gemini-3.1-flash-lite): 4 words placed
+  (squander, bolster, candor, conundrum), 1 QC-rejected with a correct reason
+  (*perfunctory* contradicted the poster's effort), regenerated clean; length 271 vs ~260
+  source; every fact and the first-person register preserved. One borderline collocation
+  survived ("that attempt to bolster our sessions") — an S1 data point, not a blocker.
+- Known carry-over to watch in S1: `generate.py` still sends the D28 density instruction
+  ("one word in every paragraph where one sits naturally") in the user message. On the
+  reader's own content this is the density-first posture; S1 tests it against
+  substitute-only.
+- Always-on server restarted (launchd `com.retain.server`); `/transform` answers on
+  `http://rays-mac-mini.tailb493b3.ts.net:8484/transform` from the phone via Tailscale.
+
+**iOS Shortcut recipe ("RetAInize") — founder builds this on the phone, ~5 minutes.**
+From memory of the Shortcuts app; verify each action name on the phone.
+
+1. New shortcut, name **RetAInize**. In its settings turn on **Show in Share Sheet**;
+   under Share Sheet Types accept **Text**, **URLs**, **Safari web pages**.
+2. Action **Receive Text / URLs / Safari web pages input from Share Sheet**; set
+   "If there's no input" to **Get Clipboard** (so copy → run also works).
+3. Action **Get Details of Safari Web Page** → **Page Selection** (falls back to nothing
+   when the input isn't a Safari page). *Unverified: whether Page Contents returns
+   readable page text; if it does, that is a zero-Swift Safari full-page handoff and an
+   early S2 signal.*
+4. Action **Text**: the selection from step 3 if non-empty, otherwise the Shortcut Input
+   as text. (An **If** block on "has any value" does this.)
+5. Action **Get Contents of URL**: `http://rays-mac-mini.tailb493b3.ts.net:8484/api/transform`,
+   Method **POST**, Request Body **JSON** with `text` = the Text from step 4,
+   `source` = the app name if easy to type, otherwise `shortcut`.
+6. Action **Get Dictionary Value** `read_url` from Contents of URL.
+7. Action **Text**: `http://rays-mac-mini.tailb493b3.ts.net:8484` + Dictionary Value.
+8. Action **Open URLs** on that text. Safari opens the read page with the "working the
+   magic" moment; the piece streams in.
+
+S0 text-only scope guard: sharing a *link* from Reddit/X/Safari sends a URL, not text —
+the server rejects anything under 200 characters, so the Shortcut should be run on a
+**text selection** (long-press → select → Share) until the founder rules on URL fetching
+(S3). The invocation log line `[transform] <ip> source=<app> chars=<n> id=<id>` in
+`~/Library/Logs/retain-server.log` plus the `user_text` rows are the 14-day count.
+
 ### S1 — Word-fit on real content: substitute, rewrite, or hybrid?
 - **Question:** on ~10 pieces the founder actually read this week, how many of the 50
   words land naturally per 1,000 words, QC-clean, under rewrite / substitute / hybrid?
