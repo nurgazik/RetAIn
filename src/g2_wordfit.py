@@ -31,6 +31,7 @@ VARIANTS = {
                    "SUBSTITUTE ONLY: keep the source verbatim and swap an existing word or "
                    "short phrase for a candidate where the sense is identical and idiomatic; "
                    "skip every candidate without a natural slot"),
+    "sentence": ("transform-sentence.md", None),  # request comes from generate.SENTENCE_REQUEST below
     "hybrid": ("transform-hybrid.md",
                "substitute where a plain word already carries the sense; rewrite at most "
                "one clause per paragraph to seat a word; never add information; skip every "
@@ -80,8 +81,10 @@ def run(only: set, redo: bool) -> dict:
                 continue
             print(f"\n=== {path.stem} / {name} ===")
             try:
+                from generate import SENTENCE_REQUEST
                 p = generate_piece(con, item, wrapper, m, env, digest_date=None,
-                                   density_floor=False, request=request)
+                                   density_floor=False,
+                                   request=SENTENCE_REQUEST if name == "sentence" else request)
                 con.commit()
             except Exception as exc:
                 print(f"[error] {key}: {exc}")
@@ -142,6 +145,7 @@ def render(results: dict) -> None:
       .row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.2rem; align-items: start; }
       .col { background: #fff; border: 1px solid #e5ddd0; border-radius: 8px; padding: 1rem; font-size: .95rem; }
       .col p { font-size: .95rem; }
+      .edited { text-decoration: underline; text-decoration-color: #e8c96a; text-underline-offset: 3px; }
       .meta { font-family: -apple-system, sans-serif; font-size: .72rem; color: #6d675e; margin-bottom: .8rem; }
       table.m { border-collapse: collapse; font-family: -apple-system, sans-serif; font-size: .9rem; margin-bottom: 2rem; }
       table.m th, table.m td { border: 1px solid #ddd5c8; padding: .4rem .8rem; text-align: left; }

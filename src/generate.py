@@ -36,6 +36,8 @@ CSS = """
   p { margin: 0 0 1.1rem; font-size: 1.06rem; }
   mark { background: linear-gradient(transparent 55%, #ffe08a 55%);
          padding: 0 .1em; cursor: pointer; border-radius: 2px; }
+  .edited { text-decoration: underline; text-decoration-color: #e8c96a;
+            text-decoration-thickness: 1.5px; text-underline-offset: 3px; }
   #pop { position: absolute; display: none; z-index: 10; max-width: 280px;
          padding: .6rem .8rem; background: #26221c; color: #faf8f4;
          border-radius: 8px; font-family: -apple-system, sans-serif;
@@ -256,6 +258,89 @@ def drop_invented(body: str, words: list) -> tuple:
         body = re.sub(r"<p>\s*</p>", "", body)
         print(f"[drop] removed the invented sentence carrying '{w}'")
     return body, remaining
+
+
+# ---------------------------------------------------------------- sentence-scoped mode
+
+SENTENCE_REQUEST = ("place a candidate word by changing ONLY the sentence it lands in — "
+                    "substitute where a plain word already carries the sense, otherwise "
+                    "rephrase that one sentence lightly; every other sentence stays "
+                    "verbatim; never add a sentence; skip every candidate without a "
+                    "natural slot")
+
+_SENT_END = re.compile(r"([.!?…][\"”’')\]]*)(\s+)(?=[\"“‘(\[]?[A-Z0-9])")
+
+
+def split_sentences(text: str) -> list:
+    """Split on sentence-ending punctuation followed by whitespace and a capital/digit."""
+    text = text.strip()
+    if not text:
+        return []
+    parts, last = [], 0
+    for m in _SENT_END.finditer(text):
+        parts.append(text[last:m.end(1)])
+        last = m.end()
+    parts.append(text[last:])
+    return [p for p in parts if p.strip()]
+
+
+def _key(sentence: str) -> str:
+    t = re.sub(r"<[^>]+>", "", html_mod.unescape(sentence))
+    return re.sub(r"[^a-z0-9]+", " ", t.lower()).strip()
+
+
+def sentence_guard(source_text: str, body: str) -> tuple:
+    """Mechanical fidelity for sentence-scoped mode. Walks the SOURCE paragraph by
+    paragraph and sentence by sentence; a sentence may differ from the source only if it
+    carries a <mark> (then it is wrapped in <span class="edited">…</span>); any other
+    difference is reverted to the source sentence; sentences the model added are dropped;
+    sentences it dropped are restored. Returns (body, stats)."""
+    import difflib
+    src_paras = [p.strip() for p in re.split(r"\n\s*\n", source_text.strip()) if p.strip()]
+    if len(src_paras) == 1 and "\n" in source_text.strip():
+        src_paras = [p.strip() for p in source_text.strip().split("\n") if p.strip()]
+    out_paras = re.findall(r"<p>(.*?)</p>", body, flags=re.S)
+    stats = {"edited": 0, "reverted": 0, "dropped": 0, "restored": 0, "kept": 0}
+
+    def fix_para(src_p: str, out_p: str) -> str:
+        src_s = split_sentences(html_mod.escape(src_p))
+        out_s = split_sentences(out_p)
+        sm = difflib.SequenceMatcher(a=[_key(x) for x in src_s], b=[_key(x) for x in out_s], autojunk=False)
+        result = []
+        for op, i1, i2, j1, j2 in sm.get_opcodes():
+            if op == "equal":
+                result.extend(out_s[j1:j2]); stats["kept"] += i2 - i1
+            elif op == "replace":
+                src_chunk, out_chunk = src_s[i1:i2], out_s[j1:j2]
+                if len(src_chunk) == len(out_chunk):
+                    for a, b in zip(src_chunk, out_chunk):
+                        if "<mark>" in b:
+                            result.append(f'<span class="edited">{b}</span>'); stats["edited"] += 1
+                        else:
+                            result.append(a); stats["reverted"] += 1
+                else:  # uneven rewrite: keep marked output sentences, restore the rest from source
+                    marked = [b for b in out_chunk if "<mark>" in b]
+                    if marked and len(marked) <= len(src_chunk):
+                        # pair marked sentences with the closest source sentences by order
+                        for idx, a in enumerate(src_chunk):
+                            if idx < len(marked):
+                                result.append(f'<span class="edited">{marked[idx]}</span>'); stats["edited"] += 1
+                            else:
+                                result.append(a); stats["restored"] += 1
+                        stats["dropped"] += len(out_chunk) - len(marked)
+                    else:
+                        result.extend(src_chunk); stats["reverted"] += len(src_chunk); stats["dropped"] += len(out_chunk)
+            elif op == "delete":
+                result.extend(src_s[i1:i2]); stats["restored"] += i2 - i1
+            elif op == "insert":
+                stats["dropped"] += j2 - j1  # added sentences never survive
+        return " ".join(result)
+
+    if len(out_paras) == len(src_paras):
+        fixed = [fix_para(sp, op) for sp, op in zip(src_paras, out_paras)]
+    else:  # paragraph structure drifted: align everything as one sequence
+        fixed = [fix_para("\n".join(src_paras), " ".join(out_paras))]
+    return "\n".join(f"<p>{p}</p>" for p in fixed), stats
 
 
 def demote_marks(body: str, words: list) -> str:
@@ -489,6 +574,12 @@ def generate_piece(con, item, wrapper_file: str, chosen: list, env: dict,
                 print(f"[render] dropped {dropped} wordless event block(s) (D31)")
             parsed["body"] = "\n".join(kept)
             parsed["marks"] = len(re.findall(r"<mark>", parsed["body"]))
+
+    if wrapper_file == "transform-sentence.md":
+        parsed["body"], guard = sentence_guard(source_text, parsed["body"])
+        parsed["marks"] = len(re.findall(r"<mark>", parsed["body"]))
+        print(f"[guard] edited={guard['edited']} reverted={guard['reverted']} "
+              f"dropped={guard['dropped']} restored={guard['restored']} kept={guard['kept']}")
 
     title = re.sub(r"[*#]+", "", parsed["title"]).strip()
     body = annotate_marks(parsed["body"], defs)

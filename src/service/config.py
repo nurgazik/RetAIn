@@ -20,6 +20,7 @@ SESSION_SECRET = os.environ.get("RETAIN_SESSION_SECRET") or secrets.token_hex(32
 SESSION_DAYS = int(os.environ.get("RETAIN_SESSION_DAYS", "180"))
 DEV_TOKEN = os.environ.get("RETAIN_DEV_TOKEN")  # if set: Bearer <DEV_TOKEN> == the dev user
 DAILY_CAP = int(os.environ.get("RETAIN_DAILY_CAP", "30"))
+ENGINE_MODE = os.environ.get("RETAIN_ENGINE_MODE", "sentence")  # sentence (founder 2026-09-25) | rewrite (D36)
 MIN_WORDS = int(os.environ.get("RETAIN_MIN_WORDS", "25"))  # a short Reddit comment is still a read
 MAX_CHARS = 24000
 if not os.environ.get("RETAIN_SESSION_SECRET"):

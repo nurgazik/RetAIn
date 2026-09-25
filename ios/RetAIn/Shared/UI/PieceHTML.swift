@@ -15,6 +15,7 @@ enum PieceHTML {
           h1 { font-size: 1.5rem; line-height: 1.25; margin: 0 0 1.25rem; }
           p { margin: 0 0 1.1rem; font-size: 1.06rem; }
           mark { background: linear-gradient(transparent 55%, #ffe08a 55%); padding: 0 .1em; border-radius: 2px; }
+          .edited { text-decoration: underline; text-decoration-color: #e8c96a; text-decoration-thickness: 1.5px; text-underline-offset: 3px; }
           #pop { position: absolute; display: none; z-index: 10; max-width: 280px; padding: .6rem .8rem;
                  background: #26221c; color: #faf8f4; border-radius: 8px; font-family: -apple-system, sans-serif;
                  font-size: .85rem; line-height: 1.45; }

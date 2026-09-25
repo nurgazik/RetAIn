@@ -10,6 +10,7 @@ import generate as G  # src/generate.py (sys.path set in config)
 from bakeoff import MODELS
 
 from . import db
+from .config import ENGINE_MODE
 
 PRICES = {m["model"]: {"in": m["in"], "out": m["out"]} for m in MODELS}
 _gen_lock = threading.Semaphore(2)  # at most two generations in flight (Gemini rate limits)
@@ -49,8 +50,11 @@ def _run(piece_id: str) -> None:
         G.CALL_LOG.clear()
         with _gen_lock:
             _set(con, piece_id, status="generating")
-            result = G.generate_piece(con, item, "transform.md", menu, env, digest_date=None,
-                                      words=words, record=False,
+            wrapper = "transform-sentence.md" if ENGINE_MODE == "sentence" else "transform.md"
+            request = G.SENTENCE_REQUEST if ENGINE_MODE == "sentence" else None
+            result = G.generate_piece(con, item, wrapper, menu, env, digest_date=None,
+                                      words=words, record=False, request=request,
+                                      density_floor=(ENGINE_MODE != "sentence"),
                                       progress=lambda phase: _set(con, piece_id, status=phase))
         cost = db.record_calls(con, piece["user_id"], piece_id, list(G.CALL_LOG), PRICES)
         _set(con, piece_id, status="done", title=result["title"], body_html=result["body"],
