@@ -52,6 +52,13 @@ CREATE TABLE IF NOT EXISTS events (
     kind      TEXT NOT NULL,        -- tap | impression
     at        TEXT NOT NULL
 );
+CREATE TABLE IF NOT EXISTS diagnostics (
+    id        INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id   TEXT,
+    kind      TEXT NOT NULL,        -- unusable-share | ...
+    payload   TEXT,                 -- JSON: types, char counts, flags — never content
+    at        TEXT NOT NULL
+);
 CREATE TABLE IF NOT EXISTS calls (
     id         INTEGER PRIMARY KEY AUTOINCREMENT,
     user_id    TEXT,

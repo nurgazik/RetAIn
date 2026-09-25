@@ -10,7 +10,7 @@ from fastapi.sse import EventSourceResponse, ServerSentEvent
 from pydantic import BaseModel, Field
 
 from . import auth, db, engine
-from .config import DAILY_CAP, MAX_CHARS, MIN_CHARS
+from .config import DAILY_CAP, MAX_CHARS, MIN_WORDS
 
 
 @asynccontextmanager
@@ -157,8 +157,8 @@ def _piece_out(r) -> dict:
 @app.post("/v1/transform", status_code=202)
 def transform(body: TransformIn, user=Depends(auth.current_user)):
     text = body.text.strip()
-    if len(text) < MIN_CHARS:
-        raise HTTPException(422, f"need at least {MIN_CHARS} characters of text")
+    if len(text.split()) < MIN_WORDS:
+        raise HTTPException(422, f"need at least {MIN_WORDS} words of text")
     text = text[:MAX_CHARS]
     con = db.connect()
     try:
@@ -249,6 +249,25 @@ def tap(piece_id: str, body: TapIn, user=Depends(auth.current_user)):
             raise HTTPException(404, "no such piece")
         con.execute("INSERT INTO events (user_id, piece_id, word, kind, at) VALUES (?,?,?,?,?)",
                     (user["id"], piece_id, body.word.strip().lower(), "tap", db.now()))
+        con.commit()
+        return {"ok": True}
+    finally:
+        con.close()
+
+
+class DiagnosticIn(BaseModel):
+    kind: str = Field(max_length=40)
+    payload: dict
+
+
+@app.post("/v1/diagnostics", status_code=201)
+def diagnostics(body: DiagnosticIn, user=Depends(auth.current_user)):
+    """Client-side events worth learning from (e.g. a share the extension could not use).
+    Payload is metadata only — types and counts — never the shared content."""
+    con = db.connect()
+    try:
+        con.execute("INSERT INTO diagnostics (user_id, kind, payload, at) VALUES (?,?,?,?)",
+                    (user["id"], body.kind, json.dumps(body.payload)[:2000], db.now()))
         con.commit()
         return {"ok": True}
     finally:

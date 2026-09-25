@@ -90,6 +90,12 @@ final class RetAInClient {
         }
     }
 
+    // MARK: diagnostics (metadata only, never content)
+    func diagnostic(kind: String, payload: [String: Any]) async {
+        guard let req = try? request("v1/diagnostics", method: "POST", body: ["kind": kind, "payload": payload]) else { return }
+        _ = try? await session.data(for: req)
+    }
+
     // MARK: pieces
     private struct PiecesEnvelope: Decodable { let pieces: [PieceSummary] }
     func pieces(limit: Int = 50) async throws -> [PieceSummary] {

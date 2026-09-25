@@ -5,6 +5,7 @@ struct TransformView: View {
     @State private var text = ""
     @State private var showSheet = false
     @State private var clipboardOffer: String?
+    private var wordCount: Int { text.split(whereSeparator: { $0.isWhitespace }).count }
 
     var body: some View {
         NavigationStack {
@@ -22,16 +23,17 @@ struct TransformView: View {
                     .overlay(alignment: .topLeading) {
                         if text.isEmpty { Text("Paste the article, post, or thread you're reading…").foregroundStyle(.tertiary).padding(12).allowsHitTesting(false) }
                     }
-                Text("\(text.count) characters (min 200)").font(.caption).foregroundStyle(.secondary)
+                Text("\(wordCount) words (min \(ExtensionInput.minWords))").font(.caption).foregroundStyle(.secondary)
                 Button { showSheet = true } label: { Label("Work the magic", systemImage: "sparkles").frame(maxWidth: .infinity) }
-                    .buttonStyle(.borderedProminent).disabled(text.count < 200)
+                    .buttonStyle(.borderedProminent).disabled(wordCount < ExtensionInput.minWords)
                 Spacer()
             }
             .padding()
             .navigationTitle("RetAInize")
             .onAppear {
                 if CommandLine.arguments.contains("-autorun") { text = Sample.text; showSheet = true; return }
-                if UIPasteboard.general.hasStrings, let s = UIPasteboard.general.string, s.count >= 200, s != text { clipboardOffer = s }
+                if UIPasteboard.general.hasStrings, let s = UIPasteboard.general.string,
+                   s.split(whereSeparator: { $0.isWhitespace }).count >= ExtensionInput.minWords, s != text { clipboardOffer = s }
             }
             .sheet(isPresented: $showSheet) {
                 SheetView(text: text, source: "app-paste") { showSheet = false }

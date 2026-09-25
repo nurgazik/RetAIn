@@ -17,11 +17,28 @@ struct ExtensionInput {
               t.count <= 40, !t.contains(" "), pageText == nil else { return nil }
         return t.lowercased().trimmingCharacters(in: .punctuationCharacters)
     }
+    static let minWords = 25
+    private static func words(_ s: String?) -> Int { s?.split(whereSeparator: { $0.isWhitespace }).count ?? 0 }
     var effectiveText: String? {
-        if let s = selection, s.count >= 200 { return s }
-        if let p = pageText, p.count >= 200 { return p }
-        if let t = text, t.count >= 200 { return t }
+        if let s = selection, Self.words(s) >= Self.minWords { return s }
+        if let p = pageText, Self.words(p) >= Self.minWords { return p }
+        if let t = text, Self.words(t) >= Self.minWords { return t }
         return nil
+    }
+    /// Why nothing was usable — shown to the reader and logged (metadata only).
+    var unusableReason: (title: String, detail: String) {
+        let longest = max(Self.words(selection), Self.words(pageText), Self.words(text))
+        if longest > 0 {
+            return ("A little more, please", "That's \(longest) word\(longest == 1 ? "" : "s"); RetAIn needs about \(Self.minWords) to work with. Select a bit more and share again.")
+        }
+        if url != nil {
+            return ("Only a link arrived", "This app shared a link, not the text. Select the text you're reading (long-press → Select) and share the selection instead.")
+        }
+        return ("Nothing to read here", "Select some text (about \(Self.minWords) words or more) and share the selection, or share a single word to capture it.")
+    }
+    var diagnosticPayload: [String: Any] {
+        ["types": typeLog, "textWords": Self.words(text), "pageWords": Self.words(pageText),
+         "selectionWords": Self.words(selection), "hasUrl": url != nil, "source": source]
     }
 
     static func gather(from context: NSExtensionContext?, source: String) async -> ExtensionInput {

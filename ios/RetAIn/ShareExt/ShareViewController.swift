@@ -23,9 +23,9 @@ final class ShareViewController: UIViewController {
                                            "build": Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? "?"]
                 root = AnyView(SheetView(text: text, title: input.title, url: input.url, source: source, meta: meta, onDone: done))
             } else {
-                root = AnyView(MessageView(title: "Nothing to read here",
-                                           detail: "Select some text (at least a couple of sentences) and share the selection, or share a single word to capture it.",
-                                           onDone: done))
+                let why = input.unusableReason
+                root = AnyView(MessageView(title: why.title, detail: why.detail, onDone: done))
+                Task { await RetAInClient.shared.diagnostic(kind: "unusable-share", payload: input.diagnosticPayload) }
             }
             let host = UIHostingController(rootView: root)
             addChild(host)
