@@ -478,7 +478,8 @@ where a user is involved; gates and platform work are stated plainly. Tags: **G*
   list, add a word (A1), word card (A3), lifecycle (A4, D26), My Reads (C5), paste box +
   clipboard offer (B4/M6), Settings, Sign in with Apple, shared session, both extensions
   on the shared sheet. Device validation pending (Apple ID + phone).
-- **M3 · Share-extension sheet — the product moment** — receive shared text (B3) →
+- **M3 · Share-extension sheet — the product moment — VERIFIED ON DEVICE 2026-09-25**
+  (founder's iPhone → new service over HTTPS: 828 chars → 3 words in 2.7 s) — receive shared text (B3) →
   "working the magic" (C1) → streamed piece with highlights and tap-to-reveal (C2) →
   disclaimer + source (C4) → saved to shared store; swipe down returns to the host app.
   Tap semantics C3. *Third: this is the thing users buy; everything before it is

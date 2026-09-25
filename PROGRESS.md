@@ -80,7 +80,13 @@ count keeps running as an observation only.
    https://rays-mac-mini.tailb493b3.ts.net.
    **Founder to-dos:** paid Apple Developer membership ($99/yr → Sign in with Apple, App
    Groups headless, TestFlight); P2 monetization; P3 thresholds.
-5. **Next:** device validation of the M2 app itself (shares from Reddit/Safari over Funnel) →
+   **M2 VERIFIED ON DEVICE 2026-09-25 05:28 UTC:** share extension from a native app →
+   new service over HTTPS → 828-char plain-text payload → 3 words in 2.7 s, $0.0016,
+   diagnostics stored in `pieces.meta`. (Device build: `project-device.yml`, Debug server
+   must be the Funnel URL, not 127.0.0.1 — first attempt failed on that.) M3 (share-sheet
+   sheet) therefore verified on device; M4 (Safari) and M5 (single-word capture) await
+   the founder's next two shares.
+5. **Next:** finish device checks (Safari, capture) →
    M8 monetization (needs P2) → M9 TestFlight (needs P3 thresholds + paid Apple
    Developer membership for App Groups on device and TestFlight).
 5. Parked (Horizon 3): proprietary generator, Safari web extension in-place, screenshot
