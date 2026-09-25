@@ -1,0 +1,108 @@
+# G1 extension spike (docs/poc2-transform.md §7 G1). Throwaway. Regenerate with:
+#   xcodegen generate   (then open RetAInSpike.xcodeproj or build with xcodebuild)
+name: RetAInSpike
+options:
+  bundleIdPrefix: com.retain.spike
+  deploymentTarget:
+    iOS: "17.0"
+  createIntermediateGroups: true
+settings:
+  base:
+    SWIFT_VERSION: "5.9"
+    CODE_SIGN_STYLE: Automatic
+    TARGETED_DEVICE_FAMILY: "1"
+    RETAIN_SERVER: http://127.0.0.1:8484   # simulator → Mac. Phone: http://rays-mac-mini.tailb493b3.ts.net:8484
+targets:
+  RetAInSpike:
+    type: application
+    platform: iOS
+    settings: {base: {PRODUCT_BUNDLE_IDENTIFIER: com.retain.spike}}
+    sources: [App, Shared]
+    entitlements:
+      path: Config/App.entitlements
+      properties:
+        com.apple.security.application-groups: [group.com.retain.spike]
+    info:
+      path: Config/App-Info.plist
+      properties:
+        UILaunchScreen: {}
+        RETAIN_SERVER: $(RETAIN_SERVER)
+        NSAppTransportSecurity: {NSAllowsArbitraryLoads: true}
+    dependencies:
+      - target: RetAInShare
+        embed: true
+      - target: RetAInAction
+        embed: true
+  RetAInShare:
+    type: app-extension
+    platform: iOS
+    settings: {base: {PRODUCT_BUNDLE_IDENTIFIER: com.retain.spike.share}}
+    sources:
+      - ShareExt
+      - Shared
+      - path: ActionExt/RetAInPage.js
+        buildPhase: resources
+    entitlements:
+      path: Config/Share.entitlements
+      properties:
+        com.apple.security.application-groups: [group.com.retain.spike]
+    info:
+      path: Config/Share-Info.plist
+      properties:
+        CFBundleDisplayName: RetAIn (share)
+        RETAIN_SERVER: $(RETAIN_SERVER)
+        NSAppTransportSecurity: {NSAllowsArbitraryLoads: true}
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.share-services
+          NSExtensionPrincipalClass: $(PRODUCT_MODULE_NAME).ShareViewController
+          NSExtensionAttributes:
+            NSExtensionJavaScriptPreprocessingFile: RetAInPage
+            NSExtensionActivationRule:
+              NSExtensionActivationSupportsText: true
+              NSExtensionActivationSupportsWebURLWithMaxCount: 1
+              NSExtensionActivationSupportsWebPageWithMaxCount: 1
+  RetAInAction:
+    type: app-extension
+    platform: iOS
+    settings: {base: {PRODUCT_BUNDLE_IDENTIFIER: com.retain.spike.action}}
+    sources:
+      - ShareExt
+      - Shared
+      - path: ActionExt/RetAInPage.js
+        buildPhase: resources
+    entitlements:
+      path: Config/Action.entitlements
+      properties:
+        com.apple.security.application-groups: [group.com.retain.spike]
+    info:
+      path: Config/Action-Info.plist
+      properties:
+        CFBundleDisplayName: RetAInize
+        RETAIN_SERVER: $(RETAIN_SERVER)
+        NSAppTransportSecurity: {NSAllowsArbitraryLoads: true}
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.ui-services
+          NSExtensionPrincipalClass: $(PRODUCT_MODULE_NAME).ShareViewController
+          NSExtensionAttributes:
+            NSExtensionActionWantsFullScreenPresentation: false
+            NSExtensionJavaScriptPreprocessingFile: RetAInPage
+            NSExtensionActivationRule:
+              NSExtensionActivationSupportsText: true
+              NSExtensionActivationSupportsWebURLWithMaxCount: 1
+              NSExtensionActivationSupportsWebPageWithMaxCount: 1
+  RetAInSpikeUITests:
+    type: bundle.ui-testing
+    platform: iOS
+    settings: {base: {PRODUCT_BUNDLE_IDENTIFIER: com.retain.spike.uitests, TEST_TARGET_NAME: RetAInSpike, GENERATE_INFOPLIST_FILE: YES}}
+    sources: [UITests]
+    dependencies:
+      - target: RetAInSpike
+schemes:
+  RetAInSpike:
+    build:
+      targets: {RetAInSpike: all, RetAInSpikeUITests: [test]}
+    run:
+      config: Debug
+    test:
+      config: Debug
+      targets: [RetAInSpikeUITests]
