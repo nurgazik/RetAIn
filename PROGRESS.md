@@ -109,6 +109,10 @@ itself via the fetchers.
 - **Founder rulings D36 + D37** (relaxed fidelity on Gemini; link intake out). Assistant
   flagged that G2's invention rate was per-embed, not occasional, incl. one fabricated
   attribution; ruling stands with the facts/attributions line as the guardrail.
+- **Fact-QC judge + paragraph repair shipped** (founder-approved, Gemini only): flags
+  hard inventions per D36, feeds D29 regeneration, repairs or drops residuals instead of
+  un-highlighting. Judge-on numbers on the 5 pieces: 5.6 marks/1,000 w, length ×1.06,
+  zero invented attributions in the highlighted sentences (vs 8.1/1,000 unguarded).
 
 ### 2026-08-08 — Coherence research sweep (founder-commissioned)
 

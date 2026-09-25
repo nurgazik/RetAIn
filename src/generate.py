@@ -135,6 +135,129 @@ def qc_gate(body: str, defs: dict, env: dict) -> list:
         return []
 
 
+FACT_QC_SYSTEM = """You are a fidelity checker for an app that adapts a text the reader chose,
+weaving in target vocabulary (marked with <mark>). You receive the SOURCE and the ADAPTATION.
+
+The adaptation is ALLOWED to add light phrasing, evaluative colour and connective sentences
+to seat its vocabulary (product rule): "a windfall of growth", "a deft move", "this helps
+bolster the plan" are fine even though the source never says them. Do NOT flag those.
+
+Flag ONLY hard inventions — a sentence that would mislead a reader who trusts it as the
+source's content:
+- a new fact, number, date, name, event or example not in the source;
+- words, opinions, hopes, motives, intentions or manner attributed to a NAMED real person
+  or organisation that the source does not attribute to them ("Hedin was adamant that…",
+  "Meta clearly hopes…", "investigators hope…", "he said with candor");
+- any change to the wording or meaning of text inside quotation marks;
+- a claim about what an investigation, study or document shows that the source does not
+  make.
+Rewording, reordering, transitions, adjectives about things (not people) and generic
+restatements of what the source already says are NOT inventions.
+
+Output STRICT JSON only — no prose, no code fences:
+{"invented": [{"sentence": "<the adaptation sentence, verbatim>", "why": "<short reason>"}]}
+Return an empty list when nothing is invented. When unsure whether something is in the
+source, flag it."""
+
+
+def _norm(t: str) -> str:
+    return re.sub(r"\s+", " ", re.sub(r"<[^>]+>", "", html_mod.unescape(t))).strip().lower()
+
+
+def fact_qc(source_text: str, body: str, env: dict) -> tuple:
+    """D36 judge (~$0.0005/piece): sentences in the adaptation that assert something the
+    source does not. Returns (marked words inside flagged sentences, flagged sentences
+    without a mark). Fails open."""
+    try:
+        raw, _ = call_model(FACT_QC_SYSTEM, f"SOURCE:\n{source_text}\n\nADAPTATION:\n{body}", env)
+        raw = re.sub(r"^```(json)?\s*|\s*```$", "", raw.strip(), flags=re.M).strip()
+        flagged = json.loads(raw).get("invented", [])
+    except Exception as exc:
+        print(f"[warn] fact-QC failed open ({exc})")
+        return [], []
+    marks = [(re.sub(r"<[^>]+>", "", m).strip(), m) for m in re.findall(r"<mark>(.*?)</mark>", body, flags=re.S)]
+    bad_words, unmarked = [], []
+    fact_qc.sentences = {}  # word -> flagged sentence (verbatim), for drop_invented
+    for f in flagged:
+        sent = _norm(f.get("sentence", ""))
+        if len(sent) < 15:
+            continue
+        hit = [w for w, _ in marks if w.lower() in sent]
+        if hit:
+            for w in hit:
+                if w not in bad_words:
+                    bad_words.append(w)
+                    fact_qc.sentences[w] = f.get("sentence", "")
+            print(f"[fact-qc] invented around {hit}: {f.get('why', '')} — \"{f.get('sentence', '')[:110]}\"")
+        else:
+            unmarked.append(f.get("sentence", ""))
+            print(f"[fact-qc] invented (no target word): \"{f.get('sentence', '')[:110]}\"")
+    return bad_words, unmarked
+
+
+REPAIR_SYSTEM = """You edit one HTML paragraph from an adaptation of a SOURCE text. Rewrite the
+paragraph so that it (1) no longer uses the FORBIDDEN word in any form, (2) asserts nothing
+the SOURCE does not say, and (3) keeps every other <mark>…</mark> tag exactly as it is.
+Preserve the paragraph's facts, order and register. Return ONLY the paragraph HTML
+(<p>…</p>), nothing else."""
+
+
+def repair_paragraphs(body: str, words: list, source_text: str, env: dict) -> tuple:
+    """D29 floor, revised under D36: instead of leaving a rejected word in the text
+    un-highlighted, rewrite just the paragraph that carries it. Returns (body, words still
+    present) — anything still present falls back to un-highlighting."""
+    remaining = []
+    for w in words:
+        stem = w.strip().lower()[:6]
+        paras = re.findall(r"<p>.*?</p>", body, flags=re.S)
+        target = next((p for p in paras if stem in re.sub(r"<[^>]+>", "", p).lower()), None)
+        if target is None:
+            continue
+        inner = lambda p: [re.sub(r"<[^>]+>", "", m).strip().lower() for m in re.findall(r"<mark>(.*?)</mark>", p, flags=re.S)]
+        keep_marks = [m for m in inner(target) if not m.startswith(stem)]
+        word_re = re.compile(rf"\b{re.escape(stem)}\w*", re.I)  # word-initial stem: 'mitigated' yes, 'unmitigated' no
+        try:
+            new = None
+            for strict in ("", f"\n\nThe previous attempt still contained '{w}'. The word '{w}' and every "
+                               f"form of it (e.g. {w}s, {w}ed, {w}ing) must be ABSENT. Rephrase without it."):
+                raw, _ = call_model(REPAIR_SYSTEM + strict, f"SOURCE:\n{source_text}\n\nFORBIDDEN WORD: {w}\n\nPARAGRAPH:\n{target}", env)
+                m = re.search(r"<p>.*?</p>", raw, flags=re.S)
+                new = m.group(0) if m else None
+                if new and not word_re.search(re.sub(r"<[^>]+>", "", new)):
+                    break
+            if new:  # unwrap any mark the repair added that wasn't there before
+                new = re.sub(r"<mark>(.*?)</mark>",
+                             lambda m: m.group(0) if re.sub(r"<[^>]+>", "", m.group(1)).strip().lower() in keep_marks else m.group(1),
+                             new, flags=re.S)
+            if new and not word_re.search(re.sub(r"<[^>]+>", "", new)) and sorted(inner(new)) == sorted(keep_marks):
+                body = body.replace(target, new, 1)
+                print(f"[repair] rewrote the paragraph carrying '{w}'")
+                continue
+            print(f"[warn] repair for '{w}' rejected (p found={bool(new)}, "
+                  f"word present={bool(new and word_re.search(re.sub(r'<[^>]+>', '', new)))}, "
+                  f"marks {inner(new) if new else None} vs {keep_marks})")
+        except Exception as exc:
+            print(f"[warn] repair for '{w}' failed ({exc})")
+        remaining.append(w)
+    return body, remaining
+
+
+def drop_invented(body: str, words: list) -> tuple:
+    """Last resort for words the fact judge flagged: the flagged sentence is not source
+    content, so remove it — provided it carries no other highlight. Returns (body, words
+    still present)."""
+    remaining = []
+    for w in words:
+        sent = getattr(fact_qc, "sentences", {}).get(w)
+        if not sent or len(re.findall(r"<mark>", sent)) > 1 or sent not in body:
+            remaining.append(w)
+            continue
+        body = body.replace(sent, "", 1)
+        body = re.sub(r"<p>\s*</p>", "", body)
+        print(f"[drop] removed the invented sentence carrying '{w}'")
+    return body, remaining
+
+
 def demote_marks(body: str, words: list) -> str:
     """Unwrap <mark> tags for demoted words — text stays, highlight goes
     (demote-don't-delete)."""
@@ -294,6 +417,10 @@ def generate_piece(con, item, wrapper_file: str, chosen: list, env: dict,
     # usage AND confuses. Regenerate without the failed words; un-highlighting
     # is only the last-resort floor.
     demoted = qc_gate(parsed["body"], defs, env)
+    invented_words, invented_unmarked = fact_qc(source_text, parsed["body"], env)
+    for w in invented_words:
+        if not any(w.lower().startswith(d.strip().lower()[:6]) for d in demoted):
+            demoted.append(w)
     qc_rejected = list(demoted)
     if demoted:
         print(f"[qc] regenerating without {demoted}...")
@@ -308,10 +435,15 @@ def generate_piece(con, item, wrapper_file: str, chosen: list, env: dict,
                 and not invented_numbers(item, parsed2) and not reappeared):
             parsed, model_used, defs = parsed2, model2, keep
             residual = qc_gate(parsed["body"], defs, env)
+            inv2, _ = fact_qc(source_text, parsed["body"], env)
+            residual += [w for w in inv2 if w not in residual]
             if residual:
-                print(f"[warn] QC failures persist ({residual}); "
-                      f"un-highlighting as last resort")
-                parsed["body"] = demote_marks(parsed["body"], residual)
+                parsed["body"], still = repair_paragraphs(parsed["body"], residual, source_text, env)
+                if still:
+                    parsed["body"], still = drop_invented(parsed["body"], still)
+                if still:
+                    print(f"[warn] QC failures persist ({still}); un-highlighting as last resort")
+                    parsed["body"] = demote_marks(parsed["body"], still)
         else:
             why = ([] if format_ok(parsed2) else ["format"]) \
                 + ([f"missing years {missing_years(item, parsed2)}"]
@@ -320,8 +452,13 @@ def generate_piece(con, item, wrapper_file: str, chosen: list, env: dict,
                    if invented_numbers(item, parsed2) else []) \
                 + (["demoted word reappeared"] if reappeared else [])
             print(f"[warn] regeneration failed validation ({'; '.join(why)}); "
-                  f"keeping original, un-highlighting {demoted} as last resort")
-            parsed["body"] = demote_marks(parsed["body"], demoted)
+                  f"keeping original, repairing paragraphs for {demoted}")
+            parsed["body"], still = repair_paragraphs(parsed["body"], demoted, source_text, env)
+            if still:
+                parsed["body"], still = drop_invented(parsed["body"], still)
+            if still:
+                print(f"[warn] repair incomplete ({still}); un-highlighting as last resort")
+                parsed["body"] = demote_marks(parsed["body"], still)
         parsed["marks"] = len(re.findall(r"<mark>", parsed["body"]))
 
     # D31: calendar event blocks render only if a highlight survived QC — the
@@ -359,6 +496,7 @@ def generate_piece(con, item, wrapper_file: str, chosen: list, env: dict,
     return {"item": item, "title": title, "body": body, "model": model_used,
             "marks": parsed["marks"], "words_used": used,
             "word_count": parsed["word_count"], "qc_rejected": qc_rejected,
+            "invented_unmarked": invented_unmarked,
             "invented_numbers": invented_numbers(item, parsed), "attempts": attempts}
 
 

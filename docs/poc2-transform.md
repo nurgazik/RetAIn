@@ -320,7 +320,18 @@ un-highlighted after the regeneration failed ("a *windfall* of growth", "*astute
 — the D29 last-resort floor, which teaches the misuse it was meant to hide. Accepted risk
 under D36; cheapest mitigation that stays on Gemini: a second judge pass (same model,
 ~$0.0005) that rejects sentences carrying a claim, attribution or characterisation absent
-from the source. Proposed to the founder, not built.
+from the source. **Founder approved; built the same evening (`generate.py`: `fact_qc`,
+`repair_paragraphs`, `drop_invented`).** The judge is calibrated to D36: evaluative colour
+and connective phrasing pass; hard inventions fail — new facts/figures/names, words,
+motives or manner attributed to a named person or organisation, changes inside quotes,
+claims about what an investigation shows. A flagged word joins the D29 regeneration;
+residuals get a paragraph rewrite without the word (two tries), then the invented sentence
+is dropped if it carries no other highlight, and only then the old un-highlight floor.
+
+Rerun with the judge on (rewrite mode, same 5 pieces): **10 marks / 1,796 words = 5.6 per
+1,000, length ×1.06** (vs 8.1 and ×1.10 unguarded). All ten highlighted sentences read as
+colour, none attributes words or motives to a named person. Cost: ~2 extra cheap calls
+per piece (judge, sometimes repair). The ~30% density cost is the price of the rule.
 1. **Substitute-only, accept ~1 word per piece** — zero-fabrication; value = an honest
    encounter now and then; encounters scale with reading volume.
 2. **Rewrite with a stronger model + a fact-QC** — rerun rewrite mode on claude-haiku-4-5
