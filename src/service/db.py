@@ -40,7 +40,8 @@ CREATE TABLE IF NOT EXISTS pieces (
     status        TEXT NOT NULL,    -- queued | generating | checking | regenerating | repairing | done | failed
     error         TEXT,
     latency_ms    INTEGER,
-    cost_usd      REAL
+    cost_usd      REAL,
+    meta          TEXT             -- JSON: client diagnostics (payload types, app build)
 );
 CREATE INDEX IF NOT EXISTS idx_pieces_user ON pieces (user_id, created_at);
 CREATE TABLE IF NOT EXISTS events (
@@ -83,6 +84,10 @@ def connect() -> sqlite3.Connection:
 def init() -> None:
     con = connect()
     con.executescript(SCHEMA)
+    try:  # migration for DBs created before `meta`
+        con.execute("ALTER TABLE pieces ADD COLUMN meta TEXT")
+    except sqlite3.OperationalError:
+        pass
     con.commit()
     con.close()
 

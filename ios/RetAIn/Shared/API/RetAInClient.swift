@@ -59,10 +59,10 @@ final class RetAInClient {
     }
 
     // MARK: transform
-    func transform(text: String, title: String?, url: String?, source: String) async throws -> TransformAccepted {
-        try await send(request("v1/transform", method: "POST",
-                               body: ["text": text, "title": title ?? "", "url": url ?? "", "source": source]),
-                       as: TransformAccepted.self)
+    func transform(text: String, title: String?, url: String?, source: String, meta: [String: Any]? = nil) async throws -> TransformAccepted {
+        var body: [String: Any] = ["text": text, "title": title ?? "", "url": url ?? "", "source": source]
+        if let meta { body["meta"] = meta }
+        return try await send(request("v1/transform", method: "POST", body: body), as: TransformAccepted.self)
     }
     /// Phases as the server passes them, then the finished piece (or an error).
     func events(pieceId: String) throws -> AsyncThrowingStream<TransformEvent, Error> {

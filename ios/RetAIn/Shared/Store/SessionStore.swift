@@ -17,6 +17,7 @@ enum SessionStore {
 
     static var token: String? {
         get {
+            if let t = embeddedDevToken { return t }
             #if targetEnvironment(simulator)
             // The simulator does not share keychain items between an app and its extensions;
             // fall back to the app-group defaults so extension flows can be tested there.
@@ -41,6 +42,17 @@ enum SessionStore {
         }
     }
     static var isSignedIn: Bool { token != nil }
+
+    /// Debug builds only: a token baked in at build time (`xcodebuild … RETAIN_DEV_TOKEN=…`) lets a
+    /// device test run without the app-group keychain (free personal teams can't sign App Groups).
+    static var embeddedDevToken: String? {
+        #if DEBUG
+        let t = (Bundle.main.object(forInfoDictionaryKey: "RETAIN_DEV_TOKEN") as? String) ?? ""
+        return t.isEmpty || t.hasPrefix("$(") ? nil : t
+        #else
+        return nil
+        #endif
+    }
 
     private static var query: [String: Any] {
         var q: [String: Any] = [kSecClass as String: kSecClassGenericPassword,

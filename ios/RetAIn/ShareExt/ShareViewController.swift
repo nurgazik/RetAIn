@@ -18,7 +18,10 @@ final class ShareViewController: UIViewController {
             } else if let word = input.singleWord {
                 root = AnyView(CaptureView(word: word, onDone: done))
             } else if let text = input.effectiveText {
-                root = AnyView(SheetView(text: text, title: input.title, url: input.url, source: source, onDone: done))
+                let meta: [String: Any] = ["types": input.typeLog, "hasSelection": (input.selection?.count ?? 0) > 0,
+                                           "pageChars": input.pageText?.count ?? 0, "textChars": input.text?.count ?? 0,
+                                           "build": Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? "?"]
+                root = AnyView(SheetView(text: text, title: input.title, url: input.url, source: source, meta: meta, onDone: done))
             } else {
                 root = AnyView(MessageView(title: "Nothing to read here",
                                            detail: "Select some text (at least a couple of sentences) and share the selection, or share a single word to capture it.",
