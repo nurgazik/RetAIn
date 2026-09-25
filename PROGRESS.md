@@ -44,14 +44,15 @@ count keeps running as an observation only.
    a real run from the phone produced a 3-word piece in the ledger. **The 14-day "do I
    reach for it?" count starts today.** Recipe + the "Limit IP Address Tracking" gotcha
    in docs/poc2-transform.md §7 S0. Text only until the founder rules on URL fetching.
-2. **Phase 1 rulings — P1 (MVP scope rewrite of PRD §8) is next**; P2 monetization
-   deferred by founder until usage data; P3 TestFlight metric pending.
-3. **G3** — Reddit/X terms reading + fetch attempts → founder rules link intake (D37).
-4. **Phase 1 rulings** — PRD §8 MVP rewrite, monetization (E1), TestFlight metric.
-5. **Phase 2 MVP build** M1 transform service → M2 app shell → M3 share-extension
+2. **P1 DONE — PRD §8 rewritten to the PoC 2 MVP** (surfaces, engine with gates, service,
+   economics ≈ $0.003/transform, proposed TestFlight metric). P2 monetization deferred by
+   founder until usage data; **P3: founder sets thresholds.**
+3. **Next build step: M1 transform service** — architecture proposal in docs/architecture.md
+   first (hosted API, auth, per-user words, ledger, cost telemetry), then build on go.
+4. **Phase 2 MVP build** M1 transform service → M2 app shell → M3 share-extension
    sheet → M4 Safari → M5 capture → M6 clipboard → M8 monetization → M9 TestFlight.
-6. Parked (Horizon 3): proprietary generator, Safari web extension in-place, screenshot
-   OCR, Android.
+5. Parked (Horizon 3): proprietary generator, Safari web extension in-place, screenshot
+   OCR, Android, link intake (D37).
 
 **Machine setup note:** work laptop pushes via SSH alias `github.com-retain`
 (dedicated personal key `~/.ssh/id_ed25519_retain` — revoke from GitHub settings when
@@ -113,6 +114,9 @@ itself via the fetchers.
   hard inventions per D36, feeds D29 regeneration, repairs or drops residuals instead of
   un-highlighting. Judge-on numbers on the 5 pieces: 5.6 marks/1,000 w, length ×1.06,
   zero invented attributions in the highlighted sentences (vs 8.1/1,000 unguarded).
+- **P1 done:** PRD §8 rewritten to the PoC 2 MVP shape. Founder's pending list: Apple ID
+  in Xcode + phone (G1 device checks), P3 thresholds, P2 monetization when usage data
+  exists.
 
 ### 2026-08-08 — Coherence research sweep (founder-commissioned)
 

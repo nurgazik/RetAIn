@@ -211,32 +211,83 @@ RetAIn stops constructing a feed. The user captures words as before; reading hap
 
 Full spec, iOS entry-point feasibility, success criteria, technical spikes and the phased backlog: **docs/poc2-transform.md**. S0 passed 2026-09-24 (phone → Mac, clipboard Shortcut). Gate is technical feasibility (D35): Phase 0 gates G1–G4 → Phase 1 rulings (MVP scope, monetization, test metric) → Phase 2 MVP build M1–M9 → TestFlight. Monetization (credits / BYO key / subscription) is decided in Phase 1, before anyone but the founder uses it.
 
-## 8. Horizon 2 — MVP (iOS app)
+## 8. Horizon 2 — MVP (iOS app): "RetAInize what you're reading"
 
-> **2026-09-24: superseded in part.** The Capture and Learning-loop blocks carry over; the Digest block describes the closed PoC 1 model and will be replaced by the PoC 2 invoke/read flow once spikes S0–S4 land (docs/poc2-transform.md §7). Left intact until then.
+*Rewritten 2026-09-24 (P1) from the PoC 2 gates (docs/poc2-transform.md §6–8) and decisions
+D34–D37. The digest-era MVP scope is preserved in §7 and git history; the Capture and
+Learning-loop blocks below carry over from it.*
 
-Built only if PoC passes. Scope:
+**Shape.** No feed, no digest, no schedule. The user captures words; whenever they are
+reading, they hand the text to RetAIn and read it back with their words woven in. Two
+surfaces do the handing: the iOS share sheet (any app) and a Safari action (the page
+itself). Reading happens in a RetAIn sheet over the host app; a copy lands in My Reads.
 
-**Capture**
-- In-app manual word entry
-- iOS Share Sheet extension (select word anywhere → share → RetAIn)
-- Word card built at capture time: dictionary API (Free Dictionary / Merriam-Webster free tier) for canonical definition + one cheap LLM call for enrichment (register notes, collocations, near-synonym nuance, 2–3 examples) — the "better than Kindle lookup" card
+**Surfaces**
+- **Share-extension sheet — the product moment.** Select text in Reddit, X, Kindle, Mail,
+  anywhere → Share → RetAIn. A sheet rises over the host app: "working the magic" for a
+  few seconds, then the piece with highlights and tap-to-reveal. Swipe down returns to the
+  host app where the user left it. Verified in the G1 spike (simulator): sub-second launch,
+  ~5 s transform, ~55 MB peak.
+- **Safari action.** Tap Share → RetAIn on any page; a JavaScript pre-step reads the
+  article from the user's own Safari session (paywalled and logged-in pages included) and
+  opens the same sheet. Verified in G1.
+- **Main app.** Word list and capture, word card, My Reads (every transformed piece,
+  highlights recoloured by current word status, D24), a paste box, and "transform what you
+  just copied?" on open (B4/M6). Settings and account.
+- **Not in MVP:** link intake (D37: Reddit/X terms), screenshot OCR, in-place substitution
+  in Safari (web extension), Android — all Horizon 3.
 
-**Digest**
-- **Hybrid layout (D17):** 1–2 pre-generated top pieces (proprietary + calendar/anchor; overnight batch for recently-active users, **timezone-aware** per D13) + taste-filtered headline list; tap → streamed on-demand rewrite with the "working the magic" moment
-- Top-piece count and overall sizing informed by PoC findings (D11)
-- Every generated piece embeds the currently most-due words (D18); tap events logged from day one
-- Generated titles for heavily-transformed pieces, with "adapted from X" attribution per license
-- Interest profile: lightweight onboarding topic picker for day-one list ordering (may shrink or die if tap history proves sufficient — personalization decision parked)
+**Capture** *(carried over)*
+- In-app manual entry; share-sheet capture of a single word from anywhere (D8). One
+  extension, two behaviours: a shared single word → capture flow; longer text → transform.
+- Word card at capture: dictionary API for the canonical definition + one cheap LLM call
+  for register, collocations, nuance, 2–3 examples.
 
-**Learning loop**
-- Word highlighting + tap-to-reveal (definition, times shown, date added)
-- Expanding-interval scheduling driven by tap/no-tap signals; graduation to "retained" is **manual only** in MVP (D12)
-- Streaks / daily goal — light gamification of the ritual
+**Engine** (D5, D34, D36)
+- gemini-3.1-flash-lite, rewrite mode: `prompts/core.md` + `prompts/transform.md`. The
+  source's facts, quotes and register are preserved; phrasing may be added to seat a word.
+- Gates, all completing behind the magic moment (D29): idiomatic QC (D19) + fact judge
+  (D36: no new facts, figures, quotes, or words/motives attributed to named people) →
+  regeneration without the failed words → paragraph repair → invented sentence dropped.
+- Word ordering is a sort, not a scheduler: every learning word, fewest servings first
+  (D32 minus intervals). No daily caps, no "due".
+- Measured on the founder's own reading (G2, judge on): ~5.6 placed words per 1,000, text
+  length ×1.06, no invented attributions in highlighted sentences.
+- Every piece carries the disclaimer: "Adapted with AI to carry your words: phrasing may be
+  added or changed, facts should not be — check the original for anything that matters."
+
+**Learning loop** *(carried over, minus scheduling)*
+- Highlights + tap-to-reveal (definition, times seen, date added). Tap = "didn't remember",
+  no tap = exposure (D7 semantics without interval logic).
+- Graduation to retained is manual (D12); lifecycle learning | retained | archived, all
+  reversible (D26).
+- No streaks or daily goal: there is no daily ritual to gamify. Exposure scales with
+  reading volume (D18's spirit).
+
+**Service** (backlog M1)
+- The engine as a hosted API: Sign in with Apple, per-user word lists, `/transform` with
+  the gates above, served ledger (offered / placed / tapped per piece), per-call cost
+  telemetry from day one (E2). Replaces the SQLite PoC server. Architecture to be proposed
+  in docs/architecture.md before M1 starts.
 
 **Business**
-- Freemium: free = reduced digest (fewer items/words); paid = full experience
-- Unit economics (measured, head-to-head 2026-07-26): ~$0.0017/piece on gemini-3.1-flash-lite (+$0.001 QC gate) → worst-case daily user (5 pieces × 30 days) ≈ **$0.40/month**, typical engaged user ≈ $0.15/month; generation is >90% of marginal cost. Even on the Haiku fallback (~$0.008/piece) the worst case stays ≈ $1.40/month → 90%+ gross margin at $5–8 subscription either way
+- Monetization **undecided** (P2): credits per transform / bring-your-own key /
+  subscription with fair-use cap. Must be decided before anyone but the founder uses the
+  product; input = S0 invocation count + per-call cost from the ledger.
+- Unit economics (measured 2026-09-24): generation ~$0.0017 + idiomatic QC ~$0.0005 + fact
+  judge ~$0.0005 + occasional repair ≈ **$0.003 per transform**. A heavy reader at 10
+  transforms/day ≈ $0.90/month; a light one at 2/day ≈ $0.18/month. Generation remains
+  >90% of marginal cost.
+
+**Success metric for the MVP test (P3, proposed — founder to set thresholds)**
+- TestFlight with the founder + ~5 advanced-ESL readers for two weeks (M9). Measure
+  transforms per user per week, placed words per transform, tap rate, and a day-14
+  self-quiz on served words. This is where the habit question from PoC 1 is asked again,
+  against the real product rather than a six-tap Shortcut.
+
+**Build order** — M1 service → M2 app shell → M3 share-extension sheet → M4 Safari action →
+M5 capture via the extension → M6 clipboard intake → M8 monetization → M9 TestFlight
+(docs/poc2-transform.md §8; M7 link intake parked by D37).
 
 ---
 
