@@ -285,6 +285,27 @@ invocation log line `[transform] <ip> source=<app> chars=<n> id=<id>` in
   founder is logged into, reddit.com thread, x.com post, a very long page (memory).
 - **Done when:** works/fails per page, Apple-docs citations, measured memory + latency.
 
+**G1 step 1 — Apple docs verified (2026-09-24), before any code:**
+
+| Question | Answer | Source |
+|---|---|---|
+| Can an iOS action/share extension read the Safari page? | **Yes.** `NSExtensionJavaScriptPreprocessingFile` names a JS file; Safari runs its global `ExtensionPreprocessingJS.run(arguments)` and passes whatever `arguments.completionFunction({...})` returns to the extension as a property-list item under `NSExtensionJavaScriptPreprocessingResultsKey`. Requires `NSExtensionActivationSupportsWebPageWithMaxCount` ≥ 1 in the activation rule. iOS-only `finalize()` can even write back into the page. | Extensibility PG "Accessing a Webpage"; current key reference: **iOS 8.0+, not deprecated**, "supplied by a Share or Action extension" |
+| Can it show full custom UI? | Yes — action extensions "always appear in an action sheet or full-screen modal view"; `NSExtensionActionWantsFullScreenPresentation` for full screen. | Extensibility PG "Action" |
+| Memory / lifetime | "Memory limits … significantly lower than … a foreground app"; "the system may aggressively terminate extensions"; launch "well under one second" or it is killed; no `UIBackgroundModes` (App Store rejects). Exact MB figure is **not** documented — measure on device (sub-question d). | Extensibility PG "Creating an App Extension" |
+| Networking inside the sheet | Ordinary `URLSession` data tasks work while the extension is alive (our streaming case); for work that must outlive the sheet, a background session with `sharedContainerIdentifier` = the app group, and the containing app finishes it. | Extensibility PG "Performing Uploads and Downloads" |
+| Handoff to the main app | App groups: shared container + `UserDefaults(suiteName:)`; "use Core Data, SQLite, or POSIX locks" to coordinate. Current Xcode article confirms app groups are for "an app extension … and its host app". | Extensibility PG "Sharing Data"; Xcode "Configuring app groups" |
+
+Reading: the mechanism the product depends on is documented, current, and old enough
+to be stable (iOS 8). The unknowns that remain are empirical: the real memory ceiling,
+streaming behaviour inside the sheet, and what each native app hands over — exactly
+sub-questions (b)–(d). **Simulator covers (a), (c), (e) with Safari; (b) and (d) need the
+founder's phone.**
+
+Tooling status on the Mac mini: Xcode 26.4 present; no code-signing identity and no
+Apple ID team in Xcode yet (device runs need the founder to sign in once); no project
+generator installed — proposal: `xcodegen` via Homebrew (dev tool only, not a product
+dependency) so the throwaway project is a readable YAML file in the repo.
+
 ### S3 — Share extension from native apps: what actually arrives?
 - **Question:** sharing from Reddit, X, Facebook, Apple News, Kindle — what item types
   arrive (URL, text, both)? For URLs, is the content fetchable, and do the terms allow it?
