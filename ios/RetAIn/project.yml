@@ -1,0 +1,118 @@
+# RetAIn iOS app (M2, PRD §8). Regenerate the Xcode project with:  xcodegen generate
+name: RetAIn
+options:
+  bundleIdPrefix: com.retain
+  deploymentTarget:
+    iOS: "17.0"
+  createIntermediateGroups: true
+settings:
+  base:
+    SWIFT_VERSION: "5.9"
+    CODE_SIGN_STYLE: Automatic
+    TARGETED_DEVICE_FAMILY: "1"
+    RETAIN_SERVER: https://rays-mac-mini.tailb493b3.ts.net   # Funnel URL; Settings can override
+  configs:
+    Debug:
+      RETAIN_SERVER: http://127.0.0.1:8585                   # simulator → local service
+targets:
+  RetAIn:
+    type: application
+    platform: iOS
+    settings: {base: {PRODUCT_BUNDLE_IDENTIFIER: com.retain.app}}
+    sources: [App, Shared]
+    entitlements:
+      path: Config/App.entitlements
+      properties:
+        com.apple.security.application-groups: [group.com.retain.app]
+        com.apple.developer.applesignin: [Default]
+    info:
+      path: Config/App-Info.plist
+      properties:
+        CFBundleDisplayName: RetAIn
+        UILaunchScreen: {}
+        RETAIN_SERVER: $(RETAIN_SERVER)
+        NSAppTransportSecurity: {NSAllowsLocalNetworking: true}
+    dependencies:
+      - target: RetAInShare
+        embed: true
+      - target: RetAInAction
+        embed: true
+  RetAInShare:
+    type: app-extension
+    platform: iOS
+    settings: {base: {PRODUCT_BUNDLE_IDENTIFIER: com.retain.app.share}}
+    sources:
+      - ShareExt
+      - Shared
+      - path: ActionExt/RetAInPage.js
+        buildPhase: resources
+    entitlements:
+      path: Config/Share.entitlements
+      properties:
+        com.apple.security.application-groups: [group.com.retain.app]
+    info:
+      path: Config/Share-Info.plist
+      properties:
+        CFBundleDisplayName: RetAIn
+        RETAIN_SERVER: $(RETAIN_SERVER)
+        NSAppTransportSecurity: {NSAllowsLocalNetworking: true}
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.share-services
+          NSExtensionPrincipalClass: $(PRODUCT_MODULE_NAME).ShareViewController
+          NSExtensionAttributes:
+            NSExtensionJavaScriptPreprocessingFile: RetAInPage
+            NSExtensionActivationRule:
+              NSExtensionActivationSupportsText: true
+              NSExtensionActivationSupportsWebURLWithMaxCount: 1
+              NSExtensionActivationSupportsWebPageWithMaxCount: 1
+  RetAInAction:
+    type: app-extension
+    platform: iOS
+    settings: {base: {PRODUCT_BUNDLE_IDENTIFIER: com.retain.app.action}}
+    sources:
+      - ShareExt
+      - Shared
+      - path: ActionExt/RetAInPage.js
+        buildPhase: resources
+    entitlements:
+      path: Config/Action.entitlements
+      properties:
+        com.apple.security.application-groups: [group.com.retain.app]
+    info:
+      path: Config/Action-Info.plist
+      properties:
+        CFBundleDisplayName: RetAInize
+        RETAIN_SERVER: $(RETAIN_SERVER)
+        NSAppTransportSecurity: {NSAllowsLocalNetworking: true}
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.ui-services
+          NSExtensionPrincipalClass: $(PRODUCT_MODULE_NAME).ShareViewController
+          NSExtensionAttributes:
+            NSExtensionActionWantsFullScreenPresentation: false
+            NSExtensionJavaScriptPreprocessingFile: RetAInPage
+            NSExtensionActivationRule:
+              NSExtensionActivationSupportsText: true
+              NSExtensionActivationSupportsWebURLWithMaxCount: 1
+              NSExtensionActivationSupportsWebPageWithMaxCount: 1
+  RetAInTests:
+    type: bundle.unit-test
+    platform: iOS
+    settings: {base: {PRODUCT_BUNDLE_IDENTIFIER: com.retain.app.tests, GENERATE_INFOPLIST_FILE: YES}}
+    sources: [Tests]
+    dependencies:
+      - target: RetAIn
+  RetAInUITests:
+    type: bundle.ui-testing
+    platform: iOS
+    settings: {base: {PRODUCT_BUNDLE_IDENTIFIER: com.retain.app.uitests, TEST_TARGET_NAME: RetAIn, GENERATE_INFOPLIST_FILE: YES}}
+    sources: [UITests]
+    dependencies:
+      - target: RetAIn
+schemes:
+  RetAIn:
+    build:
+      targets: {RetAIn: all, RetAInTests: [test], RetAInUITests: [test]}
+    run: {config: Debug}
+    test:
+      config: Debug
+      targets: [RetAInTests, RetAInUITests]

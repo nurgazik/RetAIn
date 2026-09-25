@@ -10,14 +10,16 @@ Founder/PM: Nurgazy Budaichiev (also the PoC test subject).
 
 ## Current phase
 
-**PoC 2 — on-demand transform (D34, 2026-09-24).** PoC 1 (a daily digest of rewritten
-content) is closed: 7 of 14 days read, habit never formed, and a readable digest is a
-content business the founder declines to run. Now running technical spikes S0–S5
-(docs/poc2-transform.md §7) before any iOS work: text-intake route on the PoC server + an
-iOS Shortcut for a 14-day self-test, word-fit measurement on real reading, Safari action
-extension and share-extension feasibility in Xcode. Success criteria in
-docs/poc2-transform.md §6. The digest pipeline (fetchers, calendar slots, editions) is
-retired but kept in the repo.
+**MVP build (Phase 2) after PoC 2 passed its technical gates (D35–D38, 2026-09-24).**
+PoC 1 (a daily digest) is closed: habit never formed and a readable digest is a content
+business the founder declines to run. PoC 2's gates (Safari/share-sheet feasibility,
+engine word-fit, link legality, competitive scan) are answered in docs/poc2-transform.md.
+Built so far: **M1** transform service (`src/service/`, FastAPI + SQLite, launchd agent
+`com.retain.service` on the Mac mini, port 8585) and **M2** iOS app shell (`ios/RetAIn/`,
+xcodegen project: app + share extension + Safari action). Engine: Gemini Flash-Lite
+rewrite with idiomatic QC + fact judge (D36). Next: device validation, monetization (P2),
+TestFlight (M9). The digest pipeline is retired but kept in the repo; the G1 spike lives
+in `spikes/`.
 
 ## Key documents
 
@@ -35,9 +37,10 @@ retired but kept in the repo.
   (what's usable, what's ruled out, per-source prompt wrappers). Don't re-research; extend it.
 - `data/words.json` — the target word list (the founder edits this by hand; the pipeline
   reads it and later appends serving stats). Don't regenerate or reorder it.
-- `docs/architecture.md` — digest-era pipeline skeleton (ingest → candidate store → select →
-  generate → QC → render). Generate/QC/render and the served ledger carry into PoC 2; the
-  ingest/select half is retired.
+- `docs/architecture.md` — digest-era pipeline skeleton (retired half) **plus the M1
+  transform service design (D38)** at the bottom: API contract, tables, auth, hosting.
+- `ios/RetAIn/project.yml` — the iOS app; regenerate with `xcodegen generate`; never edit
+  the .xcodeproj by hand. Run tests with the dev token: see PROGRESS.md M2 entry.
 - `docs/model-bakeoff.md` — rewrite-model evaluation record (6 models, 7 configs, the
   deliberation/word-discipline dose-response finding). Extend it when testing new models;
   harness is `src/bakeoff.py` (`python3 src/bakeoff.py <model-filter>`).
@@ -57,6 +60,8 @@ retired but kept in the repo.
 - Cost posture: rewrite model is gemini-3.1-flash-lite (~$0.0017/piece) with
   claude-haiku-4-5 as fallback (PRD D5, docs/model-bakeoff.md). QC gate is ON (D19);
   check its revisit triggers before MVP work or model changes.
-- PoC 2 scope guards: no URL fetching of third-party sites until the founder rules on the
-  terms-of-service reading (spike S3); engine mode (substitute vs rewrite) is undecided
-  until S1; monetization undecided. Don't build past a spike's "done when".
+- Scope guards: link intake is out (D37); engine mode is rewrite with relaxed fidelity
+  and the fact judge (D36); monetization undecided (P2) — decide before anyone but the
+  founder uses the product; no Anthropic model runs unless the founder asks (cost).
+- Service secrets live in `.env.local` (`RETAIN_SESSION_SECRET`, `RETAIN_DEV_TOKEN`,
+  `RETAIN_APPLE_BUNDLE_ID`); the dev token is for curl/simulator only.

@@ -473,9 +473,10 @@ where a user is involved; gates and platform work are stated plainly. Tags: **G*
   `/transform`, QC gate, served ledger, per-call cost telemetry (E2), Sign in with Apple.
   Reuses `generate.py` logic; replaces the SQLite PoC server. *First because both
   extensions call it and nothing on the phone can be tested end to end without it.*
-- **M2 · iOS app shell** — words list, add a word (A1), word card (A3), lifecycle
-  learning / retained / archived (A4, D26), My Reads (C5), app-group shared store.
-  *Second because the extension has to save into something.*
+- **M2 · iOS app shell — BUILT 2026-09-25 (`ios/RetAIn/`), simulator-verified.** Words
+  list, add a word (A1), word card (A3), lifecycle (A4, D26), My Reads (C5), paste box +
+  clipboard offer (B4/M6), Settings, Sign in with Apple, shared session, both extensions
+  on the shared sheet. Device validation pending (Apple ID + phone).
 - **M3 · Share-extension sheet — the product moment** — receive shared text (B3) →
   "working the magic" (C1) → streamed piece with highlights and tap-to-reveal (C2) →
   disclaimer + source (C4) → saved to shared store; swipe down returns to the host app.

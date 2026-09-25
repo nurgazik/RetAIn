@@ -58,8 +58,22 @@ count keeps running as an observation only.
    `com.retain.app`, set `RETAIN_APPLE_BUNDLE_ID`). **Remaining: Tailscale Funnel** — the
    CLI hung silently on `tailscale funnel --bg 8585`, which usually means Funnel/HTTPS
    isn't enabled for the tailnet yet (founder: admin console).
-4. **Phase 2 MVP build** M1 transform service → M2 app shell → M3 share-extension
-   sheet → M4 Safari → M5 capture → M6 clipboard → M8 monetization → M9 TestFlight.
+4. **M2 iOS app shell — BUILT (2026-09-24/25), simulator-verified.** `ios/RetAIn/`
+   (xcodegen project; app + share extension + Safari action + unit tests + UI test).
+   Screens: Sign in with Apple (+ Debug dev-token entry), Words (add / swipe lifecycle),
+   My Reads, RetAInize paste box with "transform what you just copied?", Settings.
+   Shared: API client with SSE phase stream, keychain session shared via the app group
+   (simulator fallback via app-group defaults), reads cache, the product sheet, both
+   extensions (single word → capture, text → transform). Verified: unit tests pass against
+   the live service (transform → phases → piece → tap → list); in-app paste produced a
+   3-word piece in 6.9 s; Safari UI test (More → Share → RetAIn → sheet) produced a 2-word
+   piece in 6.4 s. **Not yet verified: Sign in with Apple on a device** (needs Apple ID in
+   Xcode + phone) and **Funnel HTTPS** (founder ran the command; status unknown to me).
+   M3/M4/M5/M6 are largely covered by the shared sheet and extensions; what remains for
+   them is device validation of native-app share payloads and capture polish.
+5. **Next:** device validation (Sign in with Apple, Reddit/X share payloads, memory) →
+   M8 monetization (needs P2) → M9 TestFlight (needs P3 thresholds + paid Apple
+   Developer membership for App Groups on device and TestFlight).
 5. Parked (Horizon 3): proprietary generator, Safari web extension in-place, screenshot
    OCR, Android, link intake (D37).
 
@@ -125,6 +139,11 @@ itself via the fetchers.
   zero invented attributions in the highlighted sentences (vs 8.1/1,000 unguarded).
 - **M1 built the same evening** (see NOW block): service package, launchd agent, curl
   end-to-end pass, cost telemetry itemised per call. Funnel pending the admin console.
+- **M2 built overnight** (plan approved by founder): `ios/RetAIn/` app shell with both
+  extensions; unit + UI tests pass in the simulator against the live service. Two
+  simulator gotchas recorded in code: `AsyncLineSequence` drops the blank lines that
+  delimit SSE events (parser flushes on the next `event:`), and the simulator does not
+  share keychain items with extensions (app-group defaults fallback, simulator only).
 - **P1 done:** PRD §8 rewritten to the PoC 2 MVP shape. Founder's pending list: Apple ID
   in Xcode + phone (G1 device checks), P3 thresholds, P2 monetization when usage data
   exists.
