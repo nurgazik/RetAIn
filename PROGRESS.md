@@ -19,22 +19,29 @@ No scheduler, no digest. Spec + spikes + backlog: **docs/poc2-transform.md**.
 the host for Spike S0's `/transform` route. Fetchers, calendar slots and editions are
 retired but not deleted.
 
+**Backlog (docs/poc2-transform.md §8) — Phase 0 gates, then Phase 1 rulings, then MVP.**
+Founder ruling D35: technical feasibility is the PoC 2 gate; the 14-day invocation
+count keeps running as an observation only.
+
 **Next up (in order):**
+0. **G1 extension spike (Xcode)** — assistant starts on founder's go: Safari action
+   extension reads the page; what native apps hand a share extension; streaming +
+   memory inside the sheet; app-group handoff. Apple docs verified first.
+   **G4 competitive scan** runs alongside (Toucan/Fluent first).
 1. **S0 — DONE end to end (2026-09-24).** `/transform` + `POST /api/transform` live on
    the always-on server; the founder built the clipboard-based "RetAInize" Shortcut and
    a real run from the phone produced a 3-word piece in the ledger. **The 14-day "do I
    reach for it?" count starts today.** Recipe + the "Limit IP Address Tracking" gotcha
    in docs/poc2-transform.md §7 S0. Text only until the founder rules on URL fetching.
-2. **S1** — word-fit on ~10 pieces the founder actually read: rewrite vs substitute vs
-   hybrid, QC on, density floor off → compare page → founder rules engine mode (D35).
-   **Needs founder input: paste ~10 real pieces.**
-3. **S2 → S3 → S4** — Xcode spikes (Safari action extension w/ JS preprocessing; what
-   native apps hand over via share; streaming in an extension). Findings appended to
-   docs/poc2-transform.md §7. Xcode 26.4 is installed on this Mac.
-4. Founder rulings: success-criteria thresholds N and X (spec §6), engine mode, which
-   entry points make the MVP → then rewrite PRD §8.
-5. Parked, not forgotten: proprietary generator (Horizon 3 now), competitive scan
-   (Toucan/Fluent first), monetization (credits / BYO key / subscription — undecided).
+2. **G2 (S1)** — word-fit on ~10 pieces the founder actually read: rewrite vs
+   substitute vs hybrid, QC on, density floor off → compare page → founder sets X and
+   rules engine mode (D36). **Blocked on founder: paste ~10 real pieces.**
+3. **G3** — Reddit/X terms reading + fetch attempts → founder rules link intake (D37).
+4. **Phase 1 rulings** — PRD §8 MVP rewrite, monetization (E1), TestFlight metric.
+5. **Phase 2 MVP build** M1 transform service → M2 app shell → M3 share-extension
+   sheet → M4 Safari → M5 capture → M6 clipboard → M8 monetization → M9 TestFlight.
+6. Parked (Horizon 3): proprietary generator, Safari web extension in-place, screenshot
+   OCR, Android.
 
 **Machine setup note:** work laptop pushes via SSH alias `github.com-retain`
 (dedicated personal key `~/.ssh/id_ed25519_retain` — revoke from GitHub settings when
@@ -72,6 +79,12 @@ itself via the fetchers.
   phone — iOS *Limit IP Address Tracking* routes insecure HTTP through Apple's relay
   and drops it. Turned off per network; second run worked (639 chars → 3 words, 188
   words, `section=shortcut`). Durable alternative noted: HTTPS via `tailscale serve`.
+- **Founder ruling (D35):** technical feasibility is the gate; habit count is an
+  observation. Founder walked through the final UX (share → sheet over the host app →
+  read → swipe down; copy saved to My Reads) and confirmed it. Assistant's caveat on
+  record. Backlog rebuilt in docs/poc2-transform.md §8 as Phase 0 gates (G1–G4) →
+  Phase 1 rulings (P1–P3) → Phase 2 MVP (M1–M9) → Horizon 3, each with an owner,
+  blocker and done-when. Spec §6 success criteria rewritten to the four gates.
 
 ### 2026-08-08 — Coherence research sweep (founder-commissioned)
 

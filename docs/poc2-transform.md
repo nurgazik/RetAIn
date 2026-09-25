@@ -164,22 +164,27 @@ the inverse). D32's fewest-servings-first order stays; intervals and due dates g
 
 ---
 
-## 6. Success criteria (proposed — founder to ratify N)
+## 6. Success criteria — revised 2026-09-24 (founder ruling, D35)
 
-Measured over a 14-day self-test on the founder's real reading (Spike S0):
+**Founder's ruling after S0:** "as long as it can travel from app to app and easily get
+invoked against any piece of text content, we are in good shape. The learning was purely
+technical." PoC 2's gate is therefore **technical feasibility**, not habit formation.
+The habit question stays open as an observation, not a gate.
 
-1. **Invocation habit:** founder runs the transform unprompted on ≥ N of 14 days. (N to be
-   set by founder; PoC 1's bar was 10/14 for reading.)
-2. **Word-fit:** ≥ X placed-and-QC-clean words per 1,000 words on real content (X from
-   S1's measurement, not a guess), with zero surviving misuses on founder read-through.
-3. **Handoff friction:** for each source the founder actually reads, a route he rates
-   "would use again".
-4. **Retention:** day-14 self-quiz on served words vs the "look it up once, lose it"
-   baseline (PoC 1 criterion 2, unchanged).
+| # | Gate | Answered by | Status |
+|---|---|---|---|
+| 1 | The transform can be invoked from any app against any text and read back in ~20 s | S0 | **Passed 2026-09-24** (clipboard Shortcut, phone → Mac via Tailscale) |
+| 2 | On iOS, a sheet over the host app can read the shared text (and, in Safari, the page itself), stream the piece, and hand it to the main app | G1 (S2+S3+S4) | open |
+| 3 | Word-fit on the founder's real reading is acceptable: placed-and-QC-clean words per 1,000 words ≥ X, zero surviving misuses on read-through; engine mode chosen | G2 (S1) | open — X set by founder after seeing the data |
+| 4 | Facts, meaning and register of the source survive the transform on founder read-through | G2 (S1) | open (S0 sample: yes) |
 
-Go/no-go: 1 fails → the on-demand model has the same habit problem as the digest; stop.
-2 fails → engine work before any app. 3 fails on the founder's main sources → the product
-is Safari-only; decide whether that is enough. 4 fails → rethink the mechanism.
+**Observation, not a gate:** the 14-day invocation count from S0 (`[transform]` log lines,
+`user_text` rows). Reported at MVP scoping (Phase 1) as evidence, with no threshold.
+Rationale for keeping it: habit is what closed PoC 1; the count is free.
+
+**Go/no-go:** gates 2–4 pass (or fail with a workable fallback) → Phase 1 decisions, then
+MVP build. Gate 2 fails outright on Safari → the product is share-sheet-only; decide
+whether that is enough. Gate 3 fails → engine work before any app code.
 
 ---
 
@@ -187,6 +192,11 @@ is Safari-only; decide whether that is enough. 4 fails → rethink the mechanism
 
 Spikes are time-boxed investigations that end in a written finding here, not shipped
 features. Findings are appended under each spike as they land.
+
+**Backlog mapping (2026-09-24):** S0 = done. S2, S3 and S4 share one throwaway Xcode
+project and run as a single backlog item, **G1 "extension spike"**; S1 is **G2**; the
+terms-of-service half of S3 is split out as **G3** because it is a legal reading, not
+code. S5 stays conditional. See §8 for the ordered backlog.
 
 ### S0 — Handoff with zero Swift: does the founder reach for it?
 - **Question:** given the lowest-friction handoff available today, does "run this through
@@ -297,42 +307,93 @@ invocation log line `[transform] <ip> source=<app> chars=<n> id=<id>` in
 
 ---
 
-## 8. User-story backlog
+## 8. Backlog — ordered by risk and dependency (rebuilt 2026-09-24)
 
-"As a reader, I want … so that …". Tags: **PoC** (needed for the 14-day self-test),
-**MVP** (iOS app), **H3** (Horizon 3). Acceptance detail is added to a story when it is
-picked up, not before.
+Principle: each phase exists to retire the biggest remaining risk before money goes into
+the next. Nothing in Phase 2 starts before Phase 1's rulings. Stories are "As a reader…"
+where a user is involved; gates and platform work are stated plainly. Tags: **G** gate,
+**M** MVP build item, **H3** Horizon 3.
 
-### Epic A — Capture *(carried from PRD §8, unchanged)*
-- **A1** (MVP) type a word into the app so it joins my list.
-- **A2** (MVP) share a word from any app via the share sheet so capture never interrupts reading.
-- **A3** (MVP) see a word card — definition, register, collocations, nuance — so the card beats a Kindle lookup.
-- **A4** (MVP) mark a word retained, reactivate it, or archive it (D26), so my list reflects what I actually know.
+### Phase 0 — Feasibility gates (now; G1 and G2 run in parallel)
 
-### Epic B — Invoke ("RetAInize this")
-- **B1** (PoC, S2) in Safari, tap the RetAIn action and read the page with my words in a sheet, without leaving the page.
-- **B2** (PoC, S3) share a link from any app and read it transformed.
-- **B3** (PoC, S3) share selected text from any app and read it transformed, so it works even where links can't be fetched.
-- **B4** (PoC, S0) paste text or a link into the app and transform it — the baseline.
-- **B5** (later, S5) share a screenshot and have RetAIn read it, for apps that lock text.
-- **B6** (H3) in Safari, have my words substituted in place so the page itself changes.
+- **G1 · Extension spike (S2 + S3 + S4)** — *owner: assistant; needs: the founder's
+  phone for device runs.* One throwaway Xcode project with a share extension and a Safari
+  action extension, both presenting the same SwiftUI sheet that POSTs to the S0
+  `/transform` route and streams the result.
+  - Sub-questions: (a) Safari action extension reads the rendered page via JS
+    preprocessing — 5 test pages incl. a paywalled logged-in one; (b) what Reddit, X,
+    Facebook, Apple News, Kindle hand a share extension (URL / text / both); (c) streaming
+    holds inside the sheet, first-token and full-piece latency at 300 / 1,000 / 3,000
+    words; (d) memory headroom under the extension budget; (e) app-group shared storage:
+    the piece written by the extension is visible to a stub My Reads in the main app.
+  - Done when: a findings table per sub-question with Apple-docs citations, and a screen
+    recording the founder reviews. Apple docs verified before building (Context7 / web).
+- **G2 · Engine mode (S1)** — *owner: assistant; blocked on: ~10 real pieces from the
+  founder.* Rewrite vs substitute vs hybrid on the founder's real reading, QC on, density
+  floor off; metrics: marks/1,000w, QC reject rate, invented-number hits, founder
+  read-through rating. Done when: 3 × 10 table, founder sets X, ruling → **D36**.
+- **G3 · Link intake legality** — *owner: assistant.* Read Reddit's and X's developer /
+  content terms for fetching a shared link on the user's behalf; try Reddit's `.json`
+  view and X's public embed endpoint from the phone. Done when: a per-source table
+  (allowed? fetchable? recommended route) with links; founder rules whether "share a
+  link" is in the MVP → **D37**.
+- **G4 · Competitive scan** — *owner: assistant.* PRD §6 open item. Toucan, Fluent,
+  WordUp, Vocabulary.com, Membean, LLM-era entrants; specifically who already does
+  "your words into content you're reading". Done when: one page in docs/ with a
+  "what is ours" line. Fundamentals demand research before MVP money (CLAUDE.md).
 
-### Epic C — Read
-- **C1** (PoC, S4) see the piece stream in with a visible "working the magic" moment, so waiting feels like something happening for me.
-- **C2** (PoC) see my words highlighted; tap one to reveal meaning and times seen.
-- **C3** (MVP) a tap counts as "didn't remember", no tap counts as exposure (D7 semantics without interval scheduling), so the ledger is honest without a quiz.
-- **C4** (PoC) see the source link and an "adapted with AI" disclaimer on every piece (D33).
-- **C5** (MVP) find every piece I've transformed in My Reads, highlights recolored by current word status (D24).
+### Phase 1 — Decisions gate (after Phase 0)
 
-### Epic D — Engine *(mode decided by S1 → D35)*
-- **D1** (PoC) words appear only where idiomatic; QC-rejected words are absent, not un-highlighted (D9, D19, D29).
-- **D2** (PoC) the facts and meaning of what I chose to read are preserved.
-- **D3** (PoC) less-served words are preferred when fits are equal (D32 sort, no intervals), so the same easy five don't hog every piece.
-- **D4** (open) choose how aggressive the transform is, from substitute-only to free rewrite.
+- **P1** Rewrite PRD §8 MVP scope from the G1–G4 findings (entry points in, engine mode,
+  link intake yes/no).
+- **P2** Monetization model — **E1**: credits per transform / bring-your-own key /
+  subscription with fair-use cap. Must be decided before anyone but the founder uses the
+  product, because every invocation costs money. Input: S0 invocation count and per-call
+  cost from the ledger.
+- **P3** Success metric for the MVP test group (replaces the PoC 1 habit gate at the point
+  where it matters: real product, real friction, other people).
 
-### Epic E — Business *(deferred; listed so it is not lost)*
-- **E1** monetization model — credits per transform / bring-your-own API key / subscription — **undecided**, revisit after S0–S4.
-- **E2** (PoC) cost telemetry per transform from day one, so E1 is decided with numbers.
+### Phase 2 — MVP build (dependency order; each item has a "why this position")
+
+- **M1 · Transform service** — the engine as a hosted API: per-user word lists, streaming
+  `/transform`, QC gate, served ledger, per-call cost telemetry (E2), Sign in with Apple.
+  Reuses `generate.py` logic; replaces the SQLite PoC server. *First because both
+  extensions call it and nothing on the phone can be tested end to end without it.*
+- **M2 · iOS app shell** — words list, add a word (A1), word card (A3), lifecycle
+  learning / retained / archived (A4, D26), My Reads (C5), app-group shared store.
+  *Second because the extension has to save into something.*
+- **M3 · Share-extension sheet — the product moment** — receive shared text (B3) →
+  "working the magic" (C1) → streamed piece with highlights and tap-to-reveal (C2) →
+  disclaimer + source (C4) → saved to shared store; swipe down returns to the host app.
+  Tap semantics C3. *Third: this is the thing users buy; everything before it is
+  plumbing.*
+- **M4 · Safari action extension** — page text via JS preprocessing (B1) → same sheet.
+  *After M3 because it reuses the sheet; before M5 because Safari is the best-case
+  source.*
+- **M5 · Capture through the same extension** (A2, D8) — a shared single word → capture
+  flow with word card; longer text → transform. One extension, two behaviours.
+- **M6 · Clipboard intake** — app offers "transform what you just copied?" on open, plus
+  a paste box (B4). *The universal fallback; cheap.*
+- **M7 · Link intake** (B2) — only if G3 says yes for a given source.
+- **M8 · Monetization** per P2 — StoreKit, free tier, cost caps.
+- **M9 · TestFlight** — founder + ~5 advanced-ESL friends, two weeks, P3 metric. *The
+  habit question, asked again where it counts.*
+
+### Phase 3 — Horizon 3 (parked, not lost)
+
+- **H3-1** Safari web extension: in-place substitution without leaving the page (B6).
+- **H3-2** Screenshot OCR intake (B5 / S5) — only if M9 users hit locked-text apps.
+- **H3-3** Android — `ACTION_PROCESS_TEXT` / accessibility make true in-place possible.
+- **H3-4** Aggressiveness slider substitute ↔ rewrite (D4) — after D36.
+- **H3-5** Production features, cloze, conversation partner (PRD §9, unchanged).
+
+### Story index (for traceability; detail lives with the item above)
+
+A1 type a word · A2 share a word · A3 word card · A4 lifecycle · B1 Safari sheet ·
+B2 share a link · B3 share selected text · B4 paste · B5 screenshot · B6 in-place ·
+C1 magic moment · C2 highlights + tap · C3 tap semantics · C4 disclaimer · C5 My Reads ·
+D1 idiomatic only · D2 facts preserved · D3 fewest-served first · D4 aggressiveness ·
+E1 monetization · E2 cost telemetry.
 
 ---
 

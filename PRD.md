@@ -143,6 +143,8 @@ manufactures a backlog manufactures pure guilt (see the inbox-model evidence in 
 
 | D34 | **PoC 2 pivot (2026-09-24, founder): RetAIn is an on-demand transform of content the user chose, not a feed.** Word capture, the rewrite engine, QC gate, house voice, tap-to-reveal and the served ledger carry over; fetchers, pantry, calendar slots, editions, the scheduler and all "due" logic are dropped. Word ordering survives only as a sort (fewest servings first, D32) — no intervals. The digest-era decisions D15, D17, D18, D20, D21, D22, D25, D27, D28, D31, D33 are **superseded for PoC 2** (kept as record; D33's disclaimer and D29's reject-means-absent still apply to transformed pieces). Spec: docs/poc2-transform.md | PoC 1 evidence: 7/14 days, usage decayed 29→2 pieces/day, criterion 1 failed. Founder's diagnosis: a readable daily digest is a content business he doesn't want to run; content built to carry words loses to what the reader already wanted. Going where the reader already is removes the feed problem entirely; the open risks move to invocation habit, iOS handoff friction, and word-fit on arbitrary content — each has a spike |
 
+| D35 | **PoC 2 gate is technical feasibility, not habit (2026-09-24, founder).** After S0 worked end to end from the phone, the founder ruled: "as long as it can travel from app to app and easily get invoked against any piece of text content, we are in good shape." Remaining gates: G1 extension spike (Safari sheet, share-sheet payloads, streaming in a sheet, shared storage), G2 engine mode, G3 link-intake legality, G4 competitive scan — then Phase 1 rulings and the MVP build. The 14-day invocation count keeps running as an **observation** and is reported at MVP scoping; the habit question is re-asked at M9 (TestFlight with real users) | The technical learning is what S0 delivered; a habit test on a six-tap Shortcut with no app would measure the scaffolding's friction, not the product's. Assistant's caveat on record: habit is what closed PoC 1, so the count stays on and TestFlight (M9) is the real habit test. Backlog: docs/poc2-transform.md §8 |
+
 ## 6. Risks & open questions
 
 - **Engagement risk (top risk):** will the user open it daily after the novelty fades? PoC measures this directly on the founder.
@@ -204,7 +206,7 @@ manufactures a backlog manufactures pure guilt (see the inbox-model evidence in 
 
 RetAIn stops constructing a feed. The user captures words as before; reading happens wherever they already read (Safari, Reddit, X, anywhere). Whenever they want, they run the piece in front of them through RetAIn and read it back with their words placed where they fit — no scheduler, no digest, no "due" words. iOS app is the MVP surface; browser plugin later.
 
-Full spec, iOS entry-point feasibility, success criteria, technical spikes (S0–S5) and the user-story backlog: **docs/poc2-transform.md**. Spikes run first; MVP scope (§8) is rewritten only after they land. Monetization (credits / BYO key / subscription) is deliberately undecided until usage data exists.
+Full spec, iOS entry-point feasibility, success criteria, technical spikes and the phased backlog: **docs/poc2-transform.md**. S0 passed 2026-09-24 (phone → Mac, clipboard Shortcut). Gate is technical feasibility (D35): Phase 0 gates G1–G4 → Phase 1 rulings (MVP scope, monetization, test metric) → Phase 2 MVP build M1–M9 → TestFlight. Monetization (credits / BYO key / subscription) is decided in Phase 1, before anyone but the founder uses it.
 
 ## 8. Horizon 2 — MVP (iOS app)
 
