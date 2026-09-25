@@ -487,8 +487,9 @@ where a user is involved; gates and platform work are stated plainly. Tags: **G*
 - **M4 · Safari action extension** — page text via JS preprocessing (B1) → same sheet.
   *After M3 because it reuses the sheet; before M5 because Safari is the best-case
   source.*
-- **M5 · Capture through the same extension** (A2, D8) — a shared single word → capture
-  flow with word card; longer text → transform. One extension, two behaviours.
+- **M5 · Capture through the same extension — VERIFIED ON DEVICE 2026-09-25** ("remain"
+  shared as a single word → word card generated, $0.00005) (A2, D8) — a shared single
+  word → capture flow with word card; longer text → transform. One extension, two behaviours.
 - **M6 · Clipboard intake** — app offers "transform what you just copied?" on open, plus
   a paste box (B4). *The universal fallback; cheap.*
 - **M7 · Link intake** (B2) — only if G3 says yes for a given source.

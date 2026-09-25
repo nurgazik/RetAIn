@@ -85,8 +85,12 @@ count keeps running as an observation only.
    diagnostics stored in `pieces.meta`. (Device build: `project-device.yml`, Debug server
    must be the Funnel URL, not 127.0.0.1 — first attempt failed on that.) M3 (share-sheet
    sheet) therefore verified on device; M4 (Safari) and M5 (single-word capture) await
-   the founder's next two shares.
-5. **Next:** finish device checks (Safari, capture) →
+   the founder's next two shares. **05:34 UTC: second device share (1,532 chars plain
+   text from Safari as a selection → 2 words, 11 s, a tap recorded) and M5 capture
+   verified ("remain" added with a generated card, $0.00005).** M4 (Safari page action
+   via JS preprocessing) still unproven on device — the founder's Safari share used the
+   text path.
+5. **Next:** M4 device check (Safari → Share → RetAInize with no selection) →
    M8 monetization (needs P2) → M9 TestFlight (needs P3 thresholds + paid Apple
    Developer membership for App Groups on device and TestFlight).
 5. Parked (Horizon 3): proprietary generator, Safari web extension in-place, screenshot
