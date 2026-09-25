@@ -497,6 +497,20 @@ where a user is involved; gates and platform work are stated plainly. Tags: **G*
 - **M9 · TestFlight** — founder + ~5 advanced-ESL friends, two weeks, P3 metric. *The
   habit question, asked again where it counts.*
 
+### Overnight backlog 2026-09-25 (founder asleep; items 1–2 founder's, rest assistant's)
+
+| # | Item | Value | Trade-off | Implementation |
+|---|---|---|---|---|
+| 1 | Reddit comment share fails ("Nothing to read here") | Comments are a core reading surface | none; diagnose first | Extension logs unusable inputs (types + char counts, never content) to the service; minimum length → ~25 words; link-only shares get a specific message |
+| 2 | Sentence-scoped rewrite, changed sentence underlined | Trust + precise disclaimer; fidelity becomes mechanical | ~⅓ fewer words/piece (G2: hybrid 3.6 vs rewrite 5.6 per 1,000) | New prompt mode; server-side sentence diff wraps changed sentences, reverts any changed sentence without a highlight; renderer underlines; compare page on the 5 fixtures; old mode kept behind a flag |
+| 3 | My Reads refresh on foreground | Extension pieces appear in the app at once | none | scenePhase reload |
+| 4 | Per-call latency in `calls` + latency read | 10–14 s on long pages is the top friction | input cap is a founder call | ms per model call; report |
+| 5 | Tap popup: times seen + "Got it" | Learning loop; mark retained in the reader (D12) | small UI | popup gains stats + PATCH status |
+| 6 | Dark mode reader | Night reading | none | prefers-color-scheme CSS |
+| 7 | Service test suite (pytest) | Change the engine safely | time | temp DB; auth, lifecycle, cap, recovery |
+| 8 | Spend in Settings | Numbers for P2 | none | today/month from `calls` |
+| — | Deferred to daytime | native renderer; readability extraction | visible risk | — |
+
 ### Phase 3 — Horizon 3 (parked, not lost)
 
 - **H3-1** Safari web extension: in-place substitution without leaving the page (B6).
