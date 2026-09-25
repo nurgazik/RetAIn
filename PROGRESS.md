@@ -36,7 +36,9 @@ count keeps running as an observation only.
    Compare page: output/compare-transform.html. **Founder ruling needed → D36**; four
    candidate directions in the spec (substitute-only / stronger model + fact-QC /
    highlight organic occurrences / reader-set aggressiveness).
-   **G3 (Reddit/X link legality)** research agent running.
+   **G3 DONE** → docs/link-intake-legality.md: Reddit `.json` dead + API excludes
+   monetised apps; X free tier gone, oEmbed truncates; recommendation = selected text
+   for Reddit/X, in-Safari extension for articles. **Founder ruling → D37.**
 1. **S0 — DONE end to end (2026-09-24).** `/transform` + `POST /api/transform` live on
    the always-on server; the founder built the clipboard-based "RetAInize" Shortcut and
    a real run from the phone produced a 3-word piece in the ledger. **The 14-day "do I
@@ -105,6 +107,7 @@ itself via the fetchers.
   post) → G2 ran the same evening. Result: fidelity vs density trade-off is stark —
   see NOW block. Engine is now the top risk, ahead of iOS.
 - **G4 competitive scan** delivered by a research agent → docs/competitive-scan.md.
+- **G3 link-intake legality** delivered by a research agent → docs/link-intake-legality.md.
 
 ### 2026-08-08 — Coherence research sweep (founder-commissioned)
 

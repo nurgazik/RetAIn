@@ -414,11 +414,12 @@ where a user is involved; gates and platform work are stated plainly. Tags: **G*
   founder.* Rewrite vs substitute vs hybrid on the founder's real reading, QC on, density
   floor off; metrics: marks/1,000w, QC reject rate, invented-number hits, founder
   read-through rating. Done when: 3 × 10 table, founder sets X, ruling → **D36**.
-- **G3 · Link intake legality** — *owner: assistant.* Read Reddit's and X's developer /
-  content terms for fetching a shared link on the user's behalf; try Reddit's `.json`
-  view and X's public embed endpoint from the phone. Done when: a per-source table
-  (allowed? fetchable? recommended route) with links; founder rules whether "share a
-  link" is in the MVP → **D37**.
+- **G3 · Link intake legality — DONE 2026-09-24 → docs/link-intake-legality.md.**
+  Reddit's unauthenticated `.json` is dead (403, deprecated 2026-05-28) and its API
+  excludes monetised apps; X's free tier is gone and oEmbed truncates. Both licences
+  allow "format for display" only, which a rewrite exceeds; Apple 5.2.2 makes third-party
+  terms binding for review. Recommendation: share-selected-text for Reddit/X, in-Safari
+  extension for articles, server fetch only as a URL-only fallback. **Founder ruling → D37.**
 - **G4 · Competitive scan — DONE 2026-09-24 → docs/competitive-scan.md.** 25 products
   across two crowded clusters (foreign-language browser substitution; LLM-generated
   stories around your words). Nobody found does user-chosen English content via the iOS
