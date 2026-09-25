@@ -90,7 +90,16 @@ count keeps running as an observation only.
    verified ("remain" added with a generated card, $0.00005).** M4 (Safari page action
    via JS preprocessing) still unproven on device — the founder's Safari share used the
    text path.
-5. **Next:** M4 device check (Safari → Share → RetAInize with no selection) →
+   **06:44 UTC: M4 VERIFIED ON DEVICE** — Safari page action on a TechCrunch article: JS
+   preprocessing delivered 3,673 chars of page text (`types: com.apple.property-list`,
+   `pageChars: 3673`), 3 words in 10.6 s, $0.0073. The plain "RetAIn" share entry from
+   Safari also received the page (3,344 chars). Newly captured "remain" was placed first
+   in the next piece (fewest-servings-first sort working as intended).
+   **All build items M1–M6 are now verified on the founder's phone over HTTPS.**
+5. **Next:** M8 monetization (blocked on P2) and M9 TestFlight (blocked on paid Apple
+   Developer membership + P3). Polish candidates while waiting: native text renderer
+   (drop WKWebView), readability-style page extraction (textContent, not innerText),
+   Sign in with Apple device test once the membership exists →
    M8 monetization (needs P2) → M9 TestFlight (needs P3 thresholds + paid Apple
    Developer membership for App Groups on device and TestFlight).
 5. Parked (Horizon 3): proprietary generator, Safari web extension in-place, screenshot

@@ -490,8 +490,8 @@ where a user is involved; gates and platform work are stated plainly. Tags: **G*
 - **M5 · Capture through the same extension — VERIFIED ON DEVICE 2026-09-25** ("remain"
   shared as a single word → word card generated, $0.00005) (A2, D8) — a shared single
   word → capture flow with word card; longer text → transform. One extension, two behaviours.
-- **M6 · Clipboard intake** — app offers "transform what you just copied?" on open, plus
-  a paste box (B4). *The universal fallback; cheap.*
+- **M6 · Clipboard intake — BUILT in M2** (app offers "transform what you just copied?"
+  on open, plus a paste box; simulator-verified) (B4). *The universal fallback; cheap.*
 - **M7 · Link intake** (B2) — only if G3 says yes for a given source.
 - **M8 · Monetization** per P2 — StoreKit, free tier, cost caps.
 - **M9 · TestFlight** — founder + ~5 advanced-ESL friends, two weeks, P3 metric. *The
