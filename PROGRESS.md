@@ -112,7 +112,8 @@ count keeps running as an observation only.
    **Morning 2026-09-25:** founder's Reddit share arrived as `public.url` only →
    "Only a link arrived" message shown as designed; Reddit routes = select-text or
    Copy-text → clipboard offer (D37 stands). Four browser articles transformed today
-   (page text 3.7–6.3k chars, 1 word each under sentence mode). Founder: membership
+   (page text 3.7–6.3k chars, 1 word each under sentence mode; **browser = Safari**,
+   founder-confirmed). Copied text from any app works (founder). Founder: membership
    pending team id; density idea coming; earlier-share provenance dropped.
 5. **Next:** M8 monetization (blocked on P2) and M9 TestFlight (blocked on paid Apple
    Developer membership + P3). Daytime polish candidates: native text renderer,
