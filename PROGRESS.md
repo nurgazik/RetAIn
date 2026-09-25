@@ -71,7 +71,16 @@ count keeps running as an observation only.
    Xcode + phone) and **Funnel HTTPS** (founder ran the command; status unknown to me).
    M3/M4/M5/M6 are largely covered by the shared sheet and extensions; what remains for
    them is device validation of native-app share payloads and capture polish.
-5. **Next:** device validation (Sign in with Apple, Reddit/X share payloads, memory) →
+   **Device results (2026-09-25, founder's iPhone 16 Pro):** spike share extension from a
+   native app — payload `public.plain-text` (639 / 742 chars), launch 17–18 ms, peak
+   49–56 MB, 8–9 s end to end via Tailscale → G1 (b) and (d) answered. **M2 app installed
+   on the phone by the assistant via devicectl** (device variant: team UKGU6PX43H, no
+   entitlements — Apple confirms personal teams can't sign Sign in with Apple; App Groups
+   worked for the spike via Xcode's GUI but not headless). Funnel live:
+   https://rays-mac-mini.tailb493b3.ts.net.
+   **Founder to-dos:** paid Apple Developer membership ($99/yr → Sign in with Apple, App
+   Groups headless, TestFlight); P2 monetization; P3 thresholds.
+5. **Next:** device validation of the M2 app itself (shares from Reddit/Safari over Funnel) →
    M8 monetization (needs P2) → M9 TestFlight (needs P3 thresholds + paid Apple
    Developer membership for App Groups on device and TestFlight).
 5. Parked (Horizon 3): proprietary generator, Safari web extension in-place, screenshot
