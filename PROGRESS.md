@@ -78,8 +78,13 @@ count keeps running as an observation only.
    entitlements — Apple confirms personal teams can't sign Sign in with Apple; App Groups
    worked for the spike via Xcode's GUI but not headless). Funnel live:
    https://rays-mac-mini.tailb493b3.ts.net.
-   **Founder to-dos:** paid Apple Developer membership ($99/yr → Sign in with Apple, App
-   Groups headless, TestFlight); P2 monetization; P3 thresholds.
+   **Founder to-dos:** paid Apple Developer membership (waiting on Apple for the team id
+   → Sign in with Apple, App Groups headless, TestFlight); P2 monetization; P3 thresholds;
+   **density idea (founder: "a creative task, later")**. Tailscale "Launch at login" ✔
+   (2026-09-25) — server survives a Mac reboot.
+   **Working agreement (2026-09-25):** commit locally as work lands; push in batches at
+   milestones and say so; no `rm`, no installs without asking (these are the founder's
+   global "ask" rules and they are what triggered the overnight approval prompts).
    **M2 VERIFIED ON DEVICE 2026-09-25 05:28 UTC:** share extension from a native app →
    new service over HTTPS → 828-char plain-text payload → 3 words in 2.7 s, $0.0016,
    diagnostics stored in `pieces.meta`. (Device build: `project-device.yml`, Debug server
