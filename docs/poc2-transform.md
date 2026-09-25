@@ -275,6 +275,44 @@ invocation log line `[transform] <ip> source=<app> chars=<n> id=<id>` in
   `output/compare-transform.html` (existing pattern).
 - **Done when:** 3 variants × 10 pieces table + founder ruling on engine mode → D35.
 
+**G2 results (2026-09-24) — 5 pieces the founder read, 3 modes, QC on, density floor off,
+gemini-3.1-flash-lite.** Harness `src/g2_wordfit.py`; fixtures `data/g2-pieces/`; compare
+page `output/compare-transform.html` (founder rating pending).
+
+| Mode | Marks (all 5) | Marks / 1,000 w | Length vs source | QC rejected | Fidelity on read-through |
+|---|---|---|---|---|---|
+| rewrite (production posture) | 15 | 8.1 | ×1.11 (two pieces +23–24%) | 2 (+1 un-highlighted last resort) | **Fails.** Density was bought with invented clauses: "a figure that continues to *bolster* its position as a major player", "all of whom seem to rely on the platform as a *linchpin*", "he said with characteristic *candor*", "a *windfall* that has quickly turned heads". Editorialising on news; fabricated attribution. |
+| substitute | 4 | 2.4 | ×1.00 (verbatim) | 2, plus one marked source word | **Holds.** But ≈1 slot per piece; one piece got zero. |
+| hybrid | 6 | 3.6 | ×0.97 (one piece −18%: dropped paragraphs) | 1 | **Mixed.** Also invented ("To *underscore* the scale of this growth, he noted that…" — a statement he did not make) and truncated one piece. |
+
+Per piece (marks / words):
+01 tech news — rewrite 5/295, substitute 1/241, hybrid 1/194 · 02 tech-culture — 5/637,
+1/584, 1/581 · 03 literary essay — 1/296, 1/293, 1/291 · 04 local news — 3/427, 1/424,
+2/427 · 05 Reddit post — 1/191, 0/155, 1/156.
+
+**Reading of the result.** On real, reader-chosen content with the current 50-word list,
+natural slots are rare — about one per 350 words — and every mode that reaches higher
+density does it by fabricating text. The rewrite prompt forbids adding information and
+Flash-Lite added it anyway, sentence after sentence. The QC gate judges idiomatic fit, not
+added propositions, so fabricated clauses pass. The engine, not iOS, is now the main
+product risk.
+
+Caveat on the measurement: the 50 words are a seeded list (generated 2026-07-22 plus
+founder additions), not words captured from the founder's own reading. In the real
+product the list comes from what the reader reads, so slot frequency should be higher
+than this measures — by how much is unknown.
+
+Candidate directions for the founder's ruling (D36), not decided:
+1. **Substitute-only, accept ~1 word per piece** — zero-fabrication; value = an honest
+   encounter now and then; encounters scale with reading volume.
+2. **Rewrite with a stronger model + a fact-QC** — rerun rewrite mode on claude-haiku-4-5
+   (D5 fallback, ~5× cost, still cents) and add a second judge that rejects any sentence
+   whose propositions are not in the source. Tests whether fidelity can be bought.
+3. **Highlight organic occurrences** — when a target word already appears in the source,
+   mark it (ReadSmart-style; zero risk); stacks with 1 or 2.
+4. **Reader-set aggressiveness** (D4) — ship substitute as default, rewrite as an opt-in
+   "more words, looser text" mode with the disclaimer made prominent.
+
 ### S2 — Safari action extension: can we read the rendered page and show our sheet?
 - **Question:** does an iOS action extension with a JavaScript preprocessing file get the
   page DOM from the user's session (paywalled / logged-in included), and can it stream from
@@ -381,10 +419,12 @@ where a user is involved; gates and platform work are stated plainly. Tags: **G*
   view and X's public embed endpoint from the phone. Done when: a per-source table
   (allowed? fetchable? recommended route) with links; founder rules whether "share a
   link" is in the MVP → **D37**.
-- **G4 · Competitive scan** — *owner: assistant.* PRD §6 open item. Toucan, Fluent,
-  WordUp, Vocabulary.com, Membean, LLM-era entrants; specifically who already does
-  "your words into content you're reading". Done when: one page in docs/ with a
-  "what is ours" line. Fundamentals demand research before MVP money (CLAUDE.md).
+- **G4 · Competitive scan — DONE 2026-09-24 → docs/competitive-scan.md.** 25 products
+  across two crowded clusters (foreign-language browser substitution; LLM-generated
+  stories around your words). Nobody found does user-chosen English content via the iOS
+  share sheet rewritten with the reader's own words. Caution: substitution extensions
+  monetise poorly (Toucan folded into Babbel's free tier); LLM-era ESL entrants are
+  solo-dev with little traction.
 
 ### Phase 1 — Decisions gate (after Phase 0)
 

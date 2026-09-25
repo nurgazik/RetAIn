@@ -24,18 +24,28 @@ Founder ruling D35: technical feasibility is the PoC 2 gate; the 14-day invocati
 count keeps running as an observation only.
 
 **Next up (in order):**
-0. **G1 extension spike (Xcode)** — assistant starts on founder's go: Safari action
-   extension reads the page; what native apps hand a share extension; streaming +
-   memory inside the sheet; app-group handoff. Apple docs verified first.
-   **G4 competitive scan** runs alongside (Toucan/Fluent first).
+0. **G1 — simulator half DONE.** Safari action extension reads the page via JS
+   preprocessing, sheet over Safari, 4.9 s transform, 55 MB peak, app-group handoff
+   confirmed (spikes/g1-extension/, UI test drives Safari). **Remaining: native-app
+   share payloads + device memory — needs the phone + Apple ID in Xcode.**
+   **G4 competitive scan DONE** → docs/competitive-scan.md (gap is real; neighbours
+   monetise poorly).
+   **G2 DONE, result is the new top risk:** on the founder's 5 real pieces, substitute
+   mode finds ~1 slot/piece (2.4 marks/1,000 w, verbatim text); rewrite mode reaches
+   8.1/1,000 only by inventing clauses on news ("he said with characteristic candor").
+   Compare page: output/compare-transform.html. **Founder ruling needed → D36**; four
+   candidate directions in the spec (substitute-only / stronger model + fact-QC /
+   highlight organic occurrences / reader-set aggressiveness).
+   **G3 (Reddit/X link legality)** research agent running.
 1. **S0 — DONE end to end (2026-09-24).** `/transform` + `POST /api/transform` live on
    the always-on server; the founder built the clipboard-based "RetAInize" Shortcut and
    a real run from the phone produced a 3-word piece in the ledger. **The 14-day "do I
    reach for it?" count starts today.** Recipe + the "Limit IP Address Tracking" gotcha
    in docs/poc2-transform.md §7 S0. Text only until the founder rules on URL fetching.
-2. **G2 (S1)** — word-fit on ~10 pieces the founder actually read: rewrite vs
-   substitute vs hybrid, QC on, density floor off → compare page → founder sets X and
-   rules engine mode (D36). **Blocked on founder: paste ~10 real pieces.**
+2. **G2 — DONE (5 pieces).** Founder reads output/compare-transform.html, rates
+   columns, rules engine mode (D36). Assistant's recommendation: test direction 2
+   (stronger model + fact-QC) before settling, because it decides whether density
+   is buyable at all.
 3. **G3** — Reddit/X terms reading + fetch attempts → founder rules link intake (D37).
 4. **Phase 1 rulings** — PRD §8 MVP rewrite, monetization (E1), TestFlight metric.
 5. **Phase 2 MVP build** M1 transform service → M2 app shell → M3 share-extension
@@ -85,6 +95,16 @@ itself via the fetchers.
   record. Backlog rebuilt in docs/poc2-transform.md §8 as Phase 0 gates (G1–G4) →
   Phase 1 rulings (P1–P3) → Phase 2 MVP (M1–M9) → Horizon 3, each with an owner,
   blocker and done-when. Spec §6 success criteria rewritten to the four gates.
+- **G1 in the simulator (same evening):** Apple docs verified (JS preprocessing key
+  current, iOS 8+); throwaway Xcode project via xcodegen (installed with permission);
+  in-app paste path 6.6 s / 37 MB; Safari action extension via a UI test that drives
+  Safari's More → Share → RetAInize: page text returned from `<main>`, 41 ms launch at
+  21 MB, 4.9 s transform, 55 MB with the rendered sheet, app-group handoff ok. iOS 26
+  hides Share inside "More"; `innerText` misses collapsed sections.
+- **Founder pasted 5 real pieces** (tech news ×2, Sedaris essay, local news, Reddit
+  post) → G2 ran the same evening. Result: fidelity vs density trade-off is stark —
+  see NOW block. Engine is now the top risk, ahead of iOS.
+- **G4 competitive scan** delivered by a research agent → docs/competitive-scan.md.
 
 ### 2026-08-08 — Coherence research sweep (founder-commissioned)
 
