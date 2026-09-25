@@ -47,8 +47,10 @@ count keeps running as an observation only.
 2. **P1 DONE — PRD §8 rewritten to the PoC 2 MVP** (surfaces, engine with gates, service,
    economics ≈ $0.003/transform, proposed TestFlight metric). P2 monetization deferred by
    founder until usage data; **P3: founder sets thresholds.**
-3. **Next build step: M1 transform service** — architecture proposal in docs/architecture.md
-   first (hosted API, auth, per-user words, ledger, cost telemetry), then build on go.
+3. **M1 transform service — PROPOSAL WRITTEN, awaiting founder yes** (docs/architecture.md,
+   bottom section): FastAPI on the Mac mini via Tailscale Funnel first (free, HTTPS), Fly.io
+   later; SQLite with users/words/pieces/events/calls; Sign in with Apple; SSE phases;
+   daily transform cap. Needs: ok on FastAPI dependency, hosting choice A/B.
 4. **Phase 2 MVP build** M1 transform service → M2 app shell → M3 share-extension
    sheet → M4 Safari → M5 capture → M6 clipboard → M8 monetization → M9 TestFlight.
 5. Parked (Horizon 3): proprietary generator, Safari web extension in-place, screenshot

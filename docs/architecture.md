@@ -75,3 +75,69 @@ scroll-depth telemetry from day one; usage decisions deferred (personalization p
   per-user "digest date" concept, not one global daily run.
 - Generate only for recently-active users (PRD D4).
 - Batch API for 50% token cost reduction.
+
+---
+
+# PoC 2 → MVP: the transform service (M1) — PROPOSAL, pending founder yes (2026-09-24)
+
+Everything above describes the digest pipeline (PoC 1). Under D34 the ingest → store →
+select half is retired; generate → QC → render and the served ledger carry over. This
+section proposes the hosted service the iOS app and its extensions will call (backlog M1,
+PRD §8 "Service"). Nothing here is built.
+
+## What it is
+
+One small HTTP service that owns three things: **who the user is**, **their words**, and
+**the transform**. The phone never holds an LLM key; the extension sends text, the service
+sends back a piece. Same engine code as today (`generate.py`), wrapped in an API.
+
+```
+iOS app / share ext / Safari action
+   │  Sign in with Apple → session token (stored in the app-group keychain, shared by app + extensions)
+   ▼
+POST /v1/transform {text, title?, url?, source}  → {piece_id}         (returns at once)
+GET  /v1/transform/{piece_id}/events   (server-sent events: received → generating →
+                                        checking → repairing → done + piece JSON)
+GET  /v1/pieces, GET /v1/pieces/{id}          My Reads
+POST /v1/pieces/{id}/taps {word}               tap = "didn't remember"
+GET/POST/PATCH /v1/words                       list, capture (+ word-card enrichment), lifecycle
+```
+
+The "working the magic" moment is the events stream: the sheet shows each phase as it
+happens, and the piece arrives only after QC, the fact judge and any repair finish (D29).
+
+## Decisions proposed (what / why / standard practice?)
+
+| Area | Proposal | Why | Standard? |
+|---|---|---|---|
+| Language + framework | **Python + FastAPI + uvicorn** | Reuses `generate.py` unchanged; FastAPI gives auth dependencies, request validation and SSE streaming in a few lines. Alternative: keep the stdlib `http.server` (zero deps, but auth/streaming/validation by hand). | Yes — the default Python API stack. **New dependency: needs your ok.** |
+| Hosting, option A | **The Mac mini, exposed with Tailscale Funnel** — a public HTTPS URL on the ts.net domain, free, no other hosting bill. The Mac is already the always-on appliance; the launchd agent already restarts the server. | Free, available today, and HTTPS from the start (which also ends the "Limit IP Address Tracking" problem). Enough for the founder plus ~5 TestFlight readers. Risks: home network, one machine, no isolation. | Common for solo MVPs; not for a public launch. |
+| Hosting, option B | **Fly.io, one shared-CPU machine with a persistent volume** (≈ $3–5/month). | Proper host with HTTPS, secrets, logs, restart on crash; same Docker image later scales. | Yes. **Costs money: needs your ok.** |
+| Recommendation | **A now (M1–M9), B before anyone outside TestFlight.** The code is identical; only the deploy target changes. | | |
+| Database | **SQLite on the single machine**, new tables: `users`, `words` (per user, status + servings), `pieces` (per user, body, offered/placed), `events` (impressions/taps), `calls` (every model call: purpose, tokens, USD). Nightly file backup (Litestream or a cron copy). Move to Postgres only when there is a second machine. | We already run SQLite; one writer, small data. | Yes for single-node MVPs. |
+| Auth | **Sign in with Apple** → server verifies Apple's identity token once → issues its own session token (JWT, long-lived, revocable). App and extensions share it through the app-group keychain. | Required by App Store rules when any third-party sign-in exists; gives a stable user id with no passwords. | Yes. |
+| Streaming | **Server-sent events** for phases; piece JSON at the end. | Simpler than WebSockets, works through any proxy, trivially consumed by `URLSession`. | Yes. |
+| Cost control | Per-user daily transform cap in config (e.g. 30) + the `calls` table from day one. | Every transform costs ~$0.003; a cap protects against runaway cost before monetization (P2) exists. | Yes. |
+| Secrets | Gemini/Anthropic keys in the host environment only (`.env.local` today; Fly secrets later). | Keys never ship in the app. | Yes. |
+| Word ordering | Server-side sort: fewest lifetime servings first, per user (D32 minus intervals). | D34. | — |
+
+## What changes in the repo
+
+- `src/service/` (new): `app.py` (routes), `auth.py`, `db.py` (schema + migrations),
+  `engine.py` (thin wrapper around `generate_piece` with a per-user word list), `sse.py`.
+- `generate.py`: reads the word list from a parameter instead of `data/words.json`
+  (today's file becomes the founder's seed list on first sign-in).
+- `serve.py` keeps running as-is until the app exists, then retires.
+- `requirements.txt` (new): fastapi, uvicorn, python-jose or pyjwt (Apple token
+  verification), sse-starlette or hand-rolled SSE.
+
+## Not in M1
+
+Monetization (P2), word-card enrichment prompt tuning (M5), push notifications, Android,
+multi-region, admin UI. Rate limits beyond the daily cap.
+
+## Done when
+
+`curl` can sign in with a test token, add words, post a transform, watch the events stream
+end with a piece, list pieces, and record a tap — all on HTTPS from the phone via the
+Funnel URL — and every model call has a row in `calls` with a dollar figure.

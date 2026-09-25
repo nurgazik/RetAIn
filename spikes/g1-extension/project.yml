@@ -11,7 +11,7 @@ settings:
     SWIFT_VERSION: "5.9"
     CODE_SIGN_STYLE: Automatic
     TARGETED_DEVICE_FAMILY: "1"
-    RETAIN_SERVER: http://127.0.0.1:8484   # simulator → Mac. Phone: http://rays-mac-mini.tailb493b3.ts.net:8484
+    RETAIN_SERVER: http://rays-mac-mini.tailb493b3.ts.net:8484   # phone via Tailscale. Simulator: http://127.0.0.1:8484
 targets:
   RetAInSpike:
     type: application
