@@ -307,7 +307,20 @@ than this measures — by how much is unknown.
 source of truth if important"); no costlier model.** Implemented as: added phrasing OK,
 added facts/figures/quotes/attributions not OK (`prompts/transform.md`), and the
 disclaimer on every piece rewritten to say so. The candidate list below is kept as the
-record of what was considered:
+record of what was considered.
+
+**Sanity rerun under the D36 prompt (rewrite mode, same 5 pieces, same evening):** 15 marks /
+1,860 words = 8.1 per 1,000 (unchanged), length ×1.10, QC rejected 3 (salient, extrapolate,
+conundrum — all correct calls). The facts/attributions line is **not** reliably obeyed by
+Flash-Lite: "He remained *adamant* that the focus on the end-user product is what separates
+them…" (a stance the source never states), "Investigators hope these digital findings will
+*corroborate* the timeline…" and "He approached the sensitive subject with a somber
+*gravitas*" (both invented, on a story about a death). Two QC-rejected words also survived
+un-highlighted after the regeneration failed ("a *windfall* of growth", "*astute* handling")
+— the D29 last-resort floor, which teaches the misuse it was meant to hide. Accepted risk
+under D36; cheapest mitigation that stays on Gemini: a second judge pass (same model,
+~$0.0005) that rejects sentences carrying a claim, attribution or characterisation absent
+from the source. Proposed to the founder, not built.
 1. **Substitute-only, accept ~1 word per piece** — zero-fabrication; value = an honest
    encounter now and then; encounters scale with reading volume.
 2. **Rewrite with a stronger model + a fact-QC** — rerun rewrite mode on claude-haiku-4-5
