@@ -5,6 +5,7 @@ struct WordsView: View {
     @State private var newWord = ""
     @State private var error: String?
     @State private var busy = false
+    @Environment(\.scenePhase) private var scenePhase
 
     var body: some View {
         NavigationStack {
@@ -38,6 +39,7 @@ struct WordsView: View {
             .navigationTitle("Words")
             .refreshable { await load() }
             .task { await load() }
+            .onChange(of: scenePhase) { _, phase in if phase == .active { Task { await load() } } }
         }
     }
 

@@ -62,7 +62,11 @@ def me(user=Depends(auth.current_user)):
     try:
         n_words = con.execute("SELECT COUNT(*) FROM words WHERE user_id=? AND status='learning'", (user["id"],)).fetchone()[0]
         n_pieces = con.execute("SELECT COUNT(*) FROM pieces WHERE user_id=? AND status='done'", (user["id"],)).fetchone()[0]
-        return {"user_id": user["id"], "email": user["email"], "learning_words": n_words, "pieces": n_pieces}
+        today = date.today().isoformat()
+        spend_today = con.execute("SELECT COALESCE(SUM(usd),0) FROM calls WHERE user_id=? AND at LIKE ?", (user["id"], f"{today}%")).fetchone()[0]
+        spend_month = con.execute("SELECT COALESCE(SUM(usd),0) FROM calls WHERE user_id=? AND at LIKE ?", (user["id"], f"{today[:7]}%")).fetchone()[0]
+        return {"user_id": user["id"], "email": user["email"], "learning_words": n_words, "pieces": n_pieces,
+                "spend_today_usd": round(spend_today, 4), "spend_month_usd": round(spend_month, 4)}
     finally:
         con.close()
 

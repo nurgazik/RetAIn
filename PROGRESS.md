@@ -96,10 +96,22 @@ count keeps running as an observation only.
    Safari also received the page (3,344 chars). Newly captured "remain" was placed first
    in the next piece (fewest-servings-first sort working as intended).
    **All build items M1–M6 are now verified on the founder's phone over HTTPS.**
+   **Overnight 2026-09-25 (founder asleep) — all 8 backlog items shipped, tested, on the
+   phone** (spec §8 "Overnight backlog" has the per-item detail): diagnostics + 25-word
+   minimum for shares; **sentence-scoped engine mode is now the default** (mechanical
+   sentence guard, edited sentences underlined; 2.4 words/1,000 vs 5.6 for rewrite —
+   founder ruling needed); foreground refresh; per-call latency (model time ≈ 100%,
+   judges now parallel); popup stats + "Got it"; dark mode; pytest suite (7 green);
+   spend in Settings. Unit tests 3/3, UI test green, service tests 7/7.
+   **Morning decisions for the founder (independent):** (a) density: keep sentence mode
+   at ~1 word/piece, revert to rewrite, or a middle setting; (b) retry the Reddit comment
+   share (diagnostics now logged); (c) Launch Tailscale at login; (d) paid Apple
+   Developer membership; (e) which app the earlier shares came from; (f) cap input
+   length for long pages (10–14 s) or accept; (g) retire the digest server + shortcut?
 5. **Next:** M8 monetization (blocked on P2) and M9 TestFlight (blocked on paid Apple
-   Developer membership + P3). Polish candidates while waiting: native text renderer
-   (drop WKWebView), readability-style page extraction (textContent, not innerText),
-   Sign in with Apple device test once the membership exists →
+   Developer membership + P3). Daytime polish candidates: native text renderer,
+   readability-style page extraction, Sign in with Apple device test once the
+   membership exists →
    M8 monetization (needs P2) → M9 TestFlight (needs P3 thresholds + paid Apple
    Developer membership for App Groups on device and TestFlight).
 5. Parked (Horizon 3): proprietary generator, Safari web extension in-place, screenshot

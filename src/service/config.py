@@ -12,7 +12,7 @@ ENV = load_env()  # API keys + any RETAIN_* settings in .env.local
 for k, v in ENV.items():
     os.environ.setdefault(k, v)
 
-DB_PATH = ROOT / "data" / "service.db"
+DB_PATH = pathlib.Path(os.environ.get("RETAIN_DB_PATH") or (ROOT / "data" / "service.db"))
 APPLE_BUNDLE_ID = os.environ.get("RETAIN_APPLE_BUNDLE_ID", "com.retain.app")
 APPLE_ISSUER = "https://appleid.apple.com"
 APPLE_JWKS_URL = "https://appleid.apple.com/auth/keys"

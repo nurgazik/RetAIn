@@ -343,6 +343,16 @@ def sentence_guard(source_text: str, body: str) -> tuple:
     return "\n".join(f"<p>{p}</p>" for p in fixed), stats
 
 
+def run_judges(body: str, defs: dict, source_text: str, env: dict) -> tuple:
+    """Idiomatic QC (D19) and the fact judge (D36) are independent: run them in parallel
+    (~1 s saved per round). Returns (demoted_words, (invented_words, invented_unmarked))."""
+    from concurrent.futures import ThreadPoolExecutor
+    with ThreadPoolExecutor(max_workers=2) as ex:
+        f_qc = ex.submit(qc_gate, body, defs, env)
+        f_fact = ex.submit(fact_qc, source_text, body, env)
+        return f_qc.result(), f_fact.result()
+
+
 def demote_marks(body: str, words: list) -> str:
     """Unwrap <mark> tags for demoted words — text stays, highlight goes
     (demote-don't-delete)."""
@@ -353,11 +363,13 @@ def demote_marks(body: str, words: list) -> str:
     return re.sub(r"<mark>(.*?)</mark>", repl, body, flags=re.S)
 
 
-CALL_LOG = []  # (purpose, model, tokens_in, tokens_out) per model call; the service drains it
+CALL_LOG = []  # (purpose, model, tokens_in, tokens_out, ms) per model call; the service drains it
 
 
 def call_model(system: str, user: str, env: dict, purpose: str = "generate") -> tuple:
     """Primary model with automatic fallback (D5). Returns (text, model_name)."""
+    import time as _t
+    _t0 = _t.time()
     try:
         r = PRIMARY["call"](PRIMARY["model"], system, user, env[PRIMARY["key"]])
         model = PRIMARY["model"]
@@ -365,7 +377,7 @@ def call_model(system: str, user: str, env: dict, purpose: str = "generate") -> 
         print(f"[warn] {PRIMARY['model']} failed ({exc}); falling back to {FALLBACK['model']}")
         r = FALLBACK["call"](FALLBACK["model"], system, user, env[FALLBACK["key"]])
         model = FALLBACK["model"]
-    CALL_LOG.append((purpose, model, r.get("tokens_in", 0), r.get("tokens_out", 0)))
+    CALL_LOG.append((purpose, model, r.get("tokens_in", 0), r.get("tokens_out", 0), int((_t.time() - _t0) * 1000)))
     return r["text"], model
 
 
@@ -514,8 +526,7 @@ def generate_piece(con, item, wrapper_file: str, chosen: list, env: dict,
     # usage AND confuses. Regenerate without the failed words; un-highlighting
     # is only the last-resort floor.
     progress("checking")
-    demoted = qc_gate(parsed["body"], defs, env)
-    invented_words, invented_unmarked = fact_qc(source_text, parsed["body"], env)
+    demoted, (invented_words, invented_unmarked) = run_judges(parsed["body"], defs, source_text, env)
     for w in invented_words:
         if not any(w.lower().startswith(d.strip().lower()[:6]) for d in demoted):
             demoted.append(w)
@@ -533,8 +544,7 @@ def generate_piece(con, item, wrapper_file: str, chosen: list, env: dict,
         if (format_ok(parsed2) and not missing_years(item, parsed2)
                 and not invented_numbers(item, parsed2) and not reappeared):
             parsed, model_used, defs = parsed2, model2, keep
-            residual = qc_gate(parsed["body"], defs, env)
-            inv2, _ = fact_qc(source_text, parsed["body"], env)
+            residual, (inv2, _) = run_judges(parsed["body"], defs, source_text, env)
             residual += [w for w in inv2 if w not in residual]
             if residual:
                 progress("repairing")

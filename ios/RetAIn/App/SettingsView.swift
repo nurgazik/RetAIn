@@ -9,7 +9,13 @@ struct SettingsView: View {
         NavigationStack {
             Form {
                 Section("Account") {
-                    if let me { LabeledContent("User", value: me.email ?? me.userId); LabeledContent("Learning words", value: "\(me.learningWords)"); LabeledContent("Reads", value: "\(me.pieces)") }
+                    if let me {
+                        LabeledContent("User", value: me.email ?? me.userId)
+                        LabeledContent("Learning words", value: "\(me.learningWords)")
+                        LabeledContent("Reads", value: "\(me.pieces)")
+                        LabeledContent("Spend today", value: String(format: "$%.3f", me.spendTodayUsd ?? 0))
+                        LabeledContent("Spend this month", value: String(format: "$%.2f", me.spendMonthUsd ?? 0))
+                    }
                     Button("Sign out", role: .destructive) { SessionStore.token = nil; session.signedIn = false }
                 }
                 Section("Server") {

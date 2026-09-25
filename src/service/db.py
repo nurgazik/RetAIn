@@ -68,6 +68,7 @@ CREATE TABLE IF NOT EXISTS calls (
     tokens_in  INTEGER,
     tokens_out INTEGER,
     usd        REAL,
+    ms         INTEGER,
     at         TEXT NOT NULL
 );
 """
@@ -91,10 +92,11 @@ def connect() -> sqlite3.Connection:
 def init() -> None:
     con = connect()
     con.executescript(SCHEMA)
-    try:  # migration for DBs created before `meta`
-        con.execute("ALTER TABLE pieces ADD COLUMN meta TEXT")
-    except sqlite3.OperationalError:
-        pass
+    for stmt in ("ALTER TABLE pieces ADD COLUMN meta TEXT", "ALTER TABLE calls ADD COLUMN ms INTEGER"):
+        try:  # migrations for DBs created before these columns
+            con.execute(stmt)
+        except sqlite3.OperationalError:
+            pass
     con.commit()
     con.close()
 
@@ -133,14 +135,16 @@ def learning_words(con, user_id: str) -> list:
 
 
 def record_calls(con, user_id: str, piece_id: str | None, calls: list, prices: dict) -> float:
-    """calls: [(purpose, model, tokens_in, tokens_out)] → rows in `calls`; returns USD total."""
+    """calls: [(purpose, model, tokens_in, tokens_out[, ms])] → rows in `calls`; returns USD total."""
     total = 0.0
     with _lock:
-        for purpose, model, tin, tout in calls:
+        for c in calls:
+            purpose, model, tin, tout = c[:4]
+            ms = c[4] if len(c) > 4 else None
             p = prices.get(model, {"in": 0.0, "out": 0.0})
             usd = tin / 1e6 * p["in"] + tout / 1e6 * p["out"]
             total += usd
-            con.execute("INSERT INTO calls (user_id, piece_id, purpose, model, tokens_in, tokens_out, usd, at) "
-                        "VALUES (?,?,?,?,?,?,?,?)", (user_id, piece_id, purpose, model, tin, tout, usd, now()))
+            con.execute("INSERT INTO calls (user_id, piece_id, purpose, model, tokens_in, tokens_out, usd, ms, at) "
+                        "VALUES (?,?,?,?,?,?,?,?,?)", (user_id, piece_id, purpose, model, tin, tout, usd, ms, now()))
         con.commit()
     return total

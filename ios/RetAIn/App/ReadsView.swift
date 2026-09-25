@@ -4,6 +4,7 @@ struct ReadsView: View {
     @State private var pieces: [PieceSummary] = []
     @State private var selected: Piece?
     @State private var error: String?
+    @Environment(\.scenePhase) private var scenePhase
 
     var body: some View {
         NavigationStack {
@@ -23,12 +24,10 @@ struct ReadsView: View {
             .navigationTitle("My Reads")
             .refreshable { await load() }
             .task { await load() }
+            .onChange(of: scenePhase) { _, phase in if phase == .active { Task { await load() } } }
             .sheet(item: $selected) { p in
                 NavigationStack {
-                    PieceWebView(html: PieceHTML.page(title: p.title ?? "", label: "Your read", body: p.bodyHtml ?? "", attrib: p.attrib ?? "")) { word in
-                        Task { try? await RetAInClient.shared.tap(pieceId: p.id, word: word) }
-                    }
-                    .ignoresSafeArea(edges: .bottom)
+                    ReaderView(piece: p)
                     .navigationTitle(p.title ?? "").navigationBarTitleDisplayMode(.inline)
                     .toolbar { ToolbarItem(placement: .cancellationAction) { Button("Done") { selected = nil } } }
                 }

@@ -501,14 +501,14 @@ where a user is involved; gates and platform work are stated plainly. Tags: **G*
 
 | # | Item | Value | Trade-off | Implementation |
 |---|---|---|---|---|
-| 1 | Reddit comment share fails ("Nothing to read here") | Comments are a core reading surface | none; diagnose first | Extension logs unusable inputs (types + char counts, never content) to the service; minimum length → ~25 words; link-only shares get a specific message |
-| 2 | Sentence-scoped rewrite, changed sentence underlined | Trust + precise disclaimer; fidelity becomes mechanical | ~⅓ fewer words/piece (G2: hybrid 3.6 vs rewrite 5.6 per 1,000) | New prompt mode; server-side sentence diff wraps changed sentences, reverts any changed sentence without a highlight; renderer underlines; compare page on the 5 fixtures; old mode kept behind a flag |
-| 3 | My Reads refresh on foreground | Extension pieces appear in the app at once | none | scenePhase reload |
-| 4 | Per-call latency in `calls` + latency read | 10–14 s on long pages is the top friction | input cap is a founder call | ms per model call; report |
-| 5 | Tap popup: times seen + "Got it" | Learning loop; mark retained in the reader (D12) | small UI | popup gains stats + PATCH status |
-| 6 | Dark mode reader | Night reading | none | prefers-color-scheme CSS |
-| 7 | Service test suite (pytest) | Change the engine safely | time | temp DB; auth, lifecycle, cap, recovery |
-| 8 | Spend in Settings | Numbers for P2 | none | today/month from `calls` |
+| 1 | Reddit comment share fails ("Nothing to read here") — **DONE** | Comments are a core reading surface | none | `POST /v1/diagnostics` stores types + counts (never content) for unusable shares; minimum is now **25 words** (server + client); link-only and too-short shares get specific messages. Founder to retry in the morning |
+| 2 | Sentence-scoped rewrite, changed sentence underlined — **DONE, default** | Trust + precise disclaimer; fidelity mechanical | **Measured: 2.4 words/1,000 vs 5.6 for rewrite+judge** (lower than the 3.6 estimate); news pieces often get 0–1 | `prompts/transform-sentence.md`; `generate.sentence_guard` (sentence diff: marked changes kept + wrapped in `<span class="edited">`, unmarked changes reverted, added sentences dropped, dropped sentences restored); underline in iOS reader + PoC pages; `RETAIN_ENGINE_MODE=rewrite` restores D36 mode. Compare page: output/compare-transform.html ("sentence" column) |
+| 3 | My Reads / Words refresh on foreground — **DONE** | Extension pieces appear at once | none | scenePhase reload |
+| 4 | Per-call latency + read — **DONE** | 10–14 s on long pages | input cap is a founder call | `calls.ms`; finding: **model time is ~100% of latency**; a piece = 6–7 serial calls (generate ~2.3 s, qc ~0.9 s, fact ~1.0 s, repeated after regeneration). Judges now run in parallel (~1 s saved/round; Sedaris 5.8 s wall for 7.0 s of model time). Deeper cuts = fewer retries/rounds (density decision) or an input cap |
+| 5 | Tap popup: "Seen N times" + "Got it — mark retained" — **DONE** | Learning loop in the reader (D12) | — | `ReaderView` loads word stats once; popup button posts `retain` → PATCH status; unit-tested in an offscreen WKWebView |
+| 6 | Dark mode reader — **DONE** | Night reading | — | prefers-color-scheme CSS in the iOS reader |
+| 7 | Service test suite — **DONE** | Change the engine safely | — | `tests/` (pytest + httpx, dev-only): 7 tests — auth, seeded words, word lifecycle, transform → events → piece → tap → list → spend, daily cap, diagnostics, 404. `RETAIN_DB_PATH` makes the DB path overridable |
+| 8 | Spend in Settings — **DONE** | Numbers for P2 | — | `/v1/me` returns today/month USD; Settings shows them |
 | — | Deferred to daytime | native renderer; readability extraction | visible risk | — |
 
 ### Phase 3 — Horizon 3 (parked, not lost)

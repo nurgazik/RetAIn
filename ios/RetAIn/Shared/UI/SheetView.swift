@@ -28,11 +28,7 @@ struct SheetView: View {
                         Text("\(elapsed)s").font(.caption2).foregroundStyle(.tertiary)
                     }.padding()
                 case .done(let p):
-                    PieceWebView(html: PieceHTML.page(title: p.title ?? "", label: "Your read",
-                                                      body: p.bodyHtml ?? "", attrib: p.attrib ?? "")) { word in
-                        Task { try? await RetAInClient.shared.tap(pieceId: p.id, word: word) }
-                    }
-                    .ignoresSafeArea(edges: .bottom)
+                    ReaderView(piece: p)
                 case .failed(let msg):
                     VStack(spacing: 12) {
                         Text("Couldn't transform this.").font(.headline)

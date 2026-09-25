@@ -1,6 +1,6 @@
 import Foundation
 
-struct Me: Codable { let userId: String; let email: String?; let learningWords: Int; let pieces: Int }
+struct Me: Codable { let userId: String; let email: String?; let learningWords: Int; let pieces: Int; let spendTodayUsd: Double?; let spendMonthUsd: Double? }
 struct AuthResponse: Codable { let token: String; let userId: String; let newUser: Bool }
 
 struct Word: Codable, Identifiable, Hashable {
