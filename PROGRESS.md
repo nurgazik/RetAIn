@@ -106,7 +106,8 @@ count keeps running as an observation only.
    **Morning decisions for the founder (independent):** (a) density: keep sentence mode
    at ~1 word/piece, revert to rewrite, or a middle setting; (b) retry the Reddit comment
    share (diagnostics now logged); (c) Launch Tailscale at login; (d) paid Apple
-   Developer membership; (e) which app the earlier shares came from; (f) cap input
+   Developer membership: **ruled D39, individual enrollment; founder enrolling, then
+   sends the Team ID → set it in project.yml + project-device.yml**; (e) which app the earlier shares came from; (f) cap input
    length for long pages (10–14 s) or accept; (g) retire the digest server + shortcut?
 5. **Next:** M8 monetization (blocked on P2) and M9 TestFlight (blocked on paid Apple
    Developer membership + P3). Daytime polish candidates: native text renderer,
@@ -122,6 +123,16 @@ count keeps running as an observation only.
 vacation coding ends). Home Mac: clone normally with personal credentials; recreate
 `.env.local` (4 API keys — gitignored, never on GitHub) and `data/retain.db` refills
 itself via the fetchers.
+
+### 2026-09-25 — Apple Developer enrollment: individual (D39)
+
+- Founder asked whether he needs a company for the paid Apple Developer Program. Apple's
+  docs checked: individuals can monetize fully (Paid Apps Agreement, 15% Small Business
+  commission). Organization enrollment needs a D-U-N-S number, an email on the company's
+  own domain and a website, and the consulting corp has none of these. **Ruled D39:**
+  enroll as an individual now; revisit the corp before public launch, together with P2.
+- Next: founder enrolls and sends the Team ID; assistant sets `DEVELOPMENT_TEAM` (replacing
+  the personal team UKGU6PX43H in project-device.yml), regenerates, verifies signing.
 
 ### 2026-09-24 — PoC 1 closed; pivot to on-demand transform (D34)
 
