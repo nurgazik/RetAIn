@@ -109,6 +109,11 @@ count keeps running as an observation only.
    Developer membership: **ruled D39, individual enrollment; founder enrolling, then
    sends the Team ID → set it in project.yml + project-device.yml**; (e) which app the earlier shares came from; (f) cap input
    length for long pages (10–14 s) or accept; (g) retire the digest server + shortcut?
+   **Morning 2026-09-25:** founder's Reddit share arrived as `public.url` only →
+   "Only a link arrived" message shown as designed; Reddit routes = select-text or
+   Copy-text → clipboard offer (D37 stands). Four browser articles transformed today
+   (page text 3.7–6.3k chars, 1 word each under sentence mode). Founder: membership
+   pending team id; density idea coming; earlier-share provenance dropped.
 5. **Next:** M8 monetization (blocked on P2) and M9 TestFlight (blocked on paid Apple
    Developer membership + P3). Daytime polish candidates: native text renderer,
    readability-style page extraction, Sign in with Apple device test once the
