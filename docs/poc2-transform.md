@@ -301,6 +301,29 @@ streaming behaviour inside the sheet, and what each native app hands over — ex
 sub-questions (b)–(d). **Simulator covers (a), (c), (e) with Safari; (b) and (d) need the
 founder's phone.**
 
+**G1 step 2 — simulator results (2026-09-24, iPhone 17 simulator, iOS 26, Xcode 26.4).**
+Throwaway project in `spikes/g1-extension/` (regenerate with `xcodegen generate`; UI test
+`UITests/SafariExtensionTests.swift` drives Safari → More → Share → RetAInize).
+
+| Sub-question | Result | Evidence |
+|---|---|---|
+| (a) Safari action extension reads the page | **Yes.** `RetAInPage.js` ran inside en.wikipedia.org, chose `<main>`, returned title, URL and 1,475 chars of visible text; extension received it under `com.apple.property-list` → `NSExtensionJavaScriptPreprocessingResultsKey`. | spike.log: `types: com.apple.property-list \| js-preprocessing: root=MAIN text=1475` |
+| (c) Request survives inside the sheet | **Yes.** 4.9 s round-trip (POST + generate + QC) with the sheet open; piece rendered with highlight and tap-to-reveal. In-app paste path: 6.6 s. | `done … latency=4872ms`; screenshot `sheet-result.png` |
+| (d) Memory | Extension launched in **41 ms at 21 MB**; **45 MB peak** during generation; **55 MB** with the piece rendered in a WKWebView. Apple publishes no figure; the commonly reported extension ceiling is ~120 MB (unverified) — measure on device. A native text renderer instead of WKWebView would cut ~15–20 MB. | footer readout |
+| (e) App-group handoff | **Yes.** Extension wrote the piece to `group.com.retain.spike/reads.json`; the main app's stub My Reads lists it. | `group ok`; app list |
+| (b) Native-app share payloads | **Not testable in the simulator** (no Reddit/X/Kindle apps). Needs the phone. | — |
+
+Findings worth carrying into the MVP:
+- `innerText` returns only *visible* text: on mobile Wikipedia the collapsed sections were
+  excluded (1,475 chars of a long article). MVP extractor should use a readability-style
+  pass over `textContent`, not `innerText`.
+- iOS 26 Safari has no direct Share button in the compact bar; Share sits inside the
+  "More" menu, and first-run tips cover the toolbar. The UI test handles both.
+- One placement in the Wikipedia lead read slightly off ("proven to **bolster** the rate
+  of learning") — a G2 data point.
+- With `CODE_SIGNING_ALLOWED` default and no team, simulator builds sign ad hoc and the
+  app-group entitlement works; device builds need the founder's Apple ID in Xcode.
+
 Tooling status on the Mac mini: Xcode 26.4 present; no code-signing identity and no
 Apple ID team in Xcode yet (device runs need the founder to sign in once); no project
 generator installed — proposal: `xcodegen` via Homebrew (dev tool only, not a product

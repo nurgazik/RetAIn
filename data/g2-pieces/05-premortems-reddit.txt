@@ -1,0 +1,17 @@
+About a year ago our company started using premortems before some of our bigger decisions.
+
+The basic idea is simple:
+
+Before we commit, we imagine it's six months later and the decision was a complete disaster. Like a total unmitigated failure.
+
+Then everyone answers:
+
+What went wrong? And we try to really imagine the disaster and viscerally feel the impact.
+
+The thing that has really surprised me is how often someone brings up something they were already worried about, but probably wouldn't have said in a normal planning meeting.
+
+The premortem exercise is giving them permission to discuss things that might have seemed like pessimism without the premortem permission.
+
+It isn't stopping our momentum, if anything it is giving us confidence to make bigger leaps because we have really embraced thinking about the downside and then protecting against it.
+
+Has anyone else embraced this type of decision-making, even if you didn't call it a premortem?

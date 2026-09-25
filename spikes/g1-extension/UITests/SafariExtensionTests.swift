@@ -13,11 +13,22 @@ final class SafariExtensionTests: XCTestCase {
         XCTAssertTrue(safari.wait(for: .runningForeground, timeout: 20))
         sleep(4) // let the page settle
 
-        // 1. Share button (label differs across iOS versions)
-        let share = [safari.buttons["Share"], safari.buttons["ShareButton"],
-                     safari.toolbars.buttons["Share"]].first { $0.waitForExistence(timeout: 3) }
-        guard let share else { dump(safari, "no-share-button"); XCTFail("no Share button"); return }
-        share.tap()
+        // 0. First-run tips cover the toolbar on a fresh simulator
+        for _ in 0..<2 { let close = safari.buttons["Close"]; if close.exists { close.tap(); sleep(1) } }
+
+        // 1. Share button: direct on older iOS; inside the "More" menu on iOS 26
+        if let share = [safari.buttons["Share"], safari.buttons["ShareButton"]].first(where: { $0.waitForExistence(timeout: 2) }) {
+            share.tap()
+        } else if safari.buttons["MoreMenuButton"].waitForExistence(timeout: 3) {
+            safari.buttons["MoreMenuButton"].tap()
+            sleep(1)
+            dump(safari, "more-menu")
+            let inMenu = safari.descendants(matching: .any).matching(NSPredicate(format: "label BEGINSWITH 'Share'")).firstMatch
+            guard inMenu.waitForExistence(timeout: 5) else { dump(safari, "no-share-in-menu"); XCTFail("no Share in More menu"); return }
+            inMenu.tap()
+        } else {
+            dump(safari, "no-share-button"); XCTFail("no Share button"); return
+        }
         sleep(2)
 
         // 2. Our action in the share sheet (may need scrolling; may sit under "Edit Actions…")

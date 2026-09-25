@@ -209,10 +209,18 @@ def attribution_for(item) -> str:
     return base + AI_DISCLAIMER
 
 
+DENSITY_REQUEST = ("embed one in EVERY event block or paragraph where one sits naturally "
+                   "(two per block is fine when both are genuinely idiomatic; never force "
+                   "an awkward fit)")
+
+
 def generate_piece(con, item, wrapper_file: str, chosen: list, env: dict,
-                   digest_date: str = None) -> dict:
+                   digest_date: str = None, density_floor: bool = True,
+                   request: str = None) -> dict:
     """Full pipeline for one piece: prompt build, validation retry, QC with
-    regeneration (D29), annotation. Records the piece; returns it."""
+    regeneration (D29), annotation. Records the piece; returns it.
+    density_floor=False drops the D28 floor from the retry criteria (G2 measurement);
+    request overrides the D28 density sentence in the user message."""
     words = json.loads((ROOT / "data" / "words.json").read_text())["words"]
     defs = {w["word"]: w["definition"] for w in words if w["word"] in chosen}
 
@@ -227,9 +235,7 @@ def generate_piece(con, item, wrapper_file: str, chosen: list, env: dict,
         word_list = "\n".join(f"- {w}: {d}" for w, d in menu.items())
         ban = (f"FORBIDDEN WORDS — do not use these anywhere in the piece, in any "
                f"form, marked or unmarked: {', '.join(avoid)}.\n\n") if avoid else ""
-        return (f"{ban}CANDIDATE TARGET WORDS — embed one in EVERY event block or "
-                f"paragraph where one sits naturally (two per block is fine when "
-                f"both are genuinely idiomatic; never force an awkward fit). The "
+        return (f"{ban}CANDIDATE TARGET WORDS — {request or DENSITY_REQUEST}. The "
                 f"list is ordered most-wanted-first: when two words fit equally "
                 f"naturally, prefer the earlier one — but embed freely from "
                 f"anywhere in the list:\n{word_list}\n\n"
@@ -242,7 +248,7 @@ def generate_piece(con, item, wrapper_file: str, chosen: list, env: dict,
         return (format_ok(parsed), not missing_years(item, parsed),
                 not unlisted_marks(parsed["body"], defs),
                 not invented_numbers(item, parsed),
-                not density_low(parsed), parsed["marks"])
+                (not density_low(parsed)) if density_floor else True, parsed["marks"])
 
     def parse(raw: str) -> dict:
         p = parse_output(raw)
@@ -287,6 +293,7 @@ def generate_piece(con, item, wrapper_file: str, chosen: list, env: dict,
     # usage AND confuses. Regenerate without the failed words; un-highlighting
     # is only the last-resort floor.
     demoted = qc_gate(parsed["body"], defs, env)
+    qc_rejected = list(demoted)
     if demoted:
         print(f"[qc] regenerating without {demoted}...")
         keep = {w: d for w, d in defs.items()
@@ -349,7 +356,9 @@ def generate_piece(con, item, wrapper_file: str, chosen: list, env: dict,
                      f"generated {datetime.now(timezone.utc).date()}")
     print(f"[ok] {parsed['marks']} words embedded, {parsed['word_count']} words long")
     return {"item": item, "title": title, "body": body, "model": model_used,
-            "marks": parsed["marks"], "words_used": used}
+            "marks": parsed["marks"], "words_used": used,
+            "word_count": parsed["word_count"], "qc_rejected": qc_rejected,
+            "invented_numbers": invented_numbers(item, parsed), "attempts": attempts}
 
 
 def run() -> None:
