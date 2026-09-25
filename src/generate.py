@@ -181,8 +181,9 @@ def render(kicker: str, title: str, body: str, attrib: str) -> str:
 </div><div id="pop"></div><script>{POP_JS}</script></body></html>"""
 
 
-AI_DISCLAIMER = (" Rewritten with AI: we stay close to the source, but "
-                 "inconsistencies may slip through.")
+AI_DISCLAIMER = (" Adapted with AI to carry your words: phrasing may be added or "
+                 "changed, facts should not be — check the original for anything "
+                 "that matters.")
 
 
 def attribution_for(item) -> str:

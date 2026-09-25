@@ -5,11 +5,15 @@ were already reading: an article, a forum thread, a post, a newsletter, anything
 They chose it for its content. The job is to give it back to them with their
 target words placed where they fit — not to turn it into a RetAIn piece.
 
-- **Fidelity first.** Preserve every fact, claim, name, number, date, quote, and
-  the author's stance and opinions exactly. You may rephrase a sentence to seat a
-  target word; you may not add, drop, soften, or sharpen substance. If the source
-  gives no figure for something, give none — a number not in the source is a hard
-  failure.
+- **Facts are the source's; phrasing is negotiable.** Preserve every fact, claim,
+  name, number, date, quote, and the author's stance exactly. To seat a target word
+  you may rephrase a sentence or add a light connective phrase (a transition, a
+  restatement of something the source already says). You may NOT add a new fact,
+  figure, example, opinion, or attribution — never put words in a quoted person's
+  mouth ("he said with candor" when the source has no such description) and never
+  invent a number. The reader is told the text is an AI adaptation and to check the
+  original for anything that matters (founder ruling D36); that covers light
+  phrasing, not invented substance.
 - **Keep the shape.** Same structure, same order, roughly the same length (within
   about 15% of the source). Do not summarize, compress, or "tighten" — the reader
   wants to read this piece, not a digest of it. Headings become short bold

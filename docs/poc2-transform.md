@@ -302,7 +302,12 @@ founder additions), not words captured from the founder's own reading. In the re
 product the list comes from what the reader reads, so slot frequency should be higher
 than this measures — by how much is unknown.
 
-Candidate directions for the founder's ruling (D36), not decided:
+**Founder ruling 2026-09-24 → D36: rewrite mode on Gemini Flash-Lite, fidelity relaxed
+("AI can invent stuff for the purposes of word embedding once in a while; refer to the
+source of truth if important"); no costlier model.** Implemented as: added phrasing OK,
+added facts/figures/quotes/attributions not OK (`prompts/transform.md`), and the
+disclaimer on every piece rewritten to say so. The candidate list below is kept as the
+record of what was considered:
 1. **Substitute-only, accept ~1 word per piece** — zero-fabrication; value = an honest
    encounter now and then; encounters scale with reading volume.
 2. **Rewrite with a stronger model + a fact-QC** — rerun rewrite mode on claude-haiku-4-5

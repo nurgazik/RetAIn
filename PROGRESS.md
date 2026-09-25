@@ -33,9 +33,9 @@ count keeps running as an observation only.
    **G2 DONE, result is the new top risk:** on the founder's 5 real pieces, substitute
    mode finds ~1 slot/piece (2.4 marks/1,000 w, verbatim text); rewrite mode reaches
    8.1/1,000 only by inventing clauses on news ("he said with characteristic candor").
-   Compare page: output/compare-transform.html. **Founder ruling needed → D36**; four
-   candidate directions in the spec (substitute-only / stronger model + fact-QC /
-   highlight organic occurrences / reader-set aggressiveness).
+   Compare page: output/compare-transform.html. **Ruled → D36:** rewrite mode on
+   Gemini, fidelity relaxed (phrasing may be added, facts/quotes/attributions may not),
+   disclaimer rewritten; no costlier model. **D37:** link intake out of the MVP.
    **G3 DONE** → docs/link-intake-legality.md: Reddit `.json` dead + API excludes
    monetised apps; X free tier gone, oEmbed truncates; recommendation = selected text
    for Reddit/X, in-Safari extension for articles. **Founder ruling → D37.**
@@ -44,10 +44,8 @@ count keeps running as an observation only.
    a real run from the phone produced a 3-word piece in the ledger. **The 14-day "do I
    reach for it?" count starts today.** Recipe + the "Limit IP Address Tracking" gotcha
    in docs/poc2-transform.md §7 S0. Text only until the founder rules on URL fetching.
-2. **G2 — DONE (5 pieces).** Founder reads output/compare-transform.html, rates
-   columns, rules engine mode (D36). Assistant's recommendation: test direction 2
-   (stronger model + fact-QC) before settling, because it decides whether density
-   is buyable at all.
+2. **Phase 1 rulings — P1 (MVP scope rewrite of PRD §8) is next**; P2 monetization
+   deferred by founder until usage data; P3 TestFlight metric pending.
 3. **G3** — Reddit/X terms reading + fetch attempts → founder rules link intake (D37).
 4. **Phase 1 rulings** — PRD §8 MVP rewrite, monetization (E1), TestFlight metric.
 5. **Phase 2 MVP build** M1 transform service → M2 app shell → M3 share-extension
@@ -108,6 +106,9 @@ itself via the fetchers.
   see NOW block. Engine is now the top risk, ahead of iOS.
 - **G4 competitive scan** delivered by a research agent → docs/competitive-scan.md.
 - **G3 link-intake legality** delivered by a research agent → docs/link-intake-legality.md.
+- **Founder rulings D36 + D37** (relaxed fidelity on Gemini; link intake out). Assistant
+  flagged that G2's invention rate was per-embed, not occasional, incl. one fabricated
+  attribution; ruling stands with the facts/attributions line as the guardrail.
 
 ### 2026-08-08 — Coherence research sweep (founder-commissioned)
 
