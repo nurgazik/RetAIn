@@ -78,12 +78,14 @@ scroll-depth telemetry from day one; usage decisions deferred (personalization p
 
 ---
 
-# PoC 2 → MVP: the transform service (M1) — PROPOSAL, pending founder yes (2026-09-24)
+# PoC 2 → MVP: the transform service (M1) — ACCEPTED (D38) and BUILT 2026-09-24
 
 Everything above describes the digest pipeline (PoC 1). Under D34 the ingest → store →
 select half is retired; generate → QC → render and the served ledger carry over. This
-section proposes the hosted service the iOS app and its extensions will call (backlog M1,
-PRD §8 "Service"). Nothing here is built.
+section describes the hosted service the iOS app and its extensions call (backlog M1,
+PRD §8 "Service"). Built in `src/service/` (config, db, auth, engine, app); runs as the
+launchd agent `com.retain.service` on port 8585. Status of the "done when" list at the
+bottom: everything passes locally; the Funnel HTTPS URL is pending tailnet enablement.
 
 ## What it is
 

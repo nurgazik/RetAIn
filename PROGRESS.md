@@ -47,10 +47,17 @@ count keeps running as an observation only.
 2. **P1 DONE — PRD §8 rewritten to the PoC 2 MVP** (surfaces, engine with gates, service,
    economics ≈ $0.003/transform, proposed TestFlight metric). P2 monetization deferred by
    founder until usage data; **P3: founder sets thresholds.**
-3. **M1 transform service — APPROVED (D38), BUILD STARTED 2026-09-24.** FastAPI on the
-   Mac mini via Tailscale Funnel (Fly.io ~$5/mo approved as fallback); SQLite
-   users/words/pieces/events/calls; Sign in with Apple; SSE phases; daily cap. Code goes in
-   `src/service/`; venv `.venv/` (gitignored); `requirements.txt`.
+3. **M1 transform service — BUILT AND RUNNING (2026-09-24 evening).** `src/service/`
+   (FastAPI 0.141 / uvicorn / PyJWT, `.venv/`, `requirements.txt`); launchd agent
+   `com.retain.service` on port 8585 (log ~/Library/Logs/retain-service.log); SQLite
+   `data/service.db`. Verified by curl with the dev token: 401 without auth, 50 seeded
+   words, 422 on short text, transform → SSE phases generating→checking→regenerating→
+   repairing→done → piece in 7.2 s, 8 itemised model calls = $0.0038, tap recorded,
+   word card created, in-flight piece re-queued after a restart. Sign in with Apple is
+   coded per Apple's rules but untested until the app exists (M2; bundle id assumed
+   `com.retain.app`, set `RETAIN_APPLE_BUNDLE_ID`). **Remaining: Tailscale Funnel** — the
+   CLI hung silently on `tailscale funnel --bg 8585`, which usually means Funnel/HTTPS
+   isn't enabled for the tailnet yet (founder: admin console).
 4. **Phase 2 MVP build** M1 transform service → M2 app shell → M3 share-extension
    sheet → M4 Safari → M5 capture → M6 clipboard → M8 monetization → M9 TestFlight.
 5. Parked (Horizon 3): proprietary generator, Safari web extension in-place, screenshot
@@ -116,6 +123,8 @@ itself via the fetchers.
   hard inventions per D36, feeds D29 regeneration, repairs or drops residuals instead of
   un-highlighting. Judge-on numbers on the 5 pieces: 5.6 marks/1,000 w, length ×1.06,
   zero invented attributions in the highlighted sentences (vs 8.1/1,000 unguarded).
+- **M1 built the same evening** (see NOW block): service package, launchd agent, curl
+  end-to-end pass, cost telemetry itemised per call. Funnel pending the admin console.
 - **P1 done:** PRD §8 rewritten to the PoC 2 MVP shape. Founder's pending list: Apple ID
   in Xcode + phone (G1 device checks), P3 thresholds, P2 monetization when usage data
   exists.

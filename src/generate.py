@@ -124,7 +124,7 @@ def qc_gate(body: str, defs: dict, env: dict) -> list:
     words to demote. Fails open — a judge error demotes nothing."""
     word_list = "\n".join(f"- {w}: {d}" for w, d in defs.items())
     try:
-        raw, _ = call_model(QC_SYSTEM, f"WORD LIST:\n{word_list}\n\nTEXT:\n{body}", env)
+        raw, _ = call_model(QC_SYSTEM, f"WORD LIST:\n{word_list}\n\nTEXT:\n{body}", env, purpose="qc")
         raw = re.sub(r"^```(json)?\s*|\s*```$", "", raw.strip(), flags=re.M).strip()
         bad = [v for v in json.loads(raw)["verdicts"] if not v.get("ok")]
         for v in bad:
@@ -169,7 +169,7 @@ def fact_qc(source_text: str, body: str, env: dict) -> tuple:
     source does not. Returns (marked words inside flagged sentences, flagged sentences
     without a mark). Fails open."""
     try:
-        raw, _ = call_model(FACT_QC_SYSTEM, f"SOURCE:\n{source_text}\n\nADAPTATION:\n{body}", env)
+        raw, _ = call_model(FACT_QC_SYSTEM, f"SOURCE:\n{source_text}\n\nADAPTATION:\n{body}", env, purpose="fact")
         raw = re.sub(r"^```(json)?\s*|\s*```$", "", raw.strip(), flags=re.M).strip()
         flagged = json.loads(raw).get("invented", [])
     except Exception as exc:
@@ -220,7 +220,7 @@ def repair_paragraphs(body: str, words: list, source_text: str, env: dict) -> tu
             new = None
             for strict in ("", f"\n\nThe previous attempt still contained '{w}'. The word '{w}' and every "
                                f"form of it (e.g. {w}s, {w}ed, {w}ing) must be ABSENT. Rephrase without it."):
-                raw, _ = call_model(REPAIR_SYSTEM + strict, f"SOURCE:\n{source_text}\n\nFORBIDDEN WORD: {w}\n\nPARAGRAPH:\n{target}", env)
+                raw, _ = call_model(REPAIR_SYSTEM + strict, f"SOURCE:\n{source_text}\n\nFORBIDDEN WORD: {w}\n\nPARAGRAPH:\n{target}", env, purpose="repair")
                 m = re.search(r"<p>.*?</p>", raw, flags=re.S)
                 new = m.group(0) if m else None
                 if new and not word_re.search(re.sub(r"<[^>]+>", "", new)):
@@ -268,15 +268,20 @@ def demote_marks(body: str, words: list) -> str:
     return re.sub(r"<mark>(.*?)</mark>", repl, body, flags=re.S)
 
 
-def call_model(system: str, user: str, env: dict) -> tuple:
+CALL_LOG = []  # (purpose, model, tokens_in, tokens_out) per model call; the service drains it
+
+
+def call_model(system: str, user: str, env: dict, purpose: str = "generate") -> tuple:
     """Primary model with automatic fallback (D5). Returns (text, model_name)."""
     try:
         r = PRIMARY["call"](PRIMARY["model"], system, user, env[PRIMARY["key"]])
-        return r["text"], PRIMARY["model"]
+        model = PRIMARY["model"]
     except Exception as exc:
         print(f"[warn] {PRIMARY['model']} failed ({exc}); falling back to {FALLBACK['model']}")
         r = FALLBACK["call"](FALLBACK["model"], system, user, env[FALLBACK["key"]])
-        return r["text"], FALLBACK["model"]
+        model = FALLBACK["model"]
+    CALL_LOG.append((purpose, model, r.get("tokens_in", 0), r.get("tokens_out", 0)))
+    return r["text"], model
 
 
 def annotate_marks(body: str, defs: dict) -> str:
@@ -340,12 +345,18 @@ DENSITY_REQUEST = ("embed one in EVERY event block or paragraph where one sits n
 
 def generate_piece(con, item, wrapper_file: str, chosen: list, env: dict,
                    digest_date: str = None, density_floor: bool = True,
-                   request: str = None) -> dict:
+                   request: str = None, words: list = None, record: bool = True,
+                   progress=None) -> dict:
     """Full pipeline for one piece: prompt build, validation retry, QC with
     regeneration (D29), annotation. Records the piece; returns it.
     density_floor=False drops the D28 floor from the retry criteria (G2 measurement);
-    request overrides the D28 density sentence in the user message."""
-    words = json.loads((ROOT / "data" / "words.json").read_text())["words"]
+    request overrides the D28 density sentence in the user message.
+    words: per-user word dicts (service); default = data/words.json (PoC).
+    record=False skips the PoC ledger insert (the service keeps its own tables).
+    progress: optional callback(phase: str) for the app's "working the magic" moment."""
+    if words is None:
+        words = json.loads((ROOT / "data" / "words.json").read_text())["words"]
+    progress = progress or (lambda phase: None)
     defs = {w["word"]: w["definition"] for w in words if w["word"] in chosen}
 
     system = ((ROOT / "prompts" / "core.md").read_text() + "\n\n---\n\n"
@@ -380,6 +391,7 @@ def generate_piece(con, item, wrapper_file: str, chosen: list, env: dict,
         return p
 
     print(f"[gen] {item['id']} via {PRIMARY['model']}...")
+    progress("generating")
     raw, model_used = call_model(system, user, env)
     parsed = parse(raw)
     attempts = 1
@@ -416,6 +428,7 @@ def generate_piece(con, item, wrapper_file: str, chosen: list, env: dict,
     # the reader knows their words, so unhighlighted misuse still teaches wrong
     # usage AND confuses. Regenerate without the failed words; un-highlighting
     # is only the last-resort floor.
+    progress("checking")
     demoted = qc_gate(parsed["body"], defs, env)
     invented_words, invented_unmarked = fact_qc(source_text, parsed["body"], env)
     for w in invented_words:
@@ -423,6 +436,7 @@ def generate_piece(con, item, wrapper_file: str, chosen: list, env: dict,
             demoted.append(w)
     qc_rejected = list(demoted)
     if demoted:
+        progress("regenerating")
         print(f"[qc] regenerating without {demoted}...")
         keep = {w: d for w, d in defs.items()
                 if not any(s.strip().lower().startswith(w[:6].lower())
@@ -438,6 +452,7 @@ def generate_piece(con, item, wrapper_file: str, chosen: list, env: dict,
             inv2, _ = fact_qc(source_text, parsed["body"], env)
             residual += [w for w in inv2 if w not in residual]
             if residual:
+                progress("repairing")
                 parsed["body"], still = repair_paragraphs(parsed["body"], residual, source_text, env)
                 if still:
                     parsed["body"], still = drop_invented(parsed["body"], still)
@@ -453,6 +468,7 @@ def generate_piece(con, item, wrapper_file: str, chosen: list, env: dict,
                 + (["demoted word reappeared"] if reappeared else [])
             print(f"[warn] regeneration failed validation ({'; '.join(why)}); "
                   f"keeping original, repairing paragraphs for {demoted}")
+            progress("repairing")
             parsed["body"], still = repair_paragraphs(parsed["body"], demoted, source_text, env)
             if still:
                 parsed["body"], still = drop_invented(parsed["body"], still)
@@ -484,14 +500,15 @@ def generate_piece(con, item, wrapper_file: str, chosen: list, env: dict,
     used = sorted({w for w in defs
                    if any(m.startswith(w[:6].lower()) for m in marked)})
 
-    con.execute(
-        "INSERT INTO generated_pieces (item_id, created_at, model, words_used, "
-        "title, body_html, digest_date, offered_words) "
-        "VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
-        (item["id"], datetime.now(timezone.utc).isoformat(), model_used,
-         json.dumps(used), title, body, digest_date, json.dumps(chosen)))
-    store.set_status(con, item["id"], "selected",
-                     f"generated {datetime.now(timezone.utc).date()}")
+    if record:
+        con.execute(
+            "INSERT INTO generated_pieces (item_id, created_at, model, words_used, "
+            "title, body_html, digest_date, offered_words) "
+            "VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+            (item["id"], datetime.now(timezone.utc).isoformat(), model_used,
+             json.dumps(used), title, body, digest_date, json.dumps(chosen)))
+        store.set_status(con, item["id"], "selected",
+                         f"generated {datetime.now(timezone.utc).date()}")
     print(f"[ok] {parsed['marks']} words embedded, {parsed['word_count']} words long")
     return {"item": item, "title": title, "body": body, "model": model_used,
             "marks": parsed["marks"], "words_used": used,
