@@ -46,3 +46,64 @@ def test_rejected_word_reverts_its_sentence_to_source():
     assert "corroborate" not in out
     assert "The agency said the data confirm the trend." in out
     assert "<mark>salient</mark>" in out and stats["edited"] == 1
+
+
+# ---- D40 notes (SUPPLEMENT)
+
+LONG = ("Tesla showed a new version of its Optimus robot folding laundry at its factory on "
+        "Tuesday, a task the company called its hardest yet and one that took years of work "
+        "by a large team of engineers.")
+NOTE = ("<aside>Industrial robot arms are <mark>ubiquitous</mark> on factory floors, but they "
+        "work behind cages on fixed tasks.</aside>")
+
+
+def test_valid_note_is_kept_after_its_paragraph():
+    out, stats = G.sentence_guard(LONG + "\n\nShort one.", f"<p>{LONG}</p>\n{NOTE}\n<p>Short one.</p>")
+    assert stats["notes_kept"] == 1
+    assert out.index('<aside class="supplement" data-tier="supplement">') < out.index("Short one.")
+    assert G.coverage_stats(out, LONG + "\n\nShort one.")["tiers"]["supplement"] == 1
+
+
+def test_note_rules_drop_bad_notes():
+    bad = {
+        "number": "<aside>Robot arms date to <mark>1961</mark> in car plants.</aside>",
+        "quote": '<aside>Engineers call it "the <mark>ubiquitous</mark> problem".</aside>',
+        "new name": "<aside>Boston Dynamics made robots <mark>ubiquitous</mark> in videos.</aside>",
+        "no mark": "<aside>Robot arms work behind cages on fixed tasks.</aside>",
+    }
+    for why, note in bad.items():
+        _, stats = G.sentence_guard(LONG, f"<p>{LONG}</p>\n{note}")
+        assert stats["notes_dropped"] == 1 and stats["notes_kept"] == 0, why
+
+
+def test_note_dropped_when_paragraph_already_has_word_or_is_short():
+    marked = LONG.replace("showed", "<mark>unveiled</mark>")
+    _, stats = G.sentence_guard(LONG, f"<p>{marked}</p>\n{NOTE}")
+    assert stats["notes_dropped"] == 1
+    _, stats = G.sentence_guard("Too short to host.", f"<p>Too short to host.</p>\n{NOTE}")
+    assert stats["notes_dropped"] == 1
+
+
+def test_rejected_note_word_drops_the_note():
+    body = G.unmark_sentences(f"<p>{LONG}</p>\n{NOTE}", ["ubiquitous"])
+    out, stats = G.sentence_guard(LONG, body)
+    assert stats["notes_dropped"] == 1 and "aside" not in out
+
+
+def test_fact_judge_never_sees_notes():
+    assert "aside" not in G.strip_notes(f"<p>{LONG}</p>\n{NOTE}")
+    assert G.invented_numbers({"content_html": LONG}, {"body": f"<p>{LONG}</p><aside>In 1961 x</aside>"}) == []
+
+
+def test_split_paragraph_keeps_source_structure_and_note():
+    src = LONG + " It folded towels. It folded shirts."
+    body = (f"<p>{LONG}</p>\n<p>It folded towels. It folded shirts.</p>\n{NOTE}")
+    out, stats = G.sentence_guard(src, body)
+    assert out.count("<p>") == 1 and stats["notes_kept"] == 1
+
+
+def test_merged_paragraphs_are_rebuilt():
+    src = LONG + "\n\nSecond paragraph here. It stays apart."
+    body = f"<p>{LONG} Second paragraph here. It stays apart.</p>"
+    out, _ = G.sentence_guard(src, body)
+    assert out.count("<p>") == 2

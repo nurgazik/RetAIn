@@ -53,6 +53,25 @@ final class ReaderPopupTests: XCTestCase {
         XCTAssertFalse(wordPop.contains("original"), wordPop)
     }
 
+    /// D40: tapping a note says it was added by RetAIn; tapping its word shows the meaning.
+    func testNoteTapExplainsOriginWordTapShowsMeaning() async throws {
+        let body = "<p>Source paragraph.</p><aside class=\"supplement\" data-tier=\"supplement\">"
+            + "Robot arms are <mark data-def=\"found everywhere\">ubiquitous</mark> in factories.</aside>"
+        let html = PieceHTML.page(title: "T", label: "Your read", body: body, attrib: "attrib")
+        let web = WKWebView(frame: CGRect(x: 0, y: 0, width: 390, height: 800))
+        let nav = NavSink()
+        web.navigationDelegate = nav
+        web.loadHTMLString(html, baseURL: nil)
+        try await nav.wait()
+        _ = try await web.evaluateJavaScript("document.querySelector('aside').click(); true")
+        let notePop = try await web.evaluateJavaScript("document.getElementById('pop').innerText") as? String ?? ""
+        XCTAssertTrue(notePop.contains("Added by RetAIn"), notePop)
+        _ = try await web.evaluateJavaScript("document.querySelector('mark').click(); true")
+        let wordPop = try await web.evaluateJavaScript("document.getElementById('pop').innerText") as? String ?? ""
+        XCTAssertTrue(wordPop.contains("found everywhere"), wordPop)
+        XCTAssertFalse(wordPop.contains("Added by RetAIn"), wordPop)
+    }
+
     final class Sink: NSObject, WKScriptMessageHandler {
         var messages: [String: String] = [:]
         func userContentController(_ c: WKUserContentController, didReceive m: WKScriptMessage) {

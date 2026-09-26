@@ -39,6 +39,10 @@ CSS = """
   .edited { text-decoration: underline; text-decoration-color: #e8c96a;
             text-decoration-thickness: 1.5px; text-underline-offset: 3px; }
   .edited.rephrase { text-decoration-style: dashed; }
+  aside.supplement { margin: -.4rem 0 1.1rem; padding: .55rem .8rem; border-left: 3px solid #b9a27a;
+                     background: #f1ece2; border-radius: 4px; font-size: .98rem; }
+  aside.supplement::before { content: "RetAIn note"; display: block; font-family: -apple-system, sans-serif;
+                             font-size: .68rem; letter-spacing: .1em; text-transform: uppercase; color: #8a6d3b; }
   #pop { position: absolute; display: none; z-index: 10; max-width: 280px;
          padding: .6rem .8rem; background: #26221c; color: #faf8f4;
          border-radius: 8px; font-family: -apple-system, sans-serif;
@@ -90,7 +94,7 @@ def invented_numbers(item, parsed: dict) -> list:
     spells out in words can false-positive; that only costs a retry.)"""
     def nums(text):
         return set(re.findall(r"\d+(?:[.,]\d+)*", re.sub(r"<[^>]+>", " ", text)))
-    return sorted(nums(parsed["body"]) - nums(item["content_html"] or ""))
+    return sorted(nums(strip_notes(parsed["body"])) - nums(item["content_html"] or ""))  # notes: note_problem
 
 
 def normalize_bc_years(body: str) -> str:
@@ -266,8 +270,38 @@ def drop_invented(body: str, words: list) -> tuple:
 SENTENCE_REQUEST = ("place a candidate word by changing ONLY the sentence it lands in — "
                     "substitute where a plain word already carries the sense, otherwise "
                     "rephrase that one sentence lightly; every other sentence stays "
-                    "verbatim; never add a sentence; skip every candidate without a "
-                    "natural slot")
+                    "verbatim; never add a sentence to the source's paragraphs. Aim for a "
+                    "word in every paragraph of 25+ words: where a paragraph has no natural "
+                    "slot, add one <aside> note after it as the system prompt describes; "
+                    "skip any candidate that fits neither way")
+
+NOTE_RE = re.compile(r"<aside[^>]*>(.*?)</aside>", re.S)
+NOTE_MIN_HOST_WORDS = 25  # D40: only paragraphs this long count toward coverage / may get a note
+
+
+def strip_notes(body: str) -> str:
+    """Body without D40 notes — for checks that judge fidelity to the source."""
+    return NOTE_RE.sub("", body)
+
+
+def note_problem(note: str, source_text: str) -> str:
+    """D40 rules a note must meet, checked in code (no model call). Returns the first
+    violated rule, or '' when the note passes."""
+    text = html_mod.unescape(re.sub(r"<[^>]+>", "", note)).strip()
+    if len(re.findall(r"<mark>", note)) != 1:
+        return "needs exactly one marked word"
+    if re.search(r"\d", text):
+        return "contains a number"
+    if re.search(r"[\"“”]", text):
+        return "contains a quotation"
+    if len(split_sentences(text)) > 2:
+        return "longer than two sentences"
+    source_words = set(re.findall(r"[A-Za-z][\w’'-]*", source_text))
+    for s in split_sentences(text):
+        for w in re.findall(r"[A-Za-z][\w’'-]*", s)[1:]:  # first word of a sentence is capitalised anyway
+            if w[0].isupper() and w not in source_words:
+                return f"names something the source doesn't ({w})"
+    return ""
 
 _SENT_END = re.compile(r"([.!?…][\"”’')\]]*)(\s+)(?=[\"“‘(\[]?[A-Z0-9])")
 
@@ -309,58 +343,118 @@ def edited_span(src_sentence: str, out_sentence: str) -> str:
     return f'<span class="edited {tier}" data-tier="{tier}" data-orig="{src_sentence}">{out_sentence}</span>'
 
 
+def source_paragraphs(source_text: str) -> list:
+    """Blank-line paragraphs; single newlines when the text has no blank lines."""
+    paras = [p.strip() for p in re.split(r"\n\s*\n", source_text.strip()) if p.strip()]
+    if len(paras) == 1 and "\n" in source_text.strip():
+        paras = [p.strip() for p in source_text.strip().split("\n") if p.strip()]
+    return paras
+
+
 def sentence_guard(source_text: str, body: str) -> tuple:
     """Mechanical fidelity for sentence-scoped mode. Walks the SOURCE paragraph by
     paragraph and sentence by sentence; a sentence may differ from the source only if it
     carries a <mark> (then it is wrapped by edited_span with its tier and original); any
     other difference is reverted to the source sentence; sentences the model added are
-    dropped; sentences it dropped are restored. Returns (body, stats)."""
+    dropped; sentences it dropped are restored. D40 notes (<aside>) are the one allowed
+    addition: each is kept after its paragraph only if that paragraph has 25+ words and no
+    word of its own, is the paragraph's only note, and passes note_problem. Returns
+    (body, stats)."""
     import difflib
-    src_paras = [p.strip() for p in re.split(r"\n\s*\n", source_text.strip()) if p.strip()]
-    if len(src_paras) == 1 and "\n" in source_text.strip():
-        src_paras = [p.strip() for p in source_text.strip().split("\n") if p.strip()]
-    out_paras = re.findall(r"<p>(.*?)</p>", body, flags=re.S)
-    stats = {"edited": 0, "reverted": 0, "dropped": 0, "restored": 0, "kept": 0}
+    src_paras = source_paragraphs(source_text)
+    # One alignment over the whole text, sentence by sentence, so the source's paragraphs are
+    # rebuilt even when the model split or merged them (a per-paragraph walk used to collapse
+    # the piece into one block whenever the counts differed).
+    src_s, para_of = [], []
+    for pi, sp in enumerate(src_paras):
+        for s in split_sentences(html_mod.escape(sp)):
+            src_s.append(s); para_of.append(pi)
+    out_s, notes = [], []  # notes: (output sentences before the note, note html)
+    for m in re.finditer(r"<aside[^>]*>(.*?)</aside>|<p>(.*?)</p>", body, flags=re.S):
+        if m.group(1) is not None:
+            notes.append((len(out_s), re.sub(r"</?p>", "", m.group(1)).strip()))
+        else:
+            out_s.extend(split_sentences(m.group(2)))
+    stats = {"edited": 0, "reverted": 0, "dropped": 0, "restored": 0, "kept": 0,
+             "notes_kept": 0, "notes_dropped": 0}
 
-    def fix_para(src_p: str, out_p: str) -> str:
-        src_s = split_sentences(html_mod.escape(src_p))
-        out_s = split_sentences(out_p)
-        sm = difflib.SequenceMatcher(a=[_key(x) for x in src_s], b=[_key(x) for x in out_s], autojunk=False)
-        result = []
-        for op, i1, i2, j1, j2 in sm.get_opcodes():
-            if op == "equal":
-                result.extend(out_s[j1:j2]); stats["kept"] += i2 - i1
-            elif op == "replace":
-                src_chunk, out_chunk = src_s[i1:i2], out_s[j1:j2]
-                if len(src_chunk) == len(out_chunk):
-                    for a, b in zip(src_chunk, out_chunk):
-                        if "<mark>" in b:
-                            result.append(edited_span(a, b)); stats["edited"] += 1
-                        else:
-                            result.append(a); stats["reverted"] += 1
-                else:  # uneven rewrite: keep marked output sentences, restore the rest from source
-                    marked = [b for b in out_chunk if "<mark>" in b]
-                    if marked and len(marked) <= len(src_chunk):
-                        # pair marked sentences with the closest source sentences by order
-                        for idx, a in enumerate(src_chunk):
-                            if idx < len(marked):
-                                result.append(edited_span(a, marked[idx])); stats["edited"] += 1
-                            else:
-                                result.append(a); stats["restored"] += 1
-                        stats["dropped"] += len(out_chunk) - len(marked)
+    result = []    # (source sentence index, html) in source order
+    src_for = {}   # output sentence index -> source sentence index it stands for
+    sm = difflib.SequenceMatcher(a=[_key(x) for x in src_s], b=[_key(x) for x in out_s], autojunk=False)
+    for op, i1, i2, j1, j2 in sm.get_opcodes():
+        if op == "equal":
+            for d in range(i2 - i1):
+                result.append((i1 + d, out_s[j1 + d])); src_for[j1 + d] = i1 + d
+            stats["kept"] += i2 - i1
+        elif op == "replace":
+            src_chunk, out_chunk = src_s[i1:i2], out_s[j1:j2]
+            if len(src_chunk) == len(out_chunk):
+                for d, (a, b) in enumerate(zip(src_chunk, out_chunk)):
+                    src_for[j1 + d] = i1 + d
+                    if "<mark>" in b:
+                        result.append((i1 + d, edited_span(a, b))); stats["edited"] += 1
                     else:
-                        result.extend(src_chunk); stats["reverted"] += len(src_chunk); stats["dropped"] += len(out_chunk)
-            elif op == "delete":
-                result.extend(src_s[i1:i2]); stats["restored"] += i2 - i1
-            elif op == "insert":
-                stats["dropped"] += j2 - j1  # added sentences never survive
-        return " ".join(result)
+                        result.append((i1 + d, a)); stats["reverted"] += 1
+            else:  # uneven rewrite: keep marked output sentences, restore the rest from source
+                marked = [j for j in range(j1, j2) if "<mark>" in out_s[j]]
+                if marked and len(marked) <= len(src_chunk):
+                    # pair marked sentences with the closest source sentences by order
+                    for d, a in enumerate(src_chunk):
+                        if d < len(marked):
+                            result.append((i1 + d, edited_span(a, out_s[marked[d]]))); stats["edited"] += 1
+                            src_for[marked[d]] = i1 + d
+                        else:
+                            result.append((i1 + d, a)); stats["restored"] += 1
+                    stats["dropped"] += len(out_chunk) - len(marked)
+                else:
+                    result.extend((i1 + d, a) for d, a in enumerate(src_chunk))
+                    stats["reverted"] += len(src_chunk); stats["dropped"] += len(out_chunk)
+                for j in range(j1, j2):  # unmarked output sentences still anchor notes
+                    src_for.setdefault(j, min(i1 + (j - j1), i2 - 1))
+        elif op == "delete":
+            result.extend((i, src_s[i]) for i in range(i1, i2)); stats["restored"] += i2 - i1
+        elif op == "insert":
+            stats["dropped"] += j2 - j1  # added sentences never survive
+            for j in range(j1, j2):
+                src_for[j] = max(i1 - 1, 0)
+    fixed = [" ".join(h for i, h in result if para_of[i] == pi) for pi in range(len(src_paras))]
 
-    if len(out_paras) == len(src_paras):
-        fixed = [fix_para(sp, op) for sp, op in zip(src_paras, out_paras)]
-    else:  # paragraph structure drifted: align everything as one sequence
-        fixed = [fix_para("\n".join(src_paras), " ".join(out_paras))]
-    return "\n".join(f"<p>{p}</p>" for p in fixed), stats
+    placed = {}
+    for n_before, note in notes:
+        k = para_of[src_for[n_before - 1]] + 1 if n_before and src_s else 0  # 1-based host paragraph
+        host = src_paras[k - 1] if k else None
+        why = ("no paragraph to follow" if host is None
+               else "its paragraph already carries a word" if "<mark>" in fixed[k - 1]
+               else "its paragraph is under 25 words" if len(host.split()) < NOTE_MIN_HOST_WORDS
+               else "second note on one paragraph" if k in placed
+               else note_problem(note, source_text))
+        if why:
+            stats["notes_dropped"] += 1
+            print(f"[note] dropped ({why}): \"{re.sub(r'<[^>]+>', '', note)[:110]}\"")
+            continue
+        placed[k] = note
+        stats["notes_kept"] += 1
+    blocks = []
+    for k, p in enumerate(fixed, 1):
+        blocks.append(f"<p>{p}</p>")
+        if k in placed:
+            blocks.append(f'<aside class="supplement" data-tier="supplement">{placed[k]}</aside>')
+    return "\n".join(blocks), stats
+
+
+def coverage_stats(body: str, source_text: str) -> dict:
+    """D40 metrics for a finished sentence-mode body: placed words per tier and paragraph
+    coverage (share of 25+-word source paragraphs followed by, or carrying, a word)."""
+    src_paras = source_paragraphs(source_text)
+    blocks = re.findall(r"<p>.*?</p>(?:\s*<aside[^>]*>.*?</aside>)?", body, flags=re.S)
+    eligible = [b for b, s in zip(blocks, src_paras) if len(s.split()) >= NOTE_MIN_HOST_WORDS]
+    tiers = {t: sum(len(re.findall(r"<mark", m)) for m in re.findall(
+                 rf'<span class="edited {t}"[^>]*>(.*?)</span>', body, flags=re.S))
+             for t in ("substitute", "rephrase")}
+    tiers["supplement"] = sum(len(re.findall(r"<mark", n)) for n in NOTE_RE.findall(body))
+    covered = sum("<mark" in b for b in eligible)
+    return {"tiers": tiers, "eligible_paragraphs": len(eligible), "covered": covered,
+            "coverage": round(covered / len(eligible), 2) if eligible else None}
 
 
 def run_judges(body: str, defs: dict, source_text: str, env: dict) -> tuple:
@@ -369,7 +463,7 @@ def run_judges(body: str, defs: dict, source_text: str, env: dict) -> tuple:
     from concurrent.futures import ThreadPoolExecutor
     with ThreadPoolExecutor(max_workers=2) as ex:
         f_qc = ex.submit(qc_gate, body, defs, env)
-        f_fact = ex.submit(fact_qc, source_text, body, env)
+        f_fact = ex.submit(fact_qc, source_text, strip_notes(body), env)  # D40 notes are added by design
         return f_qc.result(), f_fact.result()
 
 
@@ -389,13 +483,14 @@ def unmark_sentences(body: str, words: list) -> str:
     stems = [w.strip().lower()[:6] for w in words]
     def fix_para(m):
         out = []
-        for s in split_sentences(m.group(1)):
+        for s in split_sentences(m.group(2)):
             marked = [re.sub(r"<[^>]+>", "", x).strip().lower() for x in re.findall(r"<mark>(.*?)</mark>", s, flags=re.S)]
             if any(x.startswith(st) for x in marked for st in stems):
                 s = re.sub(r"</?mark>", "", s)
             out.append(s)
-        return f"<p>{' '.join(out)}</p>"
-    return re.sub(r"<p>(.*?)</p>", fix_para, body, flags=re.S)
+        return f"<{m.group(1)}>{' '.join(out)}</{m.group(1)}>"
+    # <aside> too (D40): a note that loses its only mark is then dropped by sentence_guard
+    return re.sub(r"<(p|aside)>(.*?)</\1>", fix_para, body, flags=re.S)
 
 
 CALL_LOG = []  # (purpose, model, tokens_in, tokens_out, ms) per model call; the service drains it
@@ -444,9 +539,12 @@ def render(kicker: str, title: str, body: str, attrib: str) -> str:
 AI_DISCLAIMER = (" Adapted with AI to carry your words: phrasing may be added or "
                  "changed, facts should not be — check the original for anything "
                  "that matters.")
+SENTENCE_DISCLAIMER = (" Adapted with AI to carry your words (D40): underlined sentences "
+                       "were changed — tap one to see the original; boxed notes are added "
+                       "general context, not from the source.")
 
 
-def attribution_for(item) -> str:
+def attribution_for(item, disclaimer: str = AI_DISCLAIMER) -> str:
     url = html_mod.escape(item["url"])
     if item["source"] == "wikipedia_onthisday":
         base = (f'Adapted from <a href="{url}">Wikipedia\'s On This Day</a> '
@@ -467,7 +565,7 @@ def attribution_for(item) -> str:
     else:
         base = (f'Adapted from "<a href="{url}">{html_mod.escape(item["title"])}</a>" '
                 f'by {html_mod.escape(item["author"] or "unknown")} ({item["license"]}).')
-    return base + AI_DISCLAIMER
+    return base + disclaimer
 
 
 DENSITY_REQUEST = ("embed one in EVERY event block or paragraph where one sits naturally "
@@ -506,7 +604,18 @@ def generate_piece(con, item, wrapper_file: str, chosen: list, env: dict,
                 f"list is ordered most-wanted-first: when two words fit equally "
                 f"naturally, prefer the earlier one — but embed freely from "
                 f"anywhere in the list:\n{word_list}\n\n"
-                f"SOURCE (title: {item['title']}):\n\n{source_text}")
+                f"SOURCE (title: {item['title']}):\n\n{source_text}{needs_word}")
+
+    # D40: name the paragraphs that must carry a word — a small model counts paragraphs
+    # unreliably, so each is identified by its opening words
+    needs_word = ""
+    if wrapper_file == "transform-sentence.md":
+        eligible = [p for p in source_paragraphs(source_text) if len(p.split()) >= NOTE_MIN_HOST_WORDS]
+        if eligible:
+            needs_word = ("\n\nPARAGRAPHS THAT MUST EACH CARRY ONE TARGET WORD (substitute, else "
+                          "rephrase, else a note after it):\n"
+                          + "\n".join(f"- the paragraph starting \"{' '.join(p.split()[:8])}…\""
+                                       for p in eligible))
 
     user = build_user(defs)
 
@@ -631,7 +740,8 @@ def generate_piece(con, item, wrapper_file: str, chosen: list, env: dict,
         parsed["body"], guard = sentence_guard(source_text, parsed["body"])
         parsed["marks"] = len(re.findall(r"<mark>", parsed["body"]))
         print(f"[guard] edited={guard['edited']} reverted={guard['reverted']} "
-              f"dropped={guard['dropped']} restored={guard['restored']} kept={guard['kept']}")
+              f"dropped={guard['dropped']} restored={guard['restored']} kept={guard['kept']} "
+              f"notes kept={guard['notes_kept']} dropped={guard['notes_dropped']}")
 
     title = re.sub(r"[*#]+", "", parsed["title"]).strip()
     body = annotate_marks(parsed["body"], defs)
@@ -657,7 +767,9 @@ def generate_piece(con, item, wrapper_file: str, chosen: list, env: dict,
             "marks": parsed["marks"], "words_used": used,
             "word_count": parsed["word_count"], "qc_rejected": qc_rejected,
             "invented_unmarked": invented_unmarked,
-            "invented_numbers": invented_numbers(item, parsed), "attempts": attempts}
+            "invented_numbers": invented_numbers(item, parsed), "attempts": attempts,
+            "coverage": ({**coverage_stats(parsed["body"], source_text), "notes_dropped": guard["notes_dropped"]}
+                         if wrapper_file == "transform-sentence.md" else None)}
 
 
 def run() -> None:

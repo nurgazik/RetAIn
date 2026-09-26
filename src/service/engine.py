@@ -58,7 +58,8 @@ def _run(piece_id: str) -> None:
                                       progress=lambda phase: _set(con, piece_id, status=phase))
         cost = db.record_calls(con, piece["user_id"], piece_id, list(G.CALL_LOG), PRICES)
         _set(con, piece_id, status="done", title=result["title"], body_html=result["body"],
-             attrib=G.attribution_for(item), offered_words=json.dumps(menu),
+             attrib=G.attribution_for(item, G.SENTENCE_DISCLAIMER if ENGINE_MODE == "sentence" else G.AI_DISCLAIMER),
+             offered_words=json.dumps(menu),
              words_used=json.dumps(result["words_used"]), model=result["model"],
              latency_ms=int((time.time() - t0) * 1000), cost_usd=round(cost, 6))
     except Exception as exc:

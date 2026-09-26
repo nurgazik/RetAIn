@@ -186,6 +186,18 @@ itself via the fetchers.
   0). That's the D40 coverage problem, not caused by this change, but the revert means no
   second attempt to place a word.
 
+### 2026-09-26 (later) — SUPPLEMENT notes built in one call (D40 amended)
+
+- Founder ruled one model call only (wait time beats a trial ratio). Notes are `<aside>`
+  blocks written in the same generation; code checks them for free; fact judge skips them;
+  D41 revert drops a note whose word is rejected. Reader: boxed "RetAIn note", tap explains
+  it's added context; word tap still shows meaning. Disclaimer rewritten for sentence mode.
+- Fixed on the way: `parse_output` dropped `<aside>`; `sentence_guard` collapsed a piece into
+  one paragraph whenever the model split/merged paragraphs (likely UX-11's "blob").
+- Measured (5 G2 fixtures): 12/24 eligible paragraphs covered, 3/2/7 substitute/rephrase/note,
+  1.9–4.6 s, ~$0.0026/piece. Tests: pytest 19, iOS ReaderPopupTests 3, all green.
+- Not yet live: service not restarted and the phone app not rebuilt (founder to choose when).
+
 ### 2026-09-26 — Density over fidelity: three embedding tiers (D40), step 1 built
 
 - Founder ruled density beats fidelity: the product's value is their words inside what

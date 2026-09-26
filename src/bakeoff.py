@@ -195,7 +195,8 @@ def parse_output(text: str) -> dict:
     # Robust body extraction: models vary in section ordering, so take the
     # actual <p> paragraphs wherever they appear rather than slicing between
     # BODY:/WORDS_USED: labels. Fall back to the label slice for non-<p> output.
-    paragraphs = re.findall(r"<p>.*?</p>", text, re.S)
+    # <aside> blocks are D40 notes (sentence mode) and are kept in order.
+    paragraphs = re.findall(r"<aside[^>]*>.*?</aside>|<p>.*?</p>", text, re.S)
     if paragraphs:
         body = "\n".join(paragraphs)
     else:

@@ -342,6 +342,26 @@ per piece (judge, sometimes repair). The ~30% density cost is the price of the r
 4. **Reader-set aggressiveness** (D4) — ship substitute as default, rewrite as an opt-in
    "more words, looser text" mode with the disclaimer made prominent.
 
+#### S1 addendum — D40 notes in one call (2026-09-26)
+
+Same 5 fixtures, 50 seeded words, live sentence-mode path (one generate + parallel idiom and
+fact checks), gemini-3.1-flash-lite. Iterations, in order:
+
+| Run | Covered / eligible paragraphs | Substitute / rephrase / note | Time per piece | Why it changed |
+|---|---|---|---|---|
+| 1 | 0 notes reached the guard | — | 5.8–9.9 s (3 generate calls) | `parse_output` kept only `<p>`; notes discarded, empty pieces retried |
+| 2 | 2 / 21 | 0 / 0 / 2 | 2.4–5.0 s | parser fixed; model split/merged paragraphs → guard collapsed the piece into one block and notes lost their anchor |
+| 3 | 4 / 24 | 0 / 0 / 4 | 2.9–5.0 s | guard now aligns the whole text and rebuilds source paragraphs; prompt still said "most paragraphs should need no note" |
+| 4 | **12 / 24** | **3 / 2 / 7** | **1.9–4.6 s, ~$0.0026** | code names each 25+-word paragraph (opening words) in the user message; rules against defining the word, trends, attributed opinions |
+
+Findings: (a) the paragraph-collapse bug in `sentence_guard` is the likely cause of backlog
+UX-11 ("one big blob"); fixed. (b) The idiom check rejected 12 attempted in-text words in
+run 4; under D41 each reverts, so it is now the largest coverage loss. (c) Note quality, run 4:
+7 notes, none defines its word; 1 trend claim ("becoming ubiquitous in fashion subcultures");
+the rest are generic and plausible but bland. (d) Notes were 58% of placed words against the
+50% trial ceiling — prompt-level ceilings are soft. (e) A single 292-word paragraph (fixture 03)
+got nothing in any run.
+
 ### S2 — Safari action extension: can we read the rendered page and show our sheet?
 - **Question:** does an iOS action extension with a JavaScript preprocessing file get the
   page DOM from the user's session (paywalled / logged-in included), and can it stream from
