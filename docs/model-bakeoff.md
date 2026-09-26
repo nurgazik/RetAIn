@@ -10,14 +10,26 @@ the leaderboard. Research behind the candidate list: `reports/LLM rewrite engine
 New model: `src/evals add <openrouter-slug>` (or a line in `data/evals/models.json`) →
 `run <name>` → `grade <run>` → `report`.
 
-**First runs, dataset 3ad00d7222 (30 pieces), 2026-09-26** — mechanical metrics only; grader pending:
+**Runs of 2026-09-26, dataset 3ad00d7222, engine 99d1911f2c (D40 anchor trial, sentence mode)** —
+cost/speed/density only; grading pending. (Earlier runs 6–20 are void: the engine changed
+between the baseline and the challengers, which is why runs now carry an engine fingerprint.)
+All 11 ran in parallel; OpenRouter latency includes routing and rate-limit retries.
 
-| Model | $/piece | p50 / p90 s | Marks/piece | Coverage | Note |
-|---|---|---|---|---|---|
-| gemini-3.1-flash-lite (run 6) | $0.00415 | 4.8 / 8.0 | 3.4 | 35% | baseline |
-| gemini-3.1-flash-lite (run 7) | $0.00421 | 4.8 / 8.4 | 3.4 | 38% | repeat: harness is stable |
-| gpt-6-luna, reasoning none (run 8) | $0.00273 | 10.7 / 37.7 | 2.4 | 25% | 75 generate calls for 30 pieces: output fails validation, retries |
+| Model | $/piece | vs today | p50 / p90 s | Marks/1k words | Coverage | Note |
+|---|---|---|---|---|---|---|
+| gemini-3.1-flash-lite (today) | $0.00444 | — | 4.8 / 11.5 | 3.5 | 50% | |
+| gemma-4-26b-a4b-it | $0.00095 | −79% | 4.6 / 8.4 | 3.9 | 56% | only challenger matching today on speed and density |
+| deepseek-v4.1-flash | $0.00124 | −72% | 17.7 / 42.8 | 2.7 | 45% | slow |
+| glm-5.3-flash (thinking on) | $0.00404 | −9% | 103 / 192 | 4.4 | 59% | densest, far too slow |
+| mimo-v2.6-flash | $0.00155 | −65% | 51.6 / 114.7 | 2.3 | 33% | slow |
+| nemotron-3.5-lightning | $0.00141 | −68% | 14.3 / 36.0 | 2.2 | 18% | runaway outputs |
+| gpt-5.4-nano | $0.00405 | −9% | 20.9 / 44.4 | 2.1 | 23% | |
+| ling-3.0-flash | $0.00025 | −94% | 5.1 / 16.8 | 1.2 | 26% | cheapest |
+| gpt-6-luna (none) | $0.00237 | −47% | 10.1 / 31.9 | 1.3 | 22% | fails validation, retries |
+| solar-mini4 | $0.00111 | −75% | 30.6 / 70.0 | 1.1 | 19% | runaway outputs |
+| mercury-2.5 | $0.00089 | −80% | 8.9 / 39.8 | 0.8 | 17% | rate-limited upstream |
 
+Qwen 3.7/3.8 not run: only Alibaba serves them on OpenRouter, not zero-retention (founder to decide).
 gemini-2.5-flash-lite is closed to new API users (404, 2026-09-26).
 
 ---

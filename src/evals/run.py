@@ -26,7 +26,10 @@ def run(name: str, only: list = None, resume: int = None) -> int:
 
     if resume:
         run_id = resume
-        done = {r[0] for r in con.execute("SELECT piece_id FROM results WHERE run_id=?", (run_id,))}
+        done = {r[0] for r in con.execute("SELECT piece_id FROM results WHERE run_id=? AND ok=1", (run_id,))}
+        con.execute("DELETE FROM calls WHERE run_id=? AND piece_id NOT IN "
+                    "(SELECT piece_id FROM results WHERE run_id=? AND ok=1)", (run_id, run_id))  # failed pieces re-run
+        con.commit()  # never hold the write lock across model calls: parallel runs share this db
     else:
         run_id = con.execute(
             "INSERT INTO runs (model_name, spec, dataset, engine_mode, engine, commit_id, started_at) "

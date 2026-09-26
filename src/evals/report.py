@@ -53,9 +53,15 @@ def report() -> None:
     con = results.connect()
     version = dataset.version()
     from service.config import ENGINE_MODE
-    engine = results.engine_fingerprint(ENGINE_MODE)
+    current = results.engine_fingerprint(ENGINE_MODE)
+    latest = con.execute("SELECT engine FROM runs WHERE dataset=? AND engine IS NOT NULL ORDER BY id DESC LIMIT 1",
+                         (version,)).fetchone()
+    engine = latest[0] if latest else current  # newest engine that has runs; runs on other engines don't compare
     runs = con.execute("SELECT * FROM runs WHERE dataset=? AND engine=? AND finished_at IS NOT NULL ORDER BY id",
                        (version, engine)).fetchall()
+    if engine != current:
+        print(f"[note] engine code changed since these runs ({engine} → {current}); "
+              f"re-run the baseline before comparing new models")
     size = len(dataset.load())
     runs = [r for r in runs  # partial runs (--only smoke tests) don't compare
             if con.execute("SELECT count(*) FROM results WHERE run_id=?", (r["id"],)).fetchone()[0] == size]

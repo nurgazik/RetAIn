@@ -4,7 +4,8 @@
   .venv/bin/python src/evals add <openrouter-slug> [name] ['{"params": ...}']
                                                    register a new OpenRouter model at its list price
   .venv/bin/python src/evals run <name> [--only id,id] [--resume RUN]
-                                                   full pipeline on every golden piece
+                                                   full pipeline on every golden piece;
+                                                   --resume re-runs a run's failed/missing pieces
   .venv/bin/python src/evals grade <run_id>        fixed grader scores words + inventions
   .venv/bin/python src/evals label [N]             blind labelling page for the founder
   .venv/bin/python src/evals labels <labels.json>  import the founder's labels

@@ -129,10 +129,27 @@ def spec(name: str) -> dict:
                      f"(python src/evals add <openrouter-slug>)")
 
 
+def with_retry(call, tries: int = 4):
+    """Retry rate limits (429) and provider hiccups (5xx) with backoff: an upstream limit says
+    nothing about the model's quality. The wait counts toward the piece's seconds."""
+    import time
+    import urllib.error
+
+    def wrapped(*args):
+        for attempt in range(tries):
+            try:
+                return call(*args)
+            except urllib.error.HTTPError as exc:
+                if attempt == tries - 1 or not (exc.code == 429 or exc.code >= 500):
+                    raise
+                time.sleep(2 ** attempt * 3)
+    return wrapped
+
+
 def primary_for(s: dict) -> dict:
     """Registry entry → generate.PRIMARY shape."""
     factory, key, defaults = PROVIDERS[s["provider"]]
-    return {"model": s["model"], "call": factory(s), "key": key or s["key_env"],
+    return {"model": s["model"], "call": with_retry(factory(s)), "key": key or s["key_env"],
             "params": bakeoff.merge(json.loads(json.dumps(defaults)), s.get("params"))}
 
 
