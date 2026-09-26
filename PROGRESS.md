@@ -31,6 +31,11 @@ retired but not deleted.
 Founder ruling D35: technical feasibility is the PoC 2 gate; the 14-day invocation
 count keeps running as an observation only.
 
+**Backlog restructured 2026-09-26 into four epics — Tech Debt / Monetization / UX /
+Administration — with a "Decisions pending" table on top (docs/poc2-transform.md §8).
+Recommended first moves: AD-2 privacy policy, AD-3 account deletion, UX-3 first-run —
+all needed for TestFlight and none waits on a decision.**
+
 **Next up (in order):**
 0. **G1 — simulator half DONE.** Safari action extension reads the page via JS
    preprocessing, sheet over Safari, 4.9 s transform, 55 MB peak, app-group handoff

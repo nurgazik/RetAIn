@@ -419,116 +419,88 @@ dependency) so the throwaway project is a readable YAML file in the repo.
 
 ---
 
-## 8. Backlog — ordered by risk and dependency (rebuilt 2026-09-24)
+## 8. Backlog — four epics (restructured 2026-09-26, founder)
 
-Principle: each phase exists to retire the biggest remaining risk before money goes into
-the next. Nothing in Phase 2 starts before Phase 1's rulings. Stories are "As a reader…"
-where a user is involved; gates and platform work are stated plainly. Tags: **G** gate,
-**M** MVP build item, **H3** Horizon 3.
+Epics: **Tech Debt**, **Monetization**, **UX** (speed, reading, sharing, in-app
+experience), **Administration** (accounts, money, entities, App Store, licences).
+Items are priority-ordered within each epic; ids are stable for reference. Each carries
+value / trade-off / implementation. Product decisions the founder still owes are listed
+first because several items hang on them. The done ledger and Horizon 3 sit at the end.
 
-### Phase 0 — Feasibility gates (now; G1 and G2 run in parallel)
+### Decisions pending (founder)
 
-- **G1 · Extension spike (S2 + S3 + S4)** — *owner: assistant; needs: the founder's
-  phone for device runs.* One throwaway Xcode project with a share extension and a Safari
-  action extension, both presenting the same SwiftUI sheet that POSTs to the S0
-  `/transform` route and streams the result.
-  - Sub-questions: (a) Safari action extension reads the rendered page via JS
-    preprocessing — 5 test pages incl. a paywalled logged-in one; (b) what Reddit, X,
-    Facebook, Apple News, Kindle hand a share extension (URL / text / both); (c) streaming
-    holds inside the sheet, first-token and full-piece latency at 300 / 1,000 / 3,000
-    words; (d) memory headroom under the extension budget; (e) app-group shared storage:
-    the piece written by the extension is visible to a stub My Reads in the main app.
-  - Done when: a findings table per sub-question with Apple-docs citations, and a screen
-    recording the founder reviews. Apple docs verified before building (Context7 / web).
-- **G2 · Engine mode (S1)** — *owner: assistant; blocked on: ~10 real pieces from the
-  founder.* Rewrite vs substitute vs hybrid on the founder's real reading, QC on, density
-  floor off; metrics: marks/1,000w, QC reject rate, invented-number hits, founder
-  read-through rating. Done when: 3 × 10 table, founder sets X, ruling → **D36**.
-- **G3 · Link intake legality — DONE 2026-09-24 → docs/link-intake-legality.md.**
-  Reddit's unauthenticated `.json` is dead (403, deprecated 2026-05-28) and its API
-  excludes monetised apps; X's free tier is gone and oEmbed truncates. Both licences
-  allow "format for display" only, which a rewrite exceeds; Apple 5.2.2 makes third-party
-  terms binding for review. Recommendation: share-selected-text for Reddit/X, in-Safari
-  extension for articles, server fetch only as a URL-only fallback. **Founder ruling → D37.**
-- **G4 · Competitive scan — DONE 2026-09-24 → docs/competitive-scan.md.** 25 products
-  across two crowded clusters (foreign-language browser substitution; LLM-generated
-  stories around your words). Nobody found does user-chosen English content via the iOS
-  share sheet rewritten with the reader's own words. Caution: substitution extensions
-  monetise poorly (Toucan folded into Babbel's free tier); LLM-era ESL entrants are
-  solo-dev with little traction.
+| # | Decision | Blocks |
+|---|---|---|
+| DEC-1 | **Engine density.** Sentence mode is live at ~2.4 words/1,000 (about one per piece); rewrite mode gives 5.6 with occasional invented colour. Founder has an idea ("a creative task"). | UX-1, TD-2 |
+| DEC-2 | **Monetization model (P2):** credits per transform / bring-your-own key / subscription with fair-use cap. Inputs: $0.0016–0.010 per transform, spend visible in Settings. | MO-1..MO-4 |
+| DEC-3 | **TestFlight thresholds (P3):** transforms/user/week that count as a habit; day-14 self-quiz bar. | AD-6 verdict |
+| DEC-4 | **Seller entity before public launch (D39):** individual now, consulting corp later (D-U-N-S, domain email, website). Decided with DEC-2. | AD-7 |
+| DEC-5 | **Purge `data/service.db` from git history** (holds the founder's Apple id, email, and every transformed text; private repo) or leave it. | TD-7 |
 
-### Phase 1 — Decisions gate (after Phase 0)
-
-- **P1** Rewrite PRD §8 MVP scope from the G1–G4 findings (entry points in, engine mode,
-  link intake yes/no).
-- **P2** Monetization model — **E1**: credits per transform / bring-your-own key /
-  subscription with fair-use cap. Must be decided before anyone but the founder uses the
-  product, because every invocation costs money. Input: S0 invocation count and per-call
-  cost from the ledger.
-- **P3** Success metric for the MVP test group (replaces the PoC 1 habit gate at the point
-  where it matters: real product, real friction, other people).
-
-### Phase 2 — MVP build (dependency order; each item has a "why this position")
-
-- **M1 · Transform service** — the engine as a hosted API: per-user word lists, streaming
-  `/transform`, QC gate, served ledger, per-call cost telemetry (E2), Sign in with Apple.
-  Reuses `generate.py` logic; replaces the SQLite PoC server. *First because both
-  extensions call it and nothing on the phone can be tested end to end without it.*
-- **M2 · iOS app shell — BUILT 2026-09-25 (`ios/RetAIn/`), device-verified 2026-09-26
-  incl. Sign in with Apple** (paid membership active, D39; App Groups + Sign in with Apple
-  signed from Xcode; real account created and transforming). Words list, add a word (A1),
-  word card (A3), lifecycle (A4, D26), My Reads (C5), paste box + clipboard offer
-  (B4/M6), Settings, shared session, both extensions on the shared sheet.
-- **M3 · Share-extension sheet — the product moment — VERIFIED ON DEVICE 2026-09-25**
-  (founder's iPhone → new service over HTTPS: 828 chars → 3 words in 2.7 s) — receive shared text (B3) →
-  "working the magic" (C1) → streamed piece with highlights and tap-to-reveal (C2) →
-  disclaimer + source (C4) → saved to shared store; swipe down returns to the host app.
-  Tap semantics C3. *Third: this is the thing users buy; everything before it is
-  plumbing.*
-- **M4 · Safari action extension** — page text via JS preprocessing (B1) → same sheet.
-  *After M3 because it reuses the sheet; before M5 because Safari is the best-case
-  source.*
-- **M5 · Capture through the same extension — VERIFIED ON DEVICE 2026-09-25** ("remain"
-  shared as a single word → word card generated, $0.00005) (A2, D8) — a shared single
-  word → capture flow with word card; longer text → transform. One extension, two behaviours.
-- **M6 · Clipboard intake — BUILT in M2** (app offers "transform what you just copied?"
-  on open, plus a paste box; simulator-verified) (B4). *The universal fallback; cheap.*
-- **M7 · Link intake** (B2) — only if G3 says yes for a given source.
-- **M8 · Monetization** per P2 — StoreKit, free tier, cost caps.
-- **M9 · TestFlight** — founder + ~5 advanced-ESL friends, two weeks, P3 metric. *The
-  habit question, asked again where it counts.*
-
-### Overnight backlog 2026-09-25 (founder asleep; items 1–2 founder's, rest assistant's)
+### Epic: Tech Debt
 
 | # | Item | Value | Trade-off | Implementation |
 |---|---|---|---|---|
-| 1 | Reddit comment share fails ("Nothing to read here") — **DONE** | Comments are a core reading surface | none | `POST /v1/diagnostics` stores types + counts (never content) for unusable shares; minimum is now **25 words** (server + client); link-only and too-short shares get specific messages. Founder to retry in the morning |
-| 2 | Sentence-scoped rewrite, changed sentence underlined — **DONE, default** | Trust + precise disclaimer; fidelity mechanical | **Measured: 2.4 words/1,000 vs 5.6 for rewrite+judge** (lower than the 3.6 estimate); news pieces often get 0–1 | `prompts/transform-sentence.md`; `generate.sentence_guard` (sentence diff: marked changes kept + wrapped in `<span class="edited">`, unmarked changes reverted, added sentences dropped, dropped sentences restored); underline in iOS reader + PoC pages; `RETAIN_ENGINE_MODE=rewrite` restores D36 mode. Compare page: output/compare-transform.html ("sentence" column) |
-| 3 | My Reads / Words refresh on foreground — **DONE** | Extension pieces appear at once | none | scenePhase reload |
-| 4 | Per-call latency + read — **DONE** | 10–14 s on long pages | input cap is a founder call | `calls.ms`; finding: **model time is ~100% of latency**; a piece = 6–7 serial calls (generate ~2.3 s, qc ~0.9 s, fact ~1.0 s, repeated after regeneration). Judges now run in parallel (~1 s saved/round; Sedaris 5.8 s wall for 7.0 s of model time). Deeper cuts = fewer retries/rounds (density decision) or an input cap |
-| 5 | Tap popup: "Seen N times" + "Got it — mark retained" — **DONE** | Learning loop in the reader (D12) | — | `ReaderView` loads word stats once; popup button posts `retain` → PATCH status; unit-tested in an offscreen WKWebView |
-| 6 | Dark mode reader — **DONE** | Night reading | — | prefers-color-scheme CSS in the iOS reader |
-| 7 | Service test suite — **DONE** | Change the engine safely | — | `tests/` (pytest + httpx, dev-only): 7 tests — auth, seeded words, word lifecycle, transform → events → piece → tap → list → spend, daily cap, diagnostics, 404. `RETAIN_DB_PATH` makes the DB path overridable |
-| 8 | Spend in Settings — **DONE** | Numbers for P2 | — | `/v1/me` returns today/month USD; Settings shows them |
-| — | Deferred to daytime | native renderer; readability extraction | visible risk | — |
+| TD-1 | **Move the service off the Mac mini** (Fly.io, ~$5/mo, founder-approved) with nightly DB backups | Other people can depend on it; survives home-network and Mac outages | Small monthly cost; one deploy pipeline to own | Dockerfile for `src/service`, Fly volume for SQLite, Litestream or cron copy to object storage, secrets via `fly secrets`; switch `RETAIN_SERVER`; keep the Mac as fallback until cutover |
+| TD-2 | **Latency: retry policy + input cap** (6–14 s today; model time ≈ 100%) | Faster sheet; fewer wasted calls (a piece can burn 7 calls and place 0) | Fewer rounds = lower density; a cap = partial pieces on long pages | Skip the second generation round when nothing was rejected; make retries depend on DEC-1; cap input at ~1,500 words with a "first part" note; measure via `calls.ms` |
+| TD-3 | **Remove the dev-token path from device builds** before anyone else installs | No shared secret in an app binary | None once Sign in with Apple works everywhere | Delete `RETAIN_DEV_TOKEN` from Info.plist generation; keep it for the simulator only; rotate the token |
+| TD-4 | **Offline and error states** (My Reads needs the network; failures show raw messages) | The app never looks broken | Some UI work | Serve My Reads from the app-group cache first; friendly error copy; retry buttons |
+| TD-5 | **Rate limiting and abuse protection** beyond the per-user daily cap | Protects the model bill when strangers arrive | None | Per-IP and per-user limits in the service; alert on daily spend threshold |
+| TD-6 | **Page extraction quality** (readability-style) | Fewer navigation/ad fragments in pieces on messy sites | A day of JS work; risk of dropping real text | Score candidate containers by text density in `RetAInPage.js`; use `textContent` for collapsed sections; test on 10 sites |
+| TD-7 | **Repo hygiene:** purge `service.db` from history (DEC-5); `output/` artefacts; spike folder archived | Privacy; smaller repo | History rewrite + force-push if purged | `git filter-repo` on `data/service.db`; move `spikes/` to a branch or `archive/` |
+| TD-8 | **Retire the digest server + Shortcut** (`src/serve.py`, launchd `com.retain.server`, port 8484) | One system to run | None; PoC 1 artefacts stay in git | Unload the launchd agent; note in PROGRESS; delete the Shortcut on the phone |
+| TD-9 | **Source-text retention policy** (every piece stores its full original forever) | Privacy; storage | Some analytics lose the source | Keep source text N days, then keep only the piece; document in the privacy policy (AD-2) |
+| TD-10 | **Native text renderer** replacing WKWebView | Faster open, native selection, less memory (~15–20 MB), proper Dynamic Type | Rebuild highlights, popup and underline natively | AttributedString from the piece HTML; SwiftUI Text with tap targets; keep WKWebView behind a flag until parity |
+| TD-11 | **Service observability:** structured logs, error alerting, daily cost/latency summary | See problems before users report them | Small | Log to file with rotation; a daily summary script or Fly log drain; alert on failed pieces > N/day |
 
-### Phase 3 — Horizon 3 (parked, not lost)
+### Epic: Monetization
 
-- **H3-1** Safari web extension: in-place substitution without leaving the page (B6).
-- **H3-2** Screenshot OCR intake (B5 / S5) — only if M9 users hit locked-text apps.
-- **H3-3** Android — `ACTION_PROCESS_TEXT` / accessibility make true in-place possible.
-- **H3-4** Aggressiveness slider substitute ↔ rewrite (D4) — after D36.
-- **H3-5** Production features, cloze, conversation partner (PRD §9, unchanged).
+| # | Item | Value | Trade-off | Implementation |
+|---|---|---|---|---|
+| MO-1 | **Decide the model (DEC-2)** using real numbers: per-transform cost by length, spend per user/day | Everything below | — | One-page memo from the `calls` table: cost distribution, worst-case heavy reader, break-even per plan |
+| MO-2 | **Entitlements in the service** (free tier limits, paid tier, per-user caps by plan) | The app can enforce a plan | Design once, before StoreKit | `plans` table + `users.plan`; cap logic reads the plan; admin script to set plans for testers |
+| MO-3 | **StoreKit 2 purchase flow** (subscription or credits per DEC-2) + receipt validation server-side | Revenue | Apple review requirements; sandbox testing | StoreKit 2 in the app; App Store Server API notifications to the service; restore purchases; paywall screen |
+| MO-4 | **Bring-your-own-key option** (if DEC-2 includes it) | Power users pay Google directly; zero marginal cost | Key handling on device; support burden | Key stored in keychain; service accepts a per-request key header; never logged |
+| MO-5 | **Cost controls:** per-plan daily caps, spend alerts, kill switch | No surprise bills | — | Extends TD-5; Settings shows remaining allowance |
 
-### Story index (for traceability; detail lives with the item above)
+### Epic: UX (speed, reading, sharing, in-app experience)
 
-A1 type a word · A2 share a word · A3 word card · A4 lifecycle · B1 Safari sheet ·
-B2 share a link · B3 share selected text · B4 paste · B5 screenshot · B6 in-place ·
-C1 magic moment · C2 highlights + tap · C3 tap semantics · C4 disclaimer · C5 My Reads ·
-D1 idiomatic only · D2 facts preserved · D3 fewest-served first · D4 aggressiveness ·
-E1 monetization · E2 cost telemetry.
+| # | Item | Value | Trade-off | Implementation |
+|---|---|---|---|---|
+| UX-1 | **Engine density per DEC-1** | The core reading experience: how many words land, how faithful the text | Density vs fidelity; latency | Implement the founder's idea as an engine mode behind `RETAIN_ENGINE_MODE`; measure on the 5 fixtures + device pieces; compare page |
+| UX-2 | **Faster transforms** (user-facing half of TD-2) | The magic moment stays under ~6 s | See TD-2 | Phase labels already stream; add a "reading the first part now" partial for long pages if a cap is adopted |
+| UX-3 | **First-run experience** (a new account has zero words → nothing gets placed) | New users see the product work in minute one | Starter words must fit the reader's level | Onboarding: pick a level → starter set (e.g. 20 words); import from a list/Kindle export later; "add your first word" prompt |
+| UX-4 | **Word card enrichment** (PRD §8: register, collocations, nuance, 2–3 examples) | Capture becomes "better than a Kindle lookup" | One extra model call per capture (~$0.0001) | Extend the `card` prompt; store JSON fields on `words`; card view sections |
+| UX-5 | **Sharing routes:** confirm X, Kindle, Apple News payloads; in-app guidance per app ("Reddit: copy text") | Fewer dead ends when sharing | — | Diagnostics table already records unusable shares; add per-app hints in the "nothing to read" message; log Kindle/News/X once |
+| UX-6 | **My Reads polish:** search, filters (by word), swipe to delete, source link, extension pieces appear instantly | Reading history becomes useful | — | Server: delete endpoint + query params; app: list UI; app-group cache write from the extension (needs App Groups on device — now available) |
+| UX-7 | **In-reader lookup & capture** (tap any unknown word → define → add) | Closes the loop inside reading (Horizon 3 item promoted) | Popup complexity | Long-press on any word → `POST /v1/words`; reuse the card call |
+| UX-8 | **Word list quality-of-life:** sort by servings/age, bulk retire, notes | Managing 50–200 words stays pleasant | — | Sort controls; multi-select; optional note field |
+| UX-9 | **Reader typography controls** (size, serif/sans, line height) | Reading comfort; accessibility | Trivial with a native renderer (TD-10) | Settings → reader prefs → CSS variables or native fonts |
+| UX-10 | **App icon, launch screen, empty states** | The app looks like a product | Design time | Icon set; launch storyboard; empty-state copy for Words / My Reads |
 
----
+### Epic: Administration
+
+| # | Item | Value | Trade-off | Implementation |
+|---|---|---|---|---|
+| AD-1 | **App Store Connect app record** (bundle id `com.retain.app`, name, category, age rating) | Prerequisite for TestFlight | — | Create in App Store Connect under team UKGU6PX43H; register the two extension ids |
+| AD-2 | **Privacy policy page + support email** (required for Sign in with Apple and review) | Compliance | Needs a public URL: a GitHub Pages page is enough | Write the policy (what is stored: words, pieces incl. source text per TD-9, Apple id, email; model provider = Google); publish; add URL to App Store Connect and the app's Settings |
+| AD-3 | **Account deletion in-app** (App Store rule for apps with sign-in) + export | Compliance; trust | Build work in app + service | `DELETE /v1/me` cascading; Settings → Delete account with confirmation; optional export of words/pieces as JSON |
+| AD-4 | **App privacy "nutrition label" + privacy manifest** (data types collected, tracking = none) | Required at submission | — | Fill in App Store Connect; add `PrivacyInfo.xcprivacy` to the targets (required reason APIs) |
+| AD-5 | **Model-provider terms check** for user content sent to Gemini (retention, training opt-out on the paid tier) | Honest privacy policy; no surprises | — | Read Google's Gemini API terms for paid usage; record in docs/content-sources.md or a new docs/privacy.md |
+| AD-6 | **TestFlight:** archive + upload, internal testers, then ~5 external readers for 2 weeks (M9) | The real habit test | External testers need App Review of the build | Xcode Archive → App Store Connect; TestFlight groups; feedback form; measure DEC-3 |
+| AD-7 | **Paid Apps Agreement, tax and banking** (for MO-3) and the seller-entity call (DEC-4) | Ability to charge | Individual vs corp (D39) | Agreements in App Store Connect; W-8/Canadian tax forms; bank details |
+| AD-8 | **Domain + email** (e.g. retain.app or similar) for support, privacy page, and a later corp enrollment | Professional surface; needed for D-U-N-S path | Small yearly cost | Buy domain; forwarders for support@; host the privacy page there |
+| AD-9 | **Licences and attributions** in-app (open-source notices; content-source attributions from PoC 1 if any surface again) | Compliance | — | Settings → Acknowledgements |
+
+### Done ledger (2026-09-24 → 26)
+
+M1 transform service (FastAPI + SQLite, Sign in with Apple, SSE phases, cost + latency
+telemetry, daily cap, diagnostics, pytest suite) · M2 iOS app (Words, My Reads, paste +
+clipboard offer, Settings with spend, Sign in with Apple, shared session) · M3 share-sheet
+sheet · M4 Safari page action · M5 single-word capture · M6 clipboard intake · Sentence-
+scoped engine mode with mechanical guard + underline · Popup stats + "Got it" · Dark mode ·
+Foreground refresh · Tailscale Funnel HTTPS · Paid Apple Developer membership (D39) ·
+Device verification of all of the above on the founder's iPhone.
 
 ## 9. Open questions
 
