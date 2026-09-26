@@ -36,3 +36,13 @@ def test_unmarked_edits_still_revert():
     body = "<p>The agency claimed the data confirm the trend. Launch is set for May.</p>\n<p>A second paragraph stays.</p>"
     out, stats = G.sentence_guard(SRC, body)
     assert stats["reverted"] == 1 and "edited" not in out
+
+
+def test_rejected_word_reverts_its_sentence_to_source():
+    # D41: a judge-rejected word's sentence goes back to the source; other edits stay
+    body = ("<p>The agency said the data <mark>corroborate</mark> the trend. Launch is set for May.</p>"
+            "\n<p>A second <mark>salient</mark> paragraph stays.</p>")
+    out, stats = G.sentence_guard(SRC, G.unmark_sentences(body, ["corroborate"]))
+    assert "corroborate" not in out
+    assert "The agency said the data confirm the trend." in out
+    assert "<mark>salient</mark>" in out and stats["edited"] == 1

@@ -17,6 +17,8 @@ Spec/backlog: docs/poc2-transform.md §8. Service: `src/service/` on the Mac min
 HTTPS via Tailscale Funnel. App: `ios/RetAIn/` (xcodegen). Engine mode + density is the
 open product question: D40 (2026-09-26) sets paragraph coverage as the target with
 three tiers; step 1 (tier tagging + tap-to-reveal original) built, step 2 (measure) next.
+D41 (2026-09-26): judges kept, but a rejection in sentence mode now reverts the sentence to
+the source instead of regenerating — ~2.8 s and ~$0.0023 per piece on the 5 fixtures.
 
 **2026-09-26:** founder signed in with Apple on the real build (account
 u_152716…, nurgazy7@gmail.com); first transform on the real account ran; account seeded
@@ -167,6 +169,22 @@ all needed for TestFlight and none waits on a decision.**
 vacation coding ends). Home Mac: clone normally with personal credentials; recreate
 `.env.local` (4 API keys — gitignored, never on GitHub) and `data/retain.db` refills
 itself via the fetchers.
+
+### 2026-09-26 — Checks kept, regeneration dropped in sentence mode (D41)
+
+- Founder asked to remove the idiom + fact checks to cut wait and cost. Evidence from the
+  service log (19 idiom + 13 fact rejections, all real misuses or inventions, produced with
+  the prompt rules in place) argued against; the checks cost ~0.9 s / ~$0.0009 per round.
+  The expense was the full regeneration + second check round on 15/26 pieces.
+- Built instead: in sentence mode, a rejected word's sentence loses its marks
+  (`unmark_sentences` in src/generate.py) and `sentence_guard` restores the source
+  sentence. No extra model calls. Rewrite mode unchanged. Test added (pytest 12 green).
+- Measured on the 5 G2 fixtures: every piece 1 generate + 1 qc + 1 fact; avg 2.8 s,
+  $0.0023. Two pieces had rejections handled by revert (ubiquitous, zeitgeist;
+  corroborate — which had altered a Ben Crump quote). Rejected words confirmed absent.
+- Visible side effect: coverage on these runs was 0–1 words per piece (2 pieces ended with
+  0). That's the D40 coverage problem, not caused by this change, but the revert means no
+  second attempt to place a word.
 
 ### 2026-09-26 — Density over fidelity: three embedding tiers (D40), step 1 built
 

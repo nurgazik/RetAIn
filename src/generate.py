@@ -383,6 +383,21 @@ def demote_marks(body: str, words: list) -> str:
     return re.sub(r"<mark>(.*?)</mark>", repl, body, flags=re.S)
 
 
+def unmark_sentences(body: str, words: list) -> str:
+    """Strip every <mark> from each sentence that carries a rejected word, so
+    sentence_guard treats the sentence as an unmarked edit and reverts it to source."""
+    stems = [w.strip().lower()[:6] for w in words]
+    def fix_para(m):
+        out = []
+        for s in split_sentences(m.group(1)):
+            marked = [re.sub(r"<[^>]+>", "", x).strip().lower() for x in re.findall(r"<mark>(.*?)</mark>", s, flags=re.S)]
+            if any(x.startswith(st) for x in marked for st in stems):
+                s = re.sub(r"</?mark>", "", s)
+            out.append(s)
+        return f"<p>{' '.join(out)}</p>"
+    return re.sub(r"<p>(.*?)</p>", fix_para, body, flags=re.S)
+
+
 CALL_LOG = []  # (purpose, model, tokens_in, tokens_out, ms) per model call; the service drains it
 
 
@@ -551,7 +566,14 @@ def generate_piece(con, item, wrapper_file: str, chosen: list, env: dict,
         if not any(w.lower().startswith(d.strip().lower()[:6]) for d in demoted):
             demoted.append(w)
     qc_rejected = list(demoted)
-    if demoted:
+    if demoted and wrapper_file == "transform-sentence.md":
+        # D41: sentence mode keeps every source sentence, so a rejected word costs no
+        # model call — unmark its sentence and sentence_guard (below) restores the
+        # author's original. D29 holds: the rejected word is gone with its edit.
+        print(f"[qc] reverting sentences carrying {demoted} to source")
+        parsed["body"] = unmark_sentences(parsed["body"], demoted)
+        parsed["marks"] = len(re.findall(r"<mark>", parsed["body"]))
+    elif demoted:
         progress("regenerating")
         print(f"[qc] regenerating without {demoted}...")
         keep = {w: d for w, d in defs.items()

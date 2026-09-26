@@ -27,7 +27,7 @@ first because several items hang on them. The done ledger and Horizon 3 sit at t
 | # | Item | Value | Trade-off | Implementation |
 |---|---|---|---|---|
 | TD-1 | **Move the service off the Mac mini** (Fly.io, ~$5/mo, founder-approved) with nightly DB backups | Other people can depend on it; survives home-network and Mac outages | Small monthly cost; one deploy pipeline to own | Dockerfile for `src/service`, Fly volume for SQLite, Litestream or cron copy to object storage, secrets via `fly secrets`; switch `RETAIN_SERVER`; keep the Mac as fallback until cutover |
-| TD-2 | **Latency: retry policy + input cap** (6–14 s today; model time ≈ 100%) | Faster sheet; fewer wasted calls (a piece can burn 7 calls and place 0) | Fewer rounds = lower density; a cap = partial pieces on long pages | Skip the second generation round when nothing was rejected; make retries depend on DEC-1; cap input at ~1,500 words with a "first part" note; measure via `calls.ms` |
+| TD-2 | **Latency: retry policy + input cap** (6–14 s today; model time ≈ 100%) | Faster sheet; fewer wasted calls (a piece can burn 7 calls and place 0) | Fewer rounds = lower density; a cap = partial pieces on long pages | **Partly done (D41, 2026-09-26): sentence mode no longer regenerates on a judge rejection — 5/5 fixtures at 1 draft + 1 check, avg 2.8 s.** Remaining: make retries depend on DEC-1; cap input at ~1,500 words with a "first part" note; measure via `calls.ms` |
 | TD-3 | **Remove the dev-token path from device builds** before anyone else installs | No shared secret in an app binary | None once Sign in with Apple works everywhere | Delete `RETAIN_DEV_TOKEN` from Info.plist generation; keep it for the simulator only; rotate the token |
 | TD-4 | **Offline and error states** (My Reads needs the network; failures show raw messages) | The app never looks broken | Some UI work | Serve My Reads from the app-group cache first; friendly error copy; retry buttons |
 | TD-5 | **Rate limiting and abuse protection** beyond the per-user daily cap | Protects the model bill when strangers arrive | None | Per-IP and per-user limits in the service; alert on daily spend threshold |
@@ -87,5 +87,5 @@ clipboard offer, Settings with spend, Sign in with Apple, shared session) · M3 
 sheet · M4 Safari page action · M5 single-word capture · M6 clipboard intake · Sentence-
 scoped engine mode with mechanical guard + underline · Popup stats + "Got it" · Dark mode ·
 Foreground refresh · Tailscale Funnel HTTPS · Paid Apple Developer membership (D39) ·
-Device verification of all of the above on the founder's iPhone.
+Device verification of all of the above on the founder's iPhone · D41 revert-on-reject (sentence mode).
 
