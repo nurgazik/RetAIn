@@ -22,23 +22,21 @@ enum PieceHTML {
           .note { font-style: italic; cursor: pointer; }
           /* a bar is a tap zone filling the left margin; the visible stripe is its ::before */
           .bar { position: absolute; left: 0; width: 1.75rem; cursor: pointer; }
-          .bar::before, .swatch::before { content: ""; position: absolute; top: 0; bottom: 0; width: 3px; border-radius: 1.5px; }
-          .bar::before { left: .55rem; }
-          .bar-note::before { width: 4px; }
+          /* the stripe: a thick "(" bracket in the tier colour (founder's mockup) */
+          .bar::before, .swatch::before { content: ""; position: absolute; top: 2px; bottom: 2px; width: 9px;
+                                          border-left: 5px solid var(--c); border-radius: 12px 0 0 12px; }
+          .bar::before { left: .4rem; }
           #hint { position: absolute; display: none; z-index: 11; max-width: 270px; padding: .6rem .75rem .6rem .7rem;
                   background: #fffdf8; color: #26221c; border: 1px solid #e3dbcc; border-radius: 10px;
                   box-shadow: 0 4px 14px rgba(0,0,0,.12); font-family: -apple-system, sans-serif; font-size: .82rem;
                   line-height: 1.4; gap: .6rem; align-items: stretch; }
-          #hint .swatch { position: relative; flex: 0 0 4px; min-height: 2.2rem; }
+          #hint .swatch { position: relative; flex: 0 0 10px; min-height: 2.2rem; }
           #hint .swatch::before { left: 0; }
           #hint b { display: block; font-size: .85rem; margin-bottom: .15rem; }
           .substitute mark { background: linear-gradient(transparent 55%, #b5e3a1 55%); }
           .rephrase mark   { background: linear-gradient(transparent 55%, #b3d4f5 55%); }
           .note mark       { background: linear-gradient(transparent 55%, #f8c9a0 55%); }
           .bar-substitute { --c: #4c9a3a; } .bar-rephrase { --c: #3d7fc4; } .bar-note { --c: #d9772b; }
-          .bar-substitute::before { background: repeating-linear-gradient(to bottom, var(--c) 0 9px, transparent 9px 14px); }
-          .bar-rephrase::before   { background: var(--c); }
-          .bar-note::before       { background: repeating-linear-gradient(to bottom, var(--c) 0 4px, transparent 4px 8px); }
           #pop .orig { display: block; margin-top: .3rem; font-family: Georgia, serif; font-style: italic; }
           #pop { position: absolute; display: none; z-index: 10; max-width: 280px; padding: .6rem .8rem;
                  background: #26221c; color: #faf8f4; border-radius: 8px; font-family: -apple-system, sans-serif;
@@ -56,10 +54,12 @@ enum PieceHTML {
             mark { background: linear-gradient(transparent 55%, #7a5d13 55%); color: inherit; }
             .kicker { color: #c9a45c; } .attrib { color: #a39c90; border-top-color: #3a352e; } .attrib a { color: #c9a45c; }
             #pop { background: #faf8f4; color: #26221c; } #pop b { color: #8a6d3b; }
-            .substitute mark { background: linear-gradient(transparent 55%, #3d6b2f 55%); }
-            .rephrase mark   { background: linear-gradient(transparent 55%, #2b5485 55%); }
-            .note mark       { background: linear-gradient(transparent 55%, #8a4f22 55%); }
-            .bar-substitute { --c: #7cc466; } .bar-rephrase { --c: #6aa6e6; } .bar-note { --c: #f0a060; }
+            /* founder's dark palette: neon bars; words on a dimmed block of the same colour */
+            .bar-substitute { --c: #2BFF06; } .bar-rephrase { --c: #00FFFF; } .bar-note { --c: #FF5F1F; }
+            .substitute mark, .rephrase mark, .note mark { padding: 0 .15em; border-radius: 3px; }
+            .substitute mark { background: rgba(43, 255, 6, .28); color: #c4ffb8; }
+            .rephrase mark   { background: rgba(0, 255, 255, .26); color: #bfffff; }
+            .note mark       { background: rgba(255, 95, 31, .30); color: #ffc7ad; }
             #hint { background: #2a2620; color: #ece7dd; border-color: #3f392f; box-shadow: 0 4px 14px rgba(0,0,0,.5); }
           }
         </style></head><body>
@@ -145,7 +145,7 @@ enum PieceHTML {
                 else if (rank[kind] > rank[same.kind]) same.kind = kind;
               }
             });
-            // consecutive lines of the same kind become one bar, so dashes and dots read as a line
+            // consecutive lines of the same kind become one bar: one bracket per change
             lines.sort((a, b) => a.top - b.top);
             const runs = [];
             lines.forEach(l => {
