@@ -23,7 +23,7 @@ founder's neon palette in dark mode; Figma "D" bar shapes, UX-13 done), tap a ba
 original, tap a word for its meaning. Safari shares are cleaned by Mozilla Readability.
 **Top open problem: density** — ~1.5–2 words per article; the model under-attempts and
 the checker rejects about half of its in-text words (backlog UX-1; test models via TD-13).
-**Next up:** founder's call on light-mode bar colours (neon vs muted); founder's call on stretch length; model evals on surviving words per article.
+**Next up:** founder's call on stretch length; model evals on surviving words per article.
 
 **2026-09-26:** founder signed in with Apple on the real build (account
 u_152716…, nurgazy7@gmail.com); first transform on the real account ran; account seeded
@@ -216,9 +216,9 @@ itself via the fetchers.
 - Read the founder's three Figma nodes via Figma MCP: each bar is a filled "D" (flat left,
   curved right), a different curve per tier; note colour is now yellow #FFCE1F (was orange).
 - Built as CSS masks from the exact Figma paths (`PieceHTML.swift`), stretched to bar
-  height; widths 10/13/12 px. Dark mode = Figma colours; light mode keeps muted green/blue
-  with amber-yellow #d9a800 (assistant's pick — Figma has no light palette; founder to
-  confirm). Disclaimer copy in `src/generate.py` updated (no more "dashed/dotted orange").
+  height; widths 10/13/12 px. Dark mode = Figma colours (founder: looks good). Light mode:
+  founder asked the assistant to choose — Figma hues darkened for cream: green #28a012 and
+  cyan #0097a7 (≥3.2:1 contrast), yellow #d4a200 (2.2:1; darker turns brown). Disclaimer copy in `src/generate.py` updated (no more "dashed/dotted orange").
 - Verified: sample page rendered in simulator Safari, light + dark, by eye. pytest 28
   green; service restarted, 200. **iOS unit tests not run** — simulator refuses to launch
   com.retain.app ("Launchd job spawn failed"); likely needs the app uninstalled from the sim.

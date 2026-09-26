@@ -38,10 +38,10 @@ enum PieceHTML {
           #hint .swatch { position: relative; flex: 0 0 13px; min-height: 2.2rem; }
           #hint .swatch::before { left: 0; }
           #hint b { display: block; font-size: .85rem; margin-bottom: .15rem; }
-          .substitute mark { background: linear-gradient(transparent 55%, #b5e3a1 55%); }
-          .rephrase mark   { background: linear-gradient(transparent 55%, #b3d4f5 55%); }
-          .note mark       { background: linear-gradient(transparent 55%, #f6e08a 55%); }
-          .bar-substitute { --c: #4c9a3a; } .bar-rephrase { --c: #3d7fc4; } .bar-note { --c: #d9a800; }
+          .substitute mark { background: linear-gradient(transparent 55%, #c3eeb0 55%); }
+          .rephrase mark   { background: linear-gradient(transparent 55%, #b0ecf0 55%); }
+          .note mark       { background: linear-gradient(transparent 55%, #fbe48c 55%); }
+          .bar-substitute { --c: #28a012; } .bar-rephrase { --c: #0097a7; } .bar-note { --c: #d4a200; }
           #pop .orig { display: block; margin-top: .3rem; font-family: Georgia, serif; font-style: italic; }
           #pop { position: absolute; display: none; z-index: 10; max-width: 280px; padding: .6rem .8rem;
                  background: #26221c; color: #faf8f4; border-radius: 8px; font-family: -apple-system, sans-serif;
