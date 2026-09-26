@@ -48,7 +48,7 @@ def test_rejected_word_reverts_its_sentence_to_source():
     assert "<mark>salient</mark>" in out and stats["edited"] == 1
 
 
-# ---- D40 notes (SUPPLEMENT)
+# ---- D40 notes (SUPPLEMENT) and 120-word stretches
 
 LONG = ("Tesla showed a new version of its Optimus robot folding laundry at its factory on "
         "Tuesday, a task the company called its hardest yet and one that took years of work "
@@ -57,11 +57,19 @@ NOTE = ("<aside>Industrial robot arms are <mark>ubiquitous</mark> on factory flo
         "work behind cages on fixed tasks.</aside>")
 
 
-def test_valid_note_is_kept_after_its_paragraph():
-    out, stats = G.sentence_guard(LONG + "\n\nShort one.", f"<p>{LONG}</p>\n{NOTE}\n<p>Short one.</p>")
-    assert stats["notes_kept"] == 1
-    assert out.index('<aside class="supplement" data-tier="supplement">') < out.index("Short one.")
-    assert G.coverage_stats(out, LONG + "\n\nShort one.")["tiers"]["supplement"] == 1
+def test_note_inside_paragraph_stays_inline_after_its_sentence():
+    src = LONG + " It folded towels."
+    out, stats = G.sentence_guard(src, f"<p>{LONG} {NOTE} It folded towels.</p>")
+    assert stats["notes_kept"] == 1 and out.count("<p>") == 1
+    assert out.index('class="note supplement"') < out.index("It folded towels.")
+    assert G.coverage_stats(out)["tiers"]["supplement"] == 1
+
+
+def test_note_between_paragraphs_attaches_to_previous_sentence():
+    src = LONG + "\n\nShort one."
+    out, stats = G.sentence_guard(src, f"<p>{LONG}</p>\n{NOTE}\n<p>Short one.</p>")
+    assert stats["notes_kept"] == 1 and out.count("<p>") == 2
+    assert out.index("note supplement") < out.index("Short one.")
 
 
 def test_note_rules_drop_bad_notes():
@@ -76,23 +84,43 @@ def test_note_rules_drop_bad_notes():
         assert stats["notes_dropped"] == 1 and stats["notes_kept"] == 0, why
 
 
-def test_note_dropped_when_paragraph_already_has_word_or_is_short():
+def test_note_dropped_when_stretch_already_has_word():
     marked = LONG.replace("showed", "<mark>unveiled</mark>")
     _, stats = G.sentence_guard(LONG, f"<p>{marked}</p>\n{NOTE}")
-    assert stats["notes_dropped"] == 1
-    _, stats = G.sentence_guard("Too short to host.", f"<p>Too short to host.</p>\n{NOTE}")
     assert stats["notes_dropped"] == 1
 
 
 def test_rejected_note_word_drops_the_note():
     body = G.unmark_sentences(f"<p>{LONG}</p>\n{NOTE}", ["ubiquitous"])
     out, stats = G.sentence_guard(LONG, body)
-    assert stats["notes_dropped"] == 1 and "aside" not in out
+    assert stats["notes_dropped"] == 1 and "note" not in out
 
 
 def test_fact_judge_never_sees_notes():
     assert "aside" not in G.strip_notes(f"<p>{LONG}</p>\n{NOTE}")
     assert G.invented_numbers({"content_html": LONG}, {"body": f"<p>{LONG}</p><aside>In 1961 x</aside>"}) == []
+
+
+def test_stretches_cut_at_120_words_and_fold_short_tail():
+    s = "Word " * 59 + "end."           # 60 words per sentence
+    text = " ".join([s] * 5)            # 300 words -> 120 | 120 | 60 tail
+    _, _, stretch_of = G.source_sentences(text)
+    assert stretch_of == [0, 0, 1, 1, 2]
+    _, _, stretch_of = G.source_sentences(" ".join([s] * 4) + " Short tail.")
+    assert stretch_of == [0, 0, 1, 1, 1]  # a tail under 60 words joins the stretch before
+    assert len(G.stretch_openings(text)) == 3
+
+
+def test_one_long_paragraph_gets_one_note_per_stretch():
+    s = "Word " * 59 + "end."
+    src = " ".join([s] * 4)             # one 240-word paragraph = 2 stretches
+    n = "<aside>Robot arms are <mark>ubiquitous</mark> in plants.</aside>"
+    body = f"<p>{s} {n} {s} {n.replace('Robot', 'Crane')} {s} {s}</p>"
+    out, stats = G.sentence_guard(src, body)
+    assert stats["notes_kept"] == 1 and stats["notes_dropped"] == 1  # second note in the same stretch
+    body = f"<p>{s} {n} {s} {s} {n.replace('Robot', 'Crane')} {s}</p>"
+    out, stats = G.sentence_guard(src, body)
+    assert stats["notes_kept"] == 2 and stats["stretches_covered"] == 2 and out.count("<p>") == 1
 
 
 def test_split_paragraph_keeps_source_structure_and_note():

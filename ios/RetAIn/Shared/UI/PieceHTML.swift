@@ -19,10 +19,7 @@ enum PieceHTML {
           mark { background: linear-gradient(transparent 55%, #ffe08a 55%); padding: 0 .1em; border-radius: 2px; }
           .edited { text-decoration: underline; text-decoration-color: #e8c96a; text-decoration-thickness: 1.5px; text-underline-offset: 3px; }
           .edited.rephrase { text-decoration-style: dashed; }
-          aside.supplement { margin: -.4rem 0 1.1rem; padding: .55rem .8rem; border-left: 3px solid #b9a27a;
-                             background: #f1ece2; border-radius: 4px; font-size: .98rem; }
-          aside.supplement::before { content: "RetAIn note"; display: block; font-family: -apple-system, sans-serif;
-                                     font-size: .68rem; letter-spacing: .1em; text-transform: uppercase; color: #8a6d3b; }
+          .note { background: #ece4d4; border-radius: 3px; padding: 0 .15em; font-style: italic; }
           #pop .orig { display: block; margin-top: .3rem; font-family: Georgia, serif; font-style: italic; }
           #pop { position: absolute; display: none; z-index: 10; max-width: 280px; padding: .6rem .8rem;
                  background: #26221c; color: #faf8f4; border-radius: 8px; font-family: -apple-system, sans-serif;
@@ -41,7 +38,7 @@ enum PieceHTML {
             .kicker { color: #c9a45c; } .attrib { color: #a39c90; border-top-color: #3a352e; } .attrib a { color: #c9a45c; }
             #pop { background: #faf8f4; color: #26221c; } #pop b { color: #8a6d3b; }
             .edited { text-decoration-color: #c9a45c; }
-            aside.supplement { background: #2a2620; border-left-color: #7a6a4c; } aside.supplement::before { color: #c9a45c; }
+            .note { background: #2e2921; }
           }
         </style></head><body>
         <div class="kicker">\(label)</div><h1>\(title)</h1>
@@ -86,7 +83,7 @@ enum PieceHTML {
             });
           });
           // D40: a note has no original; tapping it (not its word) says where it came from.
-          document.querySelectorAll('aside.supplement').forEach(n => {
+          document.querySelectorAll('.note').forEach(n => {
             n.addEventListener('click', e => {
               e.stopPropagation();
               showAt('<b>Added by RetAIn</b> — general context, not from the article.', e.pageX, e.pageY + 12);

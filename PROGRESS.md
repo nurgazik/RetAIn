@@ -202,6 +202,18 @@ itself via the fetchers.
   0). That's the D40 coverage problem, not caused by this change, but the revert means no
   second attempt to place a word.
 
+### 2026-09-26 (evening) — Anchor trial: one word per ~120-word stretch
+
+- Founder: per-paragraph is the wrong anchor (3 words in one paragraph and 0 in the next is
+  fine); switched to ~120-word stretches, notes inline anywhere as long as they're marked.
+  Checker stays as is, no re-runs; relaxing it is a future founder lever.
+- Built: stretches cut in code and named in the request; guard anchors notes to the sentence
+  they follow; inline note span (interim tinted italic, margin design pending). pytest 27,
+  iOS ReaderPopupTests 3 green.
+- Measured 15 pieces: 21/36 stretches, 1.5 words/piece (per-paragraph run: 2.4), 59% notes,
+  longest word-free run median 193 words. Details: docs/poc2-transform.md §S1.
+- Still not live (service restart + phone rebuild pending founder).
+
 ### 2026-09-26 (later) — SUPPLEMENT notes built in one call (D40 amended)
 
 - Founder ruled one model call only (wait time beats a trial ratio). Notes are `<aside>`

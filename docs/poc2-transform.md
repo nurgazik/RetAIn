@@ -362,6 +362,27 @@ the rest are generic and plausible but bland. (d) Notes were 58% of placed words
 50% trial ceiling — prompt-level ceilings are soft. (e) A single 292-word paragraph (fixture 03)
 got nothing in any run.
 
+#### S1 addendum — D40 anchor trial: ~120-word stretches (2026-09-26)
+
+Founder switched the target from "a word in every 25+-word paragraph" to "no ~120-word
+stretch without a word", with notes allowed inline after any sentence. Code cuts stretches
+at sentence ends (a tail under 60 words joins the previous stretch) and names each one in
+the request by its opening words. 3 runs × 5 fixtures = 15 pieces:
+
+| Metric | Per-paragraph (run 4 above, n=5) | Per-stretch (n=15) |
+|---|---|---|
+| Coverage | 12/24 paragraphs | 21/36 stretches (58%) |
+| Words per piece | 2.4 | 1.5 |
+| Substitute / rephrase / note | 3 / 2 / 7 | 4 / 5 / 13 (59% notes) |
+| Longest word-free run | — | 155–467 words, median 193 |
+| Time per piece | 1.9–4.6 s | 2.3–7.9 s (median 2.8; 7.9 = zero-word first draft retried) |
+
+Per fixture across runs: Sedaris (one 292-word block) 2/2 every run (was 0); Meta 1–3/4;
+Reddit (155 words, one stretch) 0, 0, 1. Reading: the model treats "at least one per
+stretch" as a quota, so a coarser unit means fewer words overall; in-text slots stay scarce,
+so extra coverage mostly arrives as notes. Note quality unchanged: generic, plausible, one
+trend claim per run or so ("the zeitgeist of the current tech landscape suggests…").
+
 ### S2 — Safari action extension: can we read the rendered page and show our sheet?
 - **Question:** does an iOS action extension with a JavaScript preprocessing file get the
   page DOM from the user's session (paywalled / logged-in included), and can it stream from
