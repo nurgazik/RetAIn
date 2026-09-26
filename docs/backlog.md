@@ -16,7 +16,7 @@ first because several items hang on them. The done ledger and Horizon 3 sit at t
 
 | # | Decision | Blocks |
 |---|---|---|
-| DEC-1 | **Engine density.** Sentence mode is live at ~2.4 words/1,000 (about one per piece); rewrite mode gives 5.6 with occasional invented colour. Founder has an idea ("a creative task"). | UX-1, TD-2 |
+| DEC-1 | ~~**Engine density.**~~ Decided 2026-09-26 → **D40**: every 25+-word paragraph carries a word; tiers SUBSTITUTE / REPHRASE / SUPPLEMENT (≤50% trial), all in one model call. | UX-1, TD-2 |
 | DEC-2 | **Monetization model (P2):** credits per transform / bring-your-own key / subscription with fair-use cap. Inputs: $0.0016–0.010 per transform, spend visible in Settings. | MO-1..MO-4 |
 | DEC-3 | **TestFlight thresholds (P3):** What is confidered a user forming a habbit? DAU?. | AD-6 verdict |
 | DEC-4 | **Seller entity before public launch (D39):** individual now, consulting corp later (D-U-N-S, domain email, website). Decided with DEC-2. | AD-7 |
@@ -53,7 +53,7 @@ first because several items hang on them. The done ledger and Horizon 3 sit at t
 
 | # | Item | Value | Trade-off | Implementation |
 |---|---|---|---|---|
-| UX-1 | **Engine density per DEC-1** | The core reading experience: how many words land, how faithful the text | Density vs fidelity; latency | Implement the founder's idea as an engine mode behind `RETAIN_ENGINE_MODE`; measure on the 5 fixtures + device pieces; compare page |
+| UX-1 | **Engine density per DEC-1** | The core reading experience: how many words land, how faithful the text | Density vs fidelity; latency | D40: tier tagging + tap-to-reveal original — **done**; SUPPLEMENT notes in the same call — **done 2026-09-26** (5 fixtures: 12/24 paragraphs covered, 1.9–4.6 s). Open: go live (service restart + phone rebuild); in-text words rejected by the idiom check (8 of 13) are the main coverage loss; long unbroken texts need a length rule alongside the per-paragraph one |
 | UX-2 | **Faster transforms** (user-facing half of TD-2) | The magic moment stays under ~6 s | See TD-2 | Phase labels already stream; add a "reading the first part now" partial for long pages if a cap is adopted |
 | UX-3 | **First-run experience** (a new account has zero words → nothing gets placed) | New users see the product work in minute one | Starter words must fit the reader's level | Onboarding: pick a level → starter set (e.g. 20 words); import from a list/Kindle export later; "add your first word" prompt |
 | UX-4 | **Word card enrichment** (PRD §8: register, collocations, nuance, 2–3 examples) | Capture becomes "better than a Kindle lookup" | One extra model call per capture (~$0.0001) | Extend the `card` prompt; store JSON fields on `words`; card view sections |
