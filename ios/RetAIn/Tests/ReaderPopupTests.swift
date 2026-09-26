@@ -99,6 +99,12 @@ final class ReaderPopupTests: XCTestCase {
         XCTAssertGreaterThanOrEqual(noteBars, 1)
         let colours = [try await bg(".substitute mark"), try await bg(".rephrase mark"), try await bg(".note mark")]
         XCTAssertEqual(Set(colours).count, 3, "each tier has its own highlight colour: \(colours)")
+        _ = try await web.evaluateJavaScript("document.querySelector('.bar-note').click(); true")
+        let hint = try await web.evaluateJavaScript("document.getElementById('hint').innerText") as? String ?? ""
+        XCTAssertTrue(hint.contains("Note from RetAIn") && hint.contains("not from the article"), hint)
+        _ = try await web.evaluateJavaScript("document.querySelector('.bar-substitute').click(); true")
+        let hint2 = try await web.evaluateJavaScript("document.getElementById('hint').innerText") as? String ?? ""
+        XCTAssertTrue(hint2.contains("Word substituted"), hint2)
         let underline = try await web.evaluateJavaScript("getComputedStyle(document.querySelector('.rephrase')).textDecorationLine") as? String ?? ""
         XCTAssertEqual(underline, "none")
     }

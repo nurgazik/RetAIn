@@ -11,7 +11,7 @@ enum PieceHTML {
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <style>
           body { font-family: Georgia, 'Times New Roman', serif; background: #faf8f4; color: #26221c;
-                 margin: 0; padding: 1.25rem 1.25rem 4rem; line-height: 1.65; -webkit-text-size-adjust: 100%; }
+                 margin: 0; padding: 1.25rem 1.25rem 4rem 1.75rem; line-height: 1.65; -webkit-text-size-adjust: 100%; }
           .kicker { font-family: -apple-system, sans-serif; font-size: .75rem; letter-spacing: .12em;
                     text-transform: uppercase; color: #8a6d3b; margin-bottom: .5rem; }
           h1 { font-size: 1.5rem; line-height: 1.25; margin: 0 0 1.25rem; }
@@ -20,15 +20,25 @@ enum PieceHTML {
           /* D40: no underlines — how a sentence was changed lives in the margin, per line */
           .edited { cursor: pointer; }
           .note { font-style: italic; cursor: pointer; }
-          .bar { position: absolute; left: .4rem; width: 3px; pointer-events: none; border-radius: 1.5px; }
-          /* D40 tier colours (founder's scheme), and a distinct bar pattern per tier for colour-blind
-             readers — drawn as striped fills: WebKit renders dashed borders on thin boxes as one dash */
+          /* a bar is a tap zone filling the left margin; the visible stripe is its ::before */
+          .bar { position: absolute; left: 0; width: 1.75rem; cursor: pointer; }
+          .bar::before, .swatch::before { content: ""; position: absolute; top: 0; bottom: 0; width: 3px; border-radius: 1.5px; }
+          .bar::before { left: .55rem; }
+          .bar-note::before { width: 4px; }
+          #hint { position: absolute; display: none; z-index: 11; max-width: 270px; padding: .6rem .75rem .6rem .7rem;
+                  background: #fffdf8; color: #26221c; border: 1px solid #e3dbcc; border-radius: 10px;
+                  box-shadow: 0 4px 14px rgba(0,0,0,.12); font-family: -apple-system, sans-serif; font-size: .82rem;
+                  line-height: 1.4; gap: .6rem; align-items: stretch; }
+          #hint .swatch { position: relative; flex: 0 0 4px; min-height: 2.2rem; }
+          #hint .swatch::before { left: 0; }
+          #hint b { display: block; font-size: .85rem; margin-bottom: .15rem; }
           .substitute mark { background: linear-gradient(transparent 55%, #b5e3a1 55%); }
           .rephrase mark   { background: linear-gradient(transparent 55%, #b3d4f5 55%); }
           .note mark       { background: linear-gradient(transparent 55%, #f8c9a0 55%); }
-          .bar-substitute { --c: #4c9a3a; background: repeating-linear-gradient(to bottom, var(--c) 0 9px, transparent 9px 14px); }
-          .bar-rephrase   { --c: #3d7fc4; background: var(--c); }
-          .bar-note       { --c: #d9772b; width: 4px; background: repeating-linear-gradient(to bottom, var(--c) 0 4px, transparent 4px 8px); }
+          .bar-substitute { --c: #4c9a3a; } .bar-rephrase { --c: #3d7fc4; } .bar-note { --c: #d9772b; }
+          .bar-substitute::before { background: repeating-linear-gradient(to bottom, var(--c) 0 9px, transparent 9px 14px); }
+          .bar-rephrase::before   { background: var(--c); }
+          .bar-note::before       { background: repeating-linear-gradient(to bottom, var(--c) 0 4px, transparent 4px 8px); }
           #pop .orig { display: block; margin-top: .3rem; font-family: Georgia, serif; font-style: italic; }
           #pop { position: absolute; display: none; z-index: 10; max-width: 280px; padding: .6rem .8rem;
                  background: #26221c; color: #faf8f4; border-radius: 8px; font-family: -apple-system, sans-serif;
@@ -50,12 +60,14 @@ enum PieceHTML {
             .rephrase mark   { background: linear-gradient(transparent 55%, #2b5485 55%); }
             .note mark       { background: linear-gradient(transparent 55%, #8a4f22 55%); }
             .bar-substitute { --c: #7cc466; } .bar-rephrase { --c: #6aa6e6; } .bar-note { --c: #f0a060; }
+            #hint { background: #2a2620; color: #ece7dd; border-color: #3f392f; box-shadow: 0 4px 14px rgba(0,0,0,.5); }
           }
         </style></head><body>
         <div class="kicker">\(label)</div><h1>\(title)</h1>
         \(body)
         <div class="attrib">\(attrib)</div>
         <div id="pop"></div>
+        <div id="hint"></div>
         <script>
           const pop = document.getElementById('pop');
           const stats = \(statsJSON);
@@ -70,6 +82,7 @@ enum PieceHTML {
                 html += '<span class="meta">Seen ' + (s.n + 1) + ' time' + (s.n === 0 ? '' : 's') + '</span>';
                 html += '<button onclick="event.stopPropagation(); this.disabled = true; this.textContent = \\'Marked retained\\'; try { window.webkit.messageHandlers.retain.postMessage(\\'' + s.word + '\\'); } catch (err) {}">Got it — mark retained</button>';
               }
+              document.getElementById('hint').style.display = 'none';
               pop.innerHTML = html;
               pop.style.display = 'block';
               const r = m.getBoundingClientRect();
@@ -79,6 +92,7 @@ enum PieceHTML {
             });
           });
           function showAt(html, x, y) {
+            document.getElementById('hint').style.display = 'none';
             pop.innerHTML = html;
             pop.style.display = 'block';
             pop.style.left = Math.min(x, window.innerWidth - 300) + 'px';
@@ -100,7 +114,21 @@ enum PieceHTML {
               showAt('<b>Added by RetAIn</b> — general context, not from the article.', e.pageX, e.pageY + 12);
             });
           });
-          document.addEventListener('click', () => { pop.style.display = 'none'; });
+          const hint = document.getElementById('hint');
+          const HINTS = {
+            substitute: ['Word substituted', 'One word in this sentence was swapped for one of yours. Tap the sentence to see the original.'],
+            rephrase: ['Sentence rephrased', 'Reworded to carry one of your words; the facts are the source’s. Tap the sentence to see the original.'],
+            note: ['Note from RetAIn', 'General background added to carry one of your words — not from the article.']
+          };
+          function showHint(kind, top) {
+            pop.style.display = 'none';
+            hint.innerHTML = '<span class="swatch bar-' + kind + '"></span><div><b class="h-title"></b><span class="h-text"></span></div>';
+            hint.querySelector('.h-title').textContent = HINTS[kind][0];
+            hint.querySelector('.h-text').textContent = HINTS[kind][1];
+            hint.style.left = '1.9rem'; hint.style.top = top + 'px';
+            hint.style.display = 'flex';
+          }
+          document.addEventListener('click', () => { pop.style.display = 'none'; hint.style.display = 'none'; });
           // D40 margin bars: one per visual line of every changed sentence and note, styled
           // by tier. When two share a line, the stronger change wins (note > rephrase > substitute).
           function drawBars() {
@@ -129,6 +157,7 @@ enum PieceHTML {
               const b = document.createElement('div');
               b.className = 'bar bar-' + l.kind;
               b.style.top = l.top + 'px'; b.style.height = l.h + 'px';
+              b.addEventListener('click', e => { e.stopPropagation(); showHint(l.kind, l.top); });
               document.body.appendChild(b);
             });
           }
