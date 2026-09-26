@@ -355,7 +355,7 @@ fact checks), gemini-3.1-flash-lite. Iterations, in order:
 | 4 | **12 / 24** | **3 / 2 / 7** | **1.9–4.6 s, ~$0.0026** | code names each 25+-word paragraph (opening words) in the user message; rules against defining the word, trends, attributed opinions |
 
 Findings: (a) the paragraph-collapse bug in `sentence_guard` is the likely cause of backlog
-UX-11 ("one big blob"); fixed. (b) The idiom check rejected 12 attempted in-text words in
+UX-11 ("one big blob"); fixed. (b) The idiom check rejected 8 of 13 attempted in-text words in
 run 4; under D41 each reverts, so it is now the largest coverage loss. (c) Note quality, run 4:
 7 notes, none defines its word; 1 trend claim ("becoming ubiquitous in fashion subcultures");
 the rest are generic and plausible but bland. (d) Notes were 58% of placed words against the
