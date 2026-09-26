@@ -202,6 +202,19 @@ itself via the fetchers.
   0). That's the D40 coverage problem, not caused by this change, but the revert means no
   second attempt to place a word.
 
+### 2026-09-26 (night) — Junk removal (Readability) and margin bars
+
+- Safari extension runs Mozilla Readability 0.6.0 (vendored, Apache-2.0; founder-approved
+  dependency) before the model: share bars, nav, footers and bylines leave the body; an
+  opening headline becomes the title; short non-sentence fragments are dropped (RetAIn's own
+  rule). Byline/site/date come back as separate fields (not yet shown). Text shared from
+  other apps still arrives uncleaned.
+- Reader: underlines removed. Margin bars per visual line — solid blue = rephrased, dotted
+  orange = note; substitution gets no bar (its highlighted word is the change); word
+  highlight is one colour. Snapshot of a real piece checked by eye.
+- Tests: pytest 28; iOS unit 7 (new: page-script on a cluttered page; bars per tier).
+- Still not live: service restart + phone rebuild pending founder.
+
 ### 2026-09-26 (evening) — Anchor trial: one word per ~120-word stretch
 
 - Founder: per-paragraph is the wrong anchor (3 words in one paragraph and 0 in the next is

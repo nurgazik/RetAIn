@@ -72,6 +72,29 @@ final class ReaderPopupTests: XCTestCase {
         XCTAssertFalse(wordPop.contains("Added by RetAIn"), wordPop)
     }
 
+    /// D40: rephrased sentences and notes get a margin bar per line (solid vs dotted class);
+    /// a substitution gets none; nothing in the text is underlined.
+    func testMarginBarsPerTierAndNoUnderline() async throws {
+        let body = "<p><span class=\"edited substitute\" data-tier=\"substitute\" data-orig=\"A.\">They <mark data-def=\"x\">bolster</mark> it.</span></p>"
+            + "<p><span class=\"edited rephrase\" data-tier=\"rephrase\" data-orig=\"B.\">" + String(repeating: "A long rephrased sentence keeps going. ", count: 6) + "</span>"
+            + " <span class=\"note supplement\" data-tier=\"supplement\">A note with a <mark data-def=\"y\">word</mark>.</span></p>"
+        let html = PieceHTML.page(title: "T", label: "Your read", body: body, attrib: "attrib")
+        let web = WKWebView(frame: CGRect(x: 0, y: 0, width: 390, height: 800))
+        let nav = NavSink()
+        web.navigationDelegate = nav
+        web.loadHTMLString(html, baseURL: nil)
+        try await nav.wait()
+        let rephraseBars = try await web.evaluateJavaScript("document.querySelectorAll('.bar-rephrase').length") as? Int ?? 0
+        let noteBars = try await web.evaluateJavaScript("document.querySelectorAll('.bar-note').length") as? Int ?? 0
+        let subTop = try await web.evaluateJavaScript("document.querySelector('.substitute').getBoundingClientRect().top") as? Double ?? 0
+        let barTops = try await web.evaluateJavaScript("Array.from(document.querySelectorAll('.bar')).map(b => parseFloat(b.style.top))") as? [Double] ?? []
+        let underline = try await web.evaluateJavaScript("getComputedStyle(document.querySelector('.rephrase')).textDecorationLine") as? String ?? ""
+        XCTAssertGreaterThanOrEqual(rephraseBars, 3, "a multi-line rephrase gets a bar per line")
+        XCTAssertGreaterThanOrEqual(noteBars, 1)
+        XCTAssertFalse(barTops.contains { abs($0 - subTop) < 12 }, "no bar beside the substitution")
+        XCTAssertEqual(underline, "none")
+    }
+
     final class Sink: NSObject, WKScriptMessageHandler {
         var messages: [String: String] = [:]
         func userContentController(_ c: WKUserContentController, didReceive m: WKScriptMessage) {

@@ -17,9 +17,12 @@ enum PieceHTML {
           h1 { font-size: 1.5rem; line-height: 1.25; margin: 0 0 1.25rem; }
           p { margin: 0 0 1.1rem; font-size: 1.06rem; }
           mark { background: linear-gradient(transparent 55%, #ffe08a 55%); padding: 0 .1em; border-radius: 2px; }
-          .edited { text-decoration: underline; text-decoration-color: #e8c96a; text-decoration-thickness: 1.5px; text-underline-offset: 3px; }
-          .edited.rephrase { text-decoration-style: dashed; }
-          .note { background: #ece4d4; border-radius: 3px; padding: 0 .15em; font-style: italic; }
+          /* D40: no underlines — how a sentence was changed lives in the margin, per line */
+          .edited { cursor: pointer; }
+          .note { font-style: italic; cursor: pointer; }
+          .bar { position: absolute; left: .45rem; width: 0; pointer-events: none;
+                 border-left: 3px solid #3d7fc4; }                 /* rephrased: solid blue */
+          .bar-note { border-left: 3px dotted #d9772b; }           /* note: dotted orange */
           #pop .orig { display: block; margin-top: .3rem; font-family: Georgia, serif; font-style: italic; }
           #pop { position: absolute; display: none; z-index: 10; max-width: 280px; padding: .6rem .8rem;
                  background: #26221c; color: #faf8f4; border-radius: 8px; font-family: -apple-system, sans-serif;
@@ -37,8 +40,7 @@ enum PieceHTML {
             mark { background: linear-gradient(transparent 55%, #7a5d13 55%); color: inherit; }
             .kicker { color: #c9a45c; } .attrib { color: #a39c90; border-top-color: #3a352e; } .attrib a { color: #c9a45c; }
             #pop { background: #faf8f4; color: #26221c; } #pop b { color: #8a6d3b; }
-            .edited { text-decoration-color: #c9a45c; }
-            .note { background: #2e2921; }
+            .bar { border-left-color: #6aa6e6; } .bar-note { border-left-color: #f0a060; }
           }
         </style></head><body>
         <div class="kicker">\(label)</div><h1>\(title)</h1>
@@ -90,6 +92,33 @@ enum PieceHTML {
             });
           });
           document.addEventListener('click', () => { pop.style.display = 'none'; });
+          // D40 margin bars: one per visual line of a rephrased sentence or a note (a
+          // substitution needs none — its highlighted word is the whole change). When both
+          // share a line, the note's bar wins.
+          function drawBars() {
+            document.querySelectorAll('.bar').forEach(b => b.remove());
+            const rank = {rephrase: 1, note: 2}, lines = [];
+            document.querySelectorAll('.edited.rephrase, .note').forEach(el => {
+              const kind = el.classList.contains('note') ? 'note' : 'rephrase';
+              const lh = parseFloat(getComputedStyle(el).lineHeight) || 0;
+              for (const r of el.getClientRects()) {
+                if (r.width < 1) continue;
+                const h = Math.max(r.height, lh), top = r.top + window.scrollY - (h - r.height) / 2;
+                const same = lines.find(l => Math.abs(l.top - top) < h / 2);
+                if (!same) lines.push({top, h, kind});
+                else if (rank[kind] > rank[same.kind]) same.kind = kind;
+              }
+            });
+            lines.forEach(l => {
+              const b = document.createElement('div');
+              b.className = 'bar bar-' + l.kind;
+              b.style.top = l.top + 'px'; b.style.height = l.h + 'px';
+              document.body.appendChild(b);
+            });
+          }
+          drawBars();
+          window.addEventListener('resize', drawBars);
+          if (document.fonts) document.fonts.ready.then(drawBars);
         </script></body></html>
         """
     }
