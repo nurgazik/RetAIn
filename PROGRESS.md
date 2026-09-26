@@ -220,8 +220,8 @@ itself via the fetchers.
   founder asked the assistant to choose — Figma hues darkened for cream: green #28a012 and
   cyan #0097a7 (≥3.2:1 contrast), yellow #d4a200 (2.2:1; darker turns brown). Disclaimer copy in `src/generate.py` updated (no more "dashed/dotted orange").
 - Verified: sample page rendered in simulator Safari, light + dark, by eye. pytest 28
-  green; service restarted, 200. **iOS unit tests not run** — simulator refuses to launch
-  com.retain.app ("Launchd job spawn failed"); likely needs the app uninstalled from the sim.
+  green; service restarted, 200. iOS unit tests 7/7 green (after uninstalling the app
+  from the simulator — it had been refusing to launch with "Launchd job spawn failed").
 - Seen on render: a one-line bar is a short stub (10×~28 px). Founder to judge.
 
 ### 2026-09-26 (closing) — Tap hints, bracket bars, dark palette; handoff
