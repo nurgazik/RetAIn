@@ -23,9 +23,11 @@ in `spikes/`.
 
 ## Key documents
 
-- `docs/poc2-transform.md` — **PoC 2 source of truth**: rationale, hypothesis v2, iOS
-  entry-point feasibility, success criteria, technical spikes (findings appended as they
-  land), user-story backlog. Extend it; don't fork it.
+- `docs/backlog.md` — **the living work list**: four epics (Tech Debt, Monetization, UX,
+  Administration), the founder's pending decisions (DEC-n), done ledger. Update item
+  status here as work lands; ids are stable.
+- `docs/poc2-transform.md` — **PoC 2 record**: rationale, hypothesis v2, iOS entry-point
+  feasibility, gates, spike findings, engine measurements. Extend it; don't fork it.
 - `PROGRESS.md` — **read this first when starting a session**: current state, next-up
   queue, and the dated narrative log. Update its NOW block and append an entry at the
   end of every working session — the founder relies on it to catch up after days away.
