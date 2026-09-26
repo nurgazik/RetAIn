@@ -355,19 +355,24 @@
 				LastUpgradeCheck = 1430;
 				TargetAttributes = {
 					1E54433EE8E439AB0248C243 = {
+						DevelopmentTeam = UKGU6PX43H;
 						ProvisioningStyle = Automatic;
 						TestTargetID = 2E86B7ED4A3BD2EA61794929;
 					};
 					2E86B7ED4A3BD2EA61794929 = {
+						DevelopmentTeam = UKGU6PX43H;
 						ProvisioningStyle = Automatic;
 					};
 					68F0241E8BC299FAA5932856 = {
+						DevelopmentTeam = UKGU6PX43H;
 						ProvisioningStyle = Automatic;
 					};
 					E463BA6E723A58E1AB34890D = {
+						DevelopmentTeam = UKGU6PX43H;
 						ProvisioningStyle = Automatic;
 					};
 					FD9FDB889BE26A04F9D9862F = {
+						DevelopmentTeam = UKGU6PX43H;
 						ProvisioningStyle = Automatic;
 					};
 				};
@@ -574,6 +579,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				COPY_PHASE_STRIP = NO;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEVELOPMENT_TEAM = UKGU6PX43H;
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
@@ -734,6 +740,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				COPY_PHASE_STRIP = NO;
 				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEVELOPMENT_TEAM = UKGU6PX43H;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
@@ -756,7 +763,8 @@
 				ONLY_ACTIVE_ARCH = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				RETAIN_DEV_TOKEN = "";
-				RETAIN_SERVER = "http://127.0.0.1:8585";
+				RETAIN_SERVER = "https://rays-mac-mini.tailb493b3.ts.net";
+				"RETAIN_SERVER[sdk=iphonesimulator*]" = "http://127.0.0.1:8585";
 				SDKROOT = iphoneos;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";

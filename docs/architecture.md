@@ -84,8 +84,10 @@ Everything above describes the digest pipeline (PoC 1). Under D34 the ingest →
 select half is retired; generate → QC → render and the served ledger carry over. This
 section describes the hosted service the iOS app and its extensions call (backlog M1,
 PRD §8 "Service"). Built in `src/service/` (config, db, auth, engine, app); runs as the
-launchd agent `com.retain.service` on port 8585. Status of the "done when" list at the
-bottom: everything passes locally; the Funnel HTTPS URL is pending tailnet enablement.
+launchd agent `com.retain.service` on port 8585, public HTTPS via Tailscale Funnel at
+https://rays-mac-mini.tailb493b3.ts.net. The "done when" list at the bottom is fully met
+(2026-09-25/26): curl and the iOS app exercise every route over HTTPS; Sign in with Apple
+verified with the founder's account; every model call has a `calls` row with USD and ms.
 
 ## What it is
 

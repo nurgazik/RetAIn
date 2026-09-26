@@ -9,12 +9,13 @@ settings:
   base:
     SWIFT_VERSION: "5.9"
     CODE_SIGN_STYLE: Automatic
+    DEVELOPMENT_TEAM: UKGU6PX43H                             # founder's Apple Developer team
     TARGETED_DEVICE_FAMILY: "1"
     RETAIN_SERVER: https://rays-mac-mini.tailb493b3.ts.net   # Funnel URL; Settings can override
     RETAIN_DEV_TOKEN: ""                                     # Debug device builds: pass on the xcodebuild command line, never commit
   configs:
     Debug:
-      RETAIN_SERVER: http://127.0.0.1:8585                   # simulator → local service
+      "RETAIN_SERVER[sdk=iphonesimulator*]": http://127.0.0.1:8585   # simulator only → local service; devices use the Funnel URL
 targets:
   RetAIn:
     type: application

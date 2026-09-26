@@ -6,14 +6,22 @@ first. Decisions live in PRD.md's log (D1–D34); this file is the narrative tim
 
 ---
 
-## NOW (as of 2026-09-24 session end)
+## NOW (as of 2026-09-26 morning)
 
-**Phase:** **PoC 2 — on-demand transform (D34).** PoC 1 (the daily digest) is CLOSED:
-it ran 7 of 14 days (08-02 → 08-08), usage decayed 29→2 pieces/day, criterion 1 failed.
-Founder's diagnosis: a daily digest is a content business he doesn't want to be in.
-New shape: the user captures words as before, reads wherever they already read, and on
-demand runs the piece in front of them through RetAIn to read it with their words placed.
-No scheduler, no digest. Spec + spikes + backlog: **docs/poc2-transform.md**.
+**Phase: MVP build (Phase 2) — M1–M6 built and verified on the founder's phone; Sign in
+with Apple live; membership active; M8 (monetization) and M9 (TestFlight) remain.**
+PoC 1 (daily digest) closed 2026-09-24; PoC 2 passed its technical gates (D35). Product
+shape: capture words → share/copy whatever you're reading → sheet over the host app →
+piece with your words (sentence-scoped mode, edited sentences underlined) → My Reads.
+Spec/backlog: docs/poc2-transform.md §8. Service: `src/service/` on the Mac mini, public
+HTTPS via Tailscale Funnel. App: `ios/RetAIn/` (xcodegen). Engine mode + density is the
+open product question (founder has an idea).
+
+**2026-09-26:** founder signed in with Apple on the real build (account
+u_152716…, nurgazy7@gmail.com); first transform on the real account ran; account seeded
+with the 50 words from data/words.json (+ his own "adversity"). `data/service.db` was
+tracked in git by mistake — now untracked and ignored (history still contains earlier
+copies: founder to decide on a purge).
 
 **Digest server status:** `src/serve.py` still runs (launchd agent, Tailscale) and becomes
 the host for Spike S0's `/transform` route. Fetchers, calendar slots and editions are

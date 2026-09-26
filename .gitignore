@@ -13,3 +13,6 @@ __pycache__/
 # Claude Code local settings (machine-specific)
 .claude/settings.local.json
 .venv/
+data/service.db
+data/service.db-wal
+data/service.db-shm
