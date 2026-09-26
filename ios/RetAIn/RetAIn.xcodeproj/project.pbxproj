@@ -35,6 +35,7 @@
 		96CA112C33821E0F979A0FF6 /* SessionStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC3A20A78E389B481F0B403E /* SessionStore.swift */; };
 		985E4C3C297999FF15A517C3 /* RetAInPage.js in Resources */ = {isa = PBXBuildFile; fileRef = 2D286AEEB8FABB1977DFEA0B /* RetAInPage.js */; };
 		9937DD134003DC360C00EC77 /* RetAInClientTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8890CC0A9D4FE57E778ECA7A /* RetAInClientTests.swift */; };
+		A1F56E0D390B607745E38D3E /* PageScriptTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 18533ACD2253E300A8946870 /* PageScriptTests.swift */; };
 		AEA8B60DD6F84B7A630758B9 /* Models.swift in Sources */ = {isa = PBXBuildFile; fileRef = 08606ADADCC454623CF9B809 /* Models.swift */; };
 		B3DB93C9354FF188F902F765 /* ReadsStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = C31DA02FC3DE821DB8C935EB /* ReadsStore.swift */; };
 		B64BE8C3FA03C3C3D293126A /* RetAInClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 075C0D559D6C67C564CE18E8 /* RetAInClient.swift */; };
@@ -107,6 +108,7 @@
 /* Begin PBXFileReference section */
 		075C0D559D6C67C564CE18E8 /* RetAInClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RetAInClient.swift; sourceTree = "<group>"; };
 		08606ADADCC454623CF9B809 /* Models.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models.swift; sourceTree = "<group>"; };
+		18533ACD2253E300A8946870 /* PageScriptTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PageScriptTests.swift; sourceTree = "<group>"; };
 		1DC5A72E818D1C8038029AD0 /* WordCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WordCardView.swift; sourceTree = "<group>"; };
 		293E390A139672E14211590E /* RetAInShare.appex */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = "wrapper.app-extension"; path = RetAInShare.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		2D286AEEB8FABB1977DFEA0B /* RetAInPage.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = RetAInPage.js; sourceTree = "<group>"; };
@@ -168,6 +170,7 @@
 		570DAA0FFD3DF4EE195CD8C6 /* Tests */ = {
 			isa = PBXGroup;
 			children = (
+				18533ACD2253E300A8946870 /* PageScriptTests.swift */,
 				B8B9A94628B0384203AE3601 /* ReaderPopupTests.swift */,
 				8890CC0A9D4FE57E778ECA7A /* RetAInClientTests.swift */,
 			);
@@ -424,6 +427,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				A1F56E0D390B607745E38D3E /* PageScriptTests.swift in Sources */,
 				D69A4F6818AD70AF2E4B910A /* ReaderPopupTests.swift in Sources */,
 				9937DD134003DC360C00EC77 /* RetAInClientTests.swift in Sources */,
 			);

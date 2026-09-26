@@ -8,6 +8,7 @@ struct ExtensionInput {
     var title: String?
     var pageText: String?
     var selection: String?
+    var extractor: String?   // Safari page script: "readability" or "innerText"
     var typeLog: [String] = []
     var source: String = "share-ext"
 
@@ -38,7 +39,8 @@ struct ExtensionInput {
     }
     var diagnosticPayload: [String: Any] {
         ["types": typeLog, "textWords": Self.words(text), "pageWords": Self.words(pageText),
-         "selectionWords": Self.words(selection), "hasUrl": url != nil, "source": source]
+         "selectionWords": Self.words(selection), "hasUrl": url != nil, "source": source,
+         "extractor": extractor ?? "none"]
     }
 
     static func gather(from context: NSExtensionContext?, source: String) async -> ExtensionInput {
@@ -53,6 +55,7 @@ struct ExtensionInput {
                        let res = dict[NSExtensionJavaScriptPreprocessingResultsKey] as? [String: Any] {
                         r.pageText = res["text"] as? String
                         r.selection = res["selection"] as? String
+                        r.extractor = res["extractor"] as? String
                         r.url = r.url ?? (res["url"] as? String)
                         r.title = r.title ?? (res["title"] as? String)
                     }

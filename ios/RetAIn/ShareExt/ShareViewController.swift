@@ -20,6 +20,7 @@ final class ShareViewController: UIViewController {
             } else if let text = input.effectiveText {
                 let meta: [String: Any] = ["types": input.typeLog, "hasSelection": (input.selection?.count ?? 0) > 0,
                                            "pageChars": input.pageText?.count ?? 0, "textChars": input.text?.count ?? 0,
+                                           "extractor": input.extractor ?? "none",
                                            "build": Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? "?"]
                 root = AnyView(SheetView(text: text, title: input.title, url: input.url, source: source, meta: meta, onDone: done))
             } else {
