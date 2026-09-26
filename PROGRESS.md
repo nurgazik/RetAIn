@@ -29,7 +29,7 @@ the checker rejects about half of its in-text words (backlog UX-1; test models v
 u_152716…, nurgazy7@gmail.com); first transform on the real account ran; account seeded
 with the 50 words from data/words.json (+ his own "adversity"). `data/service.db` was
 tracked in git by mistake — now untracked and ignored (history still contains earlier
-copies: founder to decide on a purge).
+copies; founder decided 2026-09-26 not to purge).
 
 **Start here (new session, any model):** read this NOW block, then `docs/backlog.md`
 (pending decisions DEC-1..5 at the top; epics TD/MO/UX/AD), then PRD.md decisions D34–D39.

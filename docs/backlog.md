@@ -20,7 +20,6 @@ first because several items hang on them. The done ledger and Horizon 3 sit at t
 | DEC-2 | **Monetization model (P2):** credits per transform / bring-your-own key / subscription with fair-use cap. Inputs: $0.0016–0.010 per transform, spend visible in Settings. | MO-1..MO-4 |
 | DEC-3 | **TestFlight thresholds (P3):** What is confidered a user forming a habbit? DAU?. | AD-6 verdict |
 | DEC-4 | **Seller entity before public launch (D39):** individual now, consulting corp later (D-U-N-S, domain email, website). Decided with DEC-2. | AD-7 |
-| DEC-5 | **Purge `data/service.db` from git history** (holds the founder's Apple id, email, and every transformed text; private repo) or leave it. | TD-7 |
 
 ## Epic: Tech Debt
 
@@ -32,7 +31,7 @@ first because several items hang on them. The done ledger and Horizon 3 sit at t
 | TD-4 | **Offline and error states** (My Reads needs the network; failures show raw messages) | The app never looks broken | Some UI work | Serve My Reads from the app-group cache first; friendly error copy; retry buttons |
 | TD-5 | **Rate limiting and abuse protection** beyond the per-user daily cap | Protects the model bill when strangers arrive | None | Per-IP and per-user limits in the service; alert on daily spend threshold |
 | TD-6 | **Page extraction quality** (readability-style) | Fewer navigation/ad fragments in pieces on messy sites | A day of JS work; risk of dropping real text | Score candidate containers by text density in `RetAInPage.js`; use `textContent` for collapsed sections; test on 10 sites |
-| TD-7 | **Repo hygiene:** purge `service.db` from history (DEC-5); `output/` artefacts; spike folder archived | Privacy; smaller repo | History rewrite + force-push if purged | `git filter-repo` on `data/service.db`; move `spikes/` to a branch or `archive/` |
+| TD-7 | **Repo hygiene:** ~~purge `service.db` from history~~ (founder 2026-09-26: leave history as is); `output/` artefacts; spike folder archived | Privacy; smaller repo | — | Move `spikes/` to a branch or `archive/` |
 | TD-8 | **Retire the digest server + Shortcut** (`src/serve.py`, launchd `com.retain.server`, port 8484) | One system to run | None; PoC 1 artefacts stay in git | Unload the launchd agent; note in PROGRESS; delete the Shortcut on the phone |
 | TD-9 | **Source-text retention policy** (every piece stores its full original forever) | Privacy; storage | Some analytics lose the source | Keep source text N days, then keep only the piece; document in the privacy policy (AD-2) |
 | TD-10 | **Native text renderer** replacing WKWebView | Faster open, native selection, less memory (~15–20 MB), proper Dynamic Type | Rebuild highlights, popup and underline natively | AttributedString from the piece HTML; SwiftUI Text with tap targets; keep WKWebView behind a flag until parity |
