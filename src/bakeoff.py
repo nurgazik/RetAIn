@@ -91,6 +91,13 @@ def build_prompt() -> tuple:
     return system, user, dict(row)
 
 
+def merge(base: dict, extra: dict = None) -> dict:
+    """Deep-merge per-model request settings (evals registry `params`) into a request body."""
+    for k, v in (extra or {}).items():
+        base[k] = merge(dict(base.get(k) or {}), v) if isinstance(v, dict) else v
+    return base
+
+
 def post_json(url: str, headers: dict, body: dict) -> dict:
     req = urllib.request.Request(
         url, data=json.dumps(body).encode(), headers={"Content-Type": "application/json", **headers}
@@ -99,13 +106,13 @@ def post_json(url: str, headers: dict, body: dict) -> dict:
         return json.loads(resp.read())
 
 
-def call_anthropic(model: str, system: str, user: str, key: str) -> dict:
-    body = {
+def call_anthropic(model: str, system: str, user: str, key: str, params: dict = None) -> dict:
+    body = merge({
         "model": model,
         "max_tokens": MAX_OUTPUT_TOKENS,
         "system": system,
         "messages": [{"role": "user", "content": user}],
-    }
+    }, params)
     d = post_json(
         "https://api.anthropic.com/v1/messages",
         {"x-api-key": key, "anthropic-version": "2023-06-01"},
@@ -116,8 +123,8 @@ def call_anthropic(model: str, system: str, user: str, key: str) -> dict:
     return {"text": text, "tokens_in": u["input_tokens"], "tokens_out": u["output_tokens"]}
 
 
-def call_openai(model: str, system: str, user: str, key: str) -> dict:
-    body = {
+def call_openai(model: str, system: str, user: str, key: str, params: dict = None) -> dict:
+    body = merge({
         "model": model,
         "max_completion_tokens": MAX_OUTPUT_TOKENS,
         "reasoning_effort": "minimal",
@@ -126,27 +133,24 @@ def call_openai(model: str, system: str, user: str, key: str) -> dict:
             {"role": "user", "content": user},
         ],
         **OPENAI_OVERRIDES.get(model, {}),
-    }
+    }, params)
     try:
         d = post_json(
             "https://api.openai.com/v1/chat/completions",
             {"Authorization": f"Bearer {key}"}, body,
         )
     except urllib.error.HTTPError:
+        if params and "reasoning_effort" in params:
+            raise  # an explicitly requested setting must fail loudly, not be dropped
         body.pop("reasoning_effort", None)
         d = post_json(
             "https://api.openai.com/v1/chat/completions",
             {"Authorization": f"Bearer {key}"}, body,
         )
-    u = d["usage"]
-    return {
-        "text": d["choices"][0]["message"]["content"],
-        "tokens_in": u["prompt_tokens"],
-        "tokens_out": u["completion_tokens"],
-    }
+    return openai_result(d)
 
 
-def call_gemini(model: str, system: str, user: str, key: str) -> dict:
+def call_gemini(model: str, system: str, user: str, key: str, params: dict = None) -> dict:
     url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={key}"
     body = {
         "systemInstruction": {"parts": [{"text": system}]},
@@ -156,9 +160,14 @@ def call_gemini(model: str, system: str, user: str, key: str) -> dict:
             "thinkingConfig": {"thinkingBudget": 0},
         },
     }
+    if params and "thinkingConfig" in params.get("generationConfig", {}):
+        del body["generationConfig"]["thinkingConfig"]  # replace, don't merge: budget and level are exclusive
+    merge(body, params)
     try:
         d = post_json(url, {}, body)
     except urllib.error.HTTPError:
+        if params and "thinkingConfig" in params.get("generationConfig", {}):
+            raise  # an explicitly requested setting must fail loudly, not be dropped
         del body["generationConfig"]["thinkingConfig"]
         d = post_json(url, {}, body)
     parts = d["candidates"][0]["content"]["parts"]
@@ -167,21 +176,31 @@ def call_gemini(model: str, system: str, user: str, key: str) -> dict:
         "text": "".join(p.get("text", "") for p in parts),
         "tokens_in": u.get("promptTokenCount", 0),
         "tokens_out": u.get("candidatesTokenCount", 0) + u.get("thoughtsTokenCount", 0),
+        "tokens_reasoning": u.get("thoughtsTokenCount", 0),
     }
 
 
+def openai_result(d: dict) -> dict:
+    """Chat-completions response → caller result. OpenRouter adds the billed `cost` (USD)."""
+    u = d["usage"]
+    r = {"text": d["choices"][0]["message"]["content"] or "",
+         "tokens_in": u["prompt_tokens"], "tokens_out": u["completion_tokens"],
+         "tokens_reasoning": (u.get("completion_tokens_details") or {}).get("reasoning_tokens") or 0}
+    if u.get("cost") is not None:
+        r["cost"] = u["cost"]
+    return r
+
+
 def make_openai_compat(base_url: str):
-    def call(model: str, system: str, user: str, key: str) -> dict:
+    def call(model: str, system: str, user: str, key: str, params: dict = None) -> dict:
         d = post_json(
             f"{base_url}/chat/completions",
             {"Authorization": f"Bearer {key}"},
-            {"model": model, "max_tokens": MAX_OUTPUT_TOKENS,
-             "messages": [{"role": "system", "content": system},
-                          {"role": "user", "content": user}]},
+            merge({"model": model, "max_tokens": MAX_OUTPUT_TOKENS,
+                   "messages": [{"role": "system", "content": system},
+                                {"role": "user", "content": user}]}, params),
         )
-        u = d["usage"]
-        return {"text": d["choices"][0]["message"]["content"],
-                "tokens_in": u["prompt_tokens"], "tokens_out": u["completion_tokens"]}
+        return openai_result(d)
     return call
 
 
@@ -243,9 +262,9 @@ def render_html(pieces: list, source: dict) -> str:
             background: #f1ead9; padding: .8rem 1rem; border-radius: 8px; }}
 </style></head><body><div class="sheet">
 <h1>Model bake-off — blind quality review</h1>
-<p class="intro">Four rewrites of the same Global Voices article
+<p class="intro">{len(pieces)} rewrites of the same Global Voices article
 ("{html_mod.escape(source['title'])}"), same prompt, same 10 candidate words.
-Read all four and rank them before opening results.json — the letters are
+Read them all and rank them before opening results.json — the letters are
 randomized. Judge: Would I read this? Does every highlighted word sound natural?
 Are the facts intact vs <a href="{html_mod.escape(source['url'])}">the original</a>?</p>
 {''.join(sections)}
@@ -290,7 +309,7 @@ def run() -> None:
         results.append(entry)
 
     good = [r for r in results if r.get("ok")]
-    letters = list("ABCD")[: len(good)]
+    letters = [chr(ord("A") + i) for i in range(len(good))]
     random.shuffle(good)
     for letter, r in zip(letters, good):
         r["letter"] = letter

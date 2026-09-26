@@ -1,0 +1,30 @@
+{
+  "_readme": "Eval model registry. name = model + settings (one model can appear with several settings). Prices are $/1M tokens, used when the provider does not report billed cost. Add OpenRouter models with `python src/evals add <slug>`.",
+  "baseline": "gemini-3.1-flash-lite",
+  "grader": null,
+  "models": [
+    {
+      "name": "gemini-3.1-flash-lite",
+      "provider": "gemini",
+      "model": "gemini-3.1-flash-lite",
+      "in": 0.25,
+      "out": 1.5,
+      "params": {},
+      "price_source": "production calls table 2026-09-26 (matches ai.google.dev pricing)"
+    },
+    {
+      "name": "gpt-6-luna@none",
+      "provider": "openai",
+      "model": "gpt-6-luna",
+      "in": 0.1,
+      "out": 0.5,
+      "params": {
+        "reasoning_effort": "none"
+      },
+      "price_source": "developers.openai.com model page via research 2026-09-26 (re-verify before run)"
+    }
+  ],
+  "_retired": [
+    "gemini-2.5-flash-lite: 404 'no longer available to new users' (2026-09-26)"
+  ]
+}

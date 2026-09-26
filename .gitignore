@@ -16,3 +16,7 @@ __pycache__/
 data/service.db
 data/service.db-wal
 data/service.db-shm
+
+# Model evals: results and the founder's private reads never leave the machine
+data/evals.db
+data/evals/golden/private/

@@ -1,3 +1,27 @@
+# Model evals (standing harness, since 2026-09-26)
+
+One-off bake-offs are replaced by `src/evals` (see its `__main__.py` for commands). Every
+model runs the **full production pipeline** (sentence mode: rewrite + idiom judge + fact judge,
+candidate model in every role, no fallback) on a **frozen golden set**
+(`data/evals/golden/`: 17 of the founder's reads — private, gitignored — plus 13 licensed
+texts; the founder's 51 words). Results land in `data/evals.db`; `src/evals report` prints
+the leaderboard. Research behind the candidate list: `reports/LLM rewrite engine candidates 2026.md`.
+
+New model: `src/evals add <openrouter-slug>` (or a line in `data/evals/models.json`) →
+`run <name>` → `grade <run>` → `report`.
+
+**First runs, dataset 3ad00d7222 (30 pieces), 2026-09-26** — mechanical metrics only; grader pending:
+
+| Model | $/piece | p50 / p90 s | Marks/piece | Coverage | Note |
+|---|---|---|---|---|---|
+| gemini-3.1-flash-lite (run 6) | $0.00415 | 4.8 / 8.0 | 3.4 | 35% | baseline |
+| gemini-3.1-flash-lite (run 7) | $0.00421 | 4.8 / 8.4 | 3.4 | 38% | repeat: harness is stable |
+| gpt-6-luna, reasoning none (run 8) | $0.00273 | 10.7 / 37.7 | 2.4 | 25% | 75 generate calls for 30 pieces: output fails validation, retries |
+
+gemini-2.5-flash-lite is closed to new API users (404, 2026-09-26).
+
+---
+
 # Rewrite-Model Bake-off (2026-07-24)
 
 Four models, identical prompt (core + news wrapper), identical source article

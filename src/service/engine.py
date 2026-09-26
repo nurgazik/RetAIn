@@ -24,6 +24,20 @@ def text_to_html(text: str) -> str:
     return "\n".join(f"<p>{html_mod.escape(p)}</p>" for p in paras)
 
 
+def user_item(item_id: str, source: str, url: str, title: str, text: str) -> dict:
+    """A user's text as a pipeline item (shared with src/evals so evals run what production runs)."""
+    return {"id": item_id, "source": "user_text", "section": source, "url": url or item_id,
+            "title": title or "", "author": None, "published": None, "license": "user-supplied",
+            "content_html": text_to_html(text)}
+
+
+def pipeline_args() -> tuple:
+    """(wrapper file, generate_piece kwargs) for the current ENGINE_MODE."""
+    if ENGINE_MODE == "sentence":
+        return "transform-sentence.md", {"request": G.SENTENCE_REQUEST, "density_floor": False}
+    return "transform.md", {"request": None, "density_floor": True}
+
+
 def enqueue(piece_id: str) -> None:
     threading.Thread(target=_run, args=(piece_id,), daemon=True).start()
 
@@ -41,20 +55,15 @@ def _run(piece_id: str) -> None:
         piece = con.execute("SELECT * FROM pieces WHERE id=?", (piece_id,)).fetchone()
         words = db.learning_words(con, piece["user_id"])
         menu = [w["word"] for w in words]
-        item = {"id": piece_id, "source": "user_text", "section": piece["source"],
-                "url": piece["url"] or piece_id, "title": piece["title"] or "",
-                "author": None, "published": None, "license": "user-supplied",
-                "content_html": text_to_html(piece["source_text"])}
+        item = user_item(piece_id, piece["source"], piece["url"], piece["title"], piece["source_text"])
         env = {"GEMINI_API_KEY": __import__("os").environ.get("GEMINI_API_KEY", ""),
                "ANTHROPIC_API_KEY": __import__("os").environ.get("ANTHROPIC_API_KEY", "")}
         G.CALL_LOG.clear()
         with _gen_lock:
             _set(con, piece_id, status="generating")
-            wrapper = "transform-sentence.md" if ENGINE_MODE == "sentence" else "transform.md"
-            request = G.SENTENCE_REQUEST if ENGINE_MODE == "sentence" else None
+            wrapper, kwargs = pipeline_args()
             result = G.generate_piece(con, item, wrapper, menu, env, digest_date=None,
-                                      words=words, record=False, request=request,
-                                      density_floor=(ENGINE_MODE != "sentence"),
+                                      words=words, record=False, **kwargs,
                                       progress=lambda phase: _set(con, piece_id, status=phase))
         cost = db.record_calls(con, piece["user_id"], piece_id, list(G.CALL_LOG), PRICES)
         _set(con, piece_id, status="done", title=result["title"], body_html=result["body"],

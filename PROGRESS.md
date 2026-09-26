@@ -170,6 +170,22 @@ vacation coding ends). Home Mac: clone normally with personal credentials; recre
 `.env.local` (4 API keys — gitignored, never on GitHub) and `data/retain.db` refills
 itself via the fetchers.
 
+### 2026-09-26 (evening) — Model research + standing eval harness
+
+- Research (7 tracks, notes in `research_notes/`, report in `reports/LLM rewrite engine
+  candidates 2026.md`): shortlist of models cheaper per piece than Flash-Lite, incl. Chinese
+  open-weight (DeepSeek, Qwen, Xiaomi MiMo, Ant Ling) via Western zero-retention hosts,
+  NVIDIA Nemotron, Gemma 4, gpt-6-luna. Founder rule: anything pricier per piece is out.
+  claude-haiku-4-5 (fallback) may retire from 2026-10-15 → TD-12.
+- Built `src/evals`: frozen golden set (30 pieces: 17 founder reads, 13 licensed; 51 words),
+  runner = full production pipeline with the candidate in every role (via new
+  `engine.pipeline_args`/`user_item`, so evals and service can't drift), per-call billed
+  cost + reasoning tokens (callers take per-model `params`; OpenRouter route with ZDR),
+  fixed grader + blind founder labelling page + kappa, leaderboard. 24 tests green.
+- First runs: Flash-Lite $0.0042/piece, 4.8 s p50 (two runs agree); gpt-6-luna (reasoning
+  none) $0.0027, 10.7 s p50, fewer words (fails validation → retries).
+- Open (TD-13): grader choice (proposed gpt-6-sol), founder labels, OpenRouter key, shortlist runs.
+
 ### 2026-09-26 — Checks kept, regeneration dropped in sentence mode (D41)
 
 - Founder asked to remove the idiom + fact checks to cut wait and cost. Evidence from the

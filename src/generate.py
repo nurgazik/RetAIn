@@ -493,21 +493,25 @@ def unmark_sentences(body: str, words: list) -> str:
     return re.sub(r"<(p|aside)>(.*?)</\1>", fix_para, body, flags=re.S)
 
 
-CALL_LOG = []  # (purpose, model, tokens_in, tokens_out, ms) per model call; the service drains it
+CALL_LOG = []  # (purpose, model, tokens_in, tokens_out, ms, billed_usd|None, reasoning_tokens) per call; the service drains it
 
 
 def call_model(system: str, user: str, env: dict, purpose: str = "generate") -> tuple:
-    """Primary model with automatic fallback (D5). Returns (text, model_name)."""
+    """Primary model with automatic fallback (D5). Returns (text, model_name).
+    FALLBACK = None (evals) makes a primary failure raise instead."""
     import time as _t
     _t0 = _t.time()
     try:
-        r = PRIMARY["call"](PRIMARY["model"], system, user, env[PRIMARY["key"]])
+        r = PRIMARY["call"](PRIMARY["model"], system, user, env[PRIMARY["key"]], PRIMARY.get("params"))
         model = PRIMARY["model"]
     except Exception as exc:
+        if not FALLBACK:
+            raise
         print(f"[warn] {PRIMARY['model']} failed ({exc}); falling back to {FALLBACK['model']}")
         r = FALLBACK["call"](FALLBACK["model"], system, user, env[FALLBACK["key"]])
         model = FALLBACK["model"]
-    CALL_LOG.append((purpose, model, r.get("tokens_in", 0), r.get("tokens_out", 0), int((_t.time() - _t0) * 1000)))
+    CALL_LOG.append((purpose, model, r.get("tokens_in", 0), r.get("tokens_out", 0), int((_t.time() - _t0) * 1000),
+                     r.get("cost"), r.get("tokens_reasoning", 0)))
     return r["text"], model
 
 
