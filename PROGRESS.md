@@ -202,6 +202,20 @@ itself via the fetchers.
   0). That's the D40 coverage problem, not caused by this change, but the revert means no
   second attempt to place a word.
 
+### 2026-09-26 (late night) — Tier colours; demo piece in the founder's account
+
+- Founder's first real share (CBC wastewater, ~1,000 words, Readability-clean) placed 2
+  words: the model attempted 6 across ~8 stretches, the checker rejected 4, the one note
+  died with its rejected word. Engine was live (restart confirmed); UI showed no bars
+  because only substitutions survived and they had none.
+- Founder: highlights must follow the colour scheme and every change gets a bar. Now green
+  (dashed) = substituted, blue (solid) = rephrased, orange (dotted) = note; bars merged
+  per change and drawn as striped fills (WebKit drew dashed borders as one dash).
+- Hand-built demo `p_demo_283d0c28f2` in the founder's account ("[Demo] …", words_used
+  empty so it doesn't count as reading) — UI test only, not engine output.
+- Open: model under-attempts and misuses words (6 tries / 8 stretches, 4 rejected) →
+  candidate for the model evals (TD-13).
+
 ### 2026-09-26 (night) — Junk removal (Readability) and margin bars
 
 - Safari extension runs Mozilla Readability 0.6.0 (vendored, Apache-2.0; founder-approved

@@ -72,11 +72,11 @@ final class ReaderPopupTests: XCTestCase {
         XCTAssertFalse(wordPop.contains("Added by RetAIn"), wordPop)
     }
 
-    /// D40: rephrased sentences and notes get a margin bar per line (solid vs dotted class);
-    /// a substitution gets none; nothing in the text is underlined.
-    func testMarginBarsPerTierAndNoUnderline() async throws {
+    /// D40: every tier gets a margin bar spanning its lines (distinct class per tier) and its own
+    /// highlight colour; nothing in the text is underlined.
+    func testMarginBarsAndHighlightColoursPerTier() async throws {
         let body = "<p><span class=\"edited substitute\" data-tier=\"substitute\" data-orig=\"A.\">They <mark data-def=\"x\">bolster</mark> it.</span></p>"
-            + "<p><span class=\"edited rephrase\" data-tier=\"rephrase\" data-orig=\"B.\">" + String(repeating: "A long rephrased sentence keeps going. ", count: 6) + "</span>"
+            + "<p><span class=\"edited rephrase\" data-tier=\"rephrase\" data-orig=\"B.\">" + String(repeating: "A long rephrased sentence keeps going. ", count: 6) + "<mark data-def=\"z\">deft</mark>.</span>"
             + " <span class=\"note supplement\" data-tier=\"supplement\">A note with a <mark data-def=\"y\">word</mark>.</span></p>"
         let html = PieceHTML.page(title: "T", label: "Your read", body: body, attrib: "attrib")
         let web = WKWebView(frame: CGRect(x: 0, y: 0, width: 390, height: 800))
@@ -84,14 +84,22 @@ final class ReaderPopupTests: XCTestCase {
         web.navigationDelegate = nav
         web.loadHTMLString(html, baseURL: nil)
         try await nav.wait()
-        let rephraseBars = try await web.evaluateJavaScript("document.querySelectorAll('.bar-rephrase').length") as? Int ?? 0
-        let noteBars = try await web.evaluateJavaScript("document.querySelectorAll('.bar-note').length") as? Int ?? 0
-        let subTop = try await web.evaluateJavaScript("document.querySelector('.substitute').getBoundingClientRect().top") as? Double ?? 0
-        let barTops = try await web.evaluateJavaScript("Array.from(document.querySelectorAll('.bar')).map(b => parseFloat(b.style.top))") as? [Double] ?? []
-        let underline = try await web.evaluateJavaScript("getComputedStyle(document.querySelector('.rephrase')).textDecorationLine") as? String ?? ""
-        XCTAssertGreaterThanOrEqual(rephraseBars, 3, "a multi-line rephrase gets a bar per line")
+        func count(_ sel: String) async throws -> Int {
+            try await web.evaluateJavaScript("document.querySelectorAll('\(sel)').length") as? Int ?? 0
+        }
+        func bg(_ sel: String) async throws -> String {
+            try await web.evaluateJavaScript("getComputedStyle(document.querySelector('\(sel)')).backgroundImage") as? String ?? ""
+        }
+        let subBars = try await count(".bar-substitute"), rephraseBars = try await count(".bar-rephrase"), noteBars = try await count(".bar-note")
+        XCTAssertGreaterThanOrEqual(subBars, 1)
+        XCTAssertEqual(rephraseBars, 1, "consecutive lines of one change form one bar")
+        let barH = try await web.evaluateJavaScript("parseFloat(document.querySelector('.bar-rephrase').style.height)") as? Double ?? 0
+        let lineH = try await web.evaluateJavaScript("parseFloat(getComputedStyle(document.querySelector('p')).lineHeight)") as? Double ?? 1
+        XCTAssertGreaterThanOrEqual(barH, 3 * lineH - 2, "the bar spans every line of the rephrased sentence")
         XCTAssertGreaterThanOrEqual(noteBars, 1)
-        XCTAssertFalse(barTops.contains { abs($0 - subTop) < 12 }, "no bar beside the substitution")
+        let colours = [try await bg(".substitute mark"), try await bg(".rephrase mark"), try await bg(".note mark")]
+        XCTAssertEqual(Set(colours).count, 3, "each tier has its own highlight colour: \(colours)")
+        let underline = try await web.evaluateJavaScript("getComputedStyle(document.querySelector('.rephrase')).textDecorationLine") as? String ?? ""
         XCTAssertEqual(underline, "none")
     }
 

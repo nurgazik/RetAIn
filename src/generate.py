@@ -573,10 +573,10 @@ def render(kicker: str, title: str, body: str, attrib: str) -> str:
 AI_DISCLAIMER = (" Adapted with AI to carry your words: phrasing may be added or "
                  "changed, facts should not be — check the original for anything "
                  "that matters.")
-SENTENCE_DISCLAIMER = (" Adapted with AI to carry your words (D40): a solid bar in the margin "
-                       "marks a rephrased sentence, a dotted bar a note RetAIn added (general "
-                       "context, not from the source); tap a changed sentence to see the "
-                       "original.")
+SENTENCE_DISCLAIMER = (" Adapted with AI to carry your words (D40). Margin bars mark every "
+                       "change: dashed green, a word substituted; solid blue, a sentence "
+                       "rephrased; dotted orange, a note RetAIn added (general context, not "
+                       "from the source). Tap a changed sentence to see the original.")
 
 
 def attribution_for(item, disclaimer: str = AI_DISCLAIMER) -> str:

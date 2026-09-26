@@ -20,9 +20,15 @@ enum PieceHTML {
           /* D40: no underlines — how a sentence was changed lives in the margin, per line */
           .edited { cursor: pointer; }
           .note { font-style: italic; cursor: pointer; }
-          .bar { position: absolute; left: .45rem; width: 0; pointer-events: none;
-                 border-left: 3px solid #3d7fc4; }                 /* rephrased: solid blue */
-          .bar-note { border-left: 3px dotted #d9772b; }           /* note: dotted orange */
+          .bar { position: absolute; left: .4rem; width: 3px; pointer-events: none; border-radius: 1.5px; }
+          /* D40 tier colours (founder's scheme), and a distinct bar pattern per tier for colour-blind
+             readers — drawn as striped fills: WebKit renders dashed borders on thin boxes as one dash */
+          .substitute mark { background: linear-gradient(transparent 55%, #b5e3a1 55%); }
+          .rephrase mark   { background: linear-gradient(transparent 55%, #b3d4f5 55%); }
+          .note mark       { background: linear-gradient(transparent 55%, #f8c9a0 55%); }
+          .bar-substitute { --c: #4c9a3a; background: repeating-linear-gradient(to bottom, var(--c) 0 9px, transparent 9px 14px); }
+          .bar-rephrase   { --c: #3d7fc4; background: var(--c); }
+          .bar-note       { --c: #d9772b; width: 4px; background: repeating-linear-gradient(to bottom, var(--c) 0 4px, transparent 4px 8px); }
           #pop .orig { display: block; margin-top: .3rem; font-family: Georgia, serif; font-style: italic; }
           #pop { position: absolute; display: none; z-index: 10; max-width: 280px; padding: .6rem .8rem;
                  background: #26221c; color: #faf8f4; border-radius: 8px; font-family: -apple-system, sans-serif;
@@ -40,7 +46,10 @@ enum PieceHTML {
             mark { background: linear-gradient(transparent 55%, #7a5d13 55%); color: inherit; }
             .kicker { color: #c9a45c; } .attrib { color: #a39c90; border-top-color: #3a352e; } .attrib a { color: #c9a45c; }
             #pop { background: #faf8f4; color: #26221c; } #pop b { color: #8a6d3b; }
-            .bar { border-left-color: #6aa6e6; } .bar-note { border-left-color: #f0a060; }
+            .substitute mark { background: linear-gradient(transparent 55%, #3d6b2f 55%); }
+            .rephrase mark   { background: linear-gradient(transparent 55%, #2b5485 55%); }
+            .note mark       { background: linear-gradient(transparent 55%, #8a4f22 55%); }
+            .bar-substitute { --c: #7cc466; } .bar-rephrase { --c: #6aa6e6; } .bar-note { --c: #f0a060; }
           }
         </style></head><body>
         <div class="kicker">\(label)</div><h1>\(title)</h1>
@@ -92,14 +101,13 @@ enum PieceHTML {
             });
           });
           document.addEventListener('click', () => { pop.style.display = 'none'; });
-          // D40 margin bars: one per visual line of a rephrased sentence or a note (a
-          // substitution needs none — its highlighted word is the whole change). When both
-          // share a line, the note's bar wins.
+          // D40 margin bars: one per visual line of every changed sentence and note, styled
+          // by tier. When two share a line, the stronger change wins (note > rephrase > substitute).
           function drawBars() {
             document.querySelectorAll('.bar').forEach(b => b.remove());
-            const rank = {rephrase: 1, note: 2}, lines = [];
-            document.querySelectorAll('.edited.rephrase, .note').forEach(el => {
-              const kind = el.classList.contains('note') ? 'note' : 'rephrase';
+            const rank = {substitute: 1, rephrase: 2, note: 3}, lines = [];
+            document.querySelectorAll('.edited, .note').forEach(el => {
+              const kind = el.classList.contains('note') ? 'note' : el.classList.contains('rephrase') ? 'rephrase' : 'substitute';
               const lh = parseFloat(getComputedStyle(el).lineHeight) || 0;
               for (const r of el.getClientRects()) {
                 if (r.width < 1) continue;
@@ -109,7 +117,15 @@ enum PieceHTML {
                 else if (rank[kind] > rank[same.kind]) same.kind = kind;
               }
             });
+            // consecutive lines of the same kind become one bar, so dashes and dots read as a line
+            lines.sort((a, b) => a.top - b.top);
+            const runs = [];
             lines.forEach(l => {
+              const last = runs[runs.length - 1];
+              if (last && last.kind === l.kind && l.top <= last.top + last.h + 2) last.h = l.top + l.h - last.top;
+              else runs.push({...l});
+            });
+            runs.forEach(l => {
               const b = document.createElement('div');
               b.className = 'bar bar-' + l.kind;
               b.style.top = l.top + 'px'; b.style.height = l.h + 'px';
