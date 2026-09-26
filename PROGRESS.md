@@ -179,6 +179,19 @@ vacation coding ends). Home Mac: clone normally with personal credentials; recre
 `.env.local` (4 API keys — gitignored, never on GitHub) and `data/retain.db` refills
 itself via the fetchers.
 
+### 2026-09-26 (night) — Engine switched to Gemma 4 26B (D42)
+
+- Blind quality grading added to the harness (packets graded by Claude Code helper agents on
+  the founder's plan, no API cost) plus role separation: writer-only runs, fixed checker, and a
+  checker test against graded words. Findings in docs/model-bakeoff.md: Gemma is the better
+  writer (21% vs 38% wrong raw; 11 vs 43 inventions), a weak self-checker (catches 55% of misuse;
+  gpt-6-luna 91%).
+- Founder decision D42: Gemma writes and self-checks via OpenRouter (ZDR hosts, thinking off);
+  Flash-Lite is the fallback (TD-12 done). Service restarted; live test piece on Gemma: 3 calls,
+  $0.00057, 12.3 s. Service now records OpenRouter's billed cost.
+- Open: founder labelling session; grade the Gemma + luna split; privacy policy must name
+  OpenRouter (AD-2).
+
 ### 2026-09-26 (evening) — Model research + standing eval harness
 
 - Research (7 tracks, notes in `research_notes/`, report in `reports/LLM rewrite engine

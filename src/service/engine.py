@@ -24,6 +24,12 @@ def text_to_html(text: str) -> str:
     return "\n".join(f"<p>{html_mod.escape(p)}</p>" for p in paras)
 
 
+def model_env() -> dict:
+    """API keys for every provider the engine may call (primary + fallback)."""
+    import os
+    return {k: os.environ.get(k, "") for k in ("OPENROUTER_API_KEY", "GEMINI_API_KEY", "ANTHROPIC_API_KEY")}
+
+
 def user_item(item_id: str, source: str, url: str, title: str, text: str) -> dict:
     """A user's text as a pipeline item (shared with src/evals so evals run what production runs)."""
     return {"id": item_id, "source": "user_text", "section": source, "url": url or item_id,
@@ -56,8 +62,7 @@ def _run(piece_id: str) -> None:
         words = db.learning_words(con, piece["user_id"])
         menu = [w["word"] for w in words]
         item = user_item(piece_id, piece["source"], piece["url"], piece["title"], piece["source_text"])
-        env = {"GEMINI_API_KEY": __import__("os").environ.get("GEMINI_API_KEY", ""),
-               "ANTHROPIC_API_KEY": __import__("os").environ.get("ANTHROPIC_API_KEY", "")}
+        env = model_env()
         G.CALL_LOG.clear()
         with _gen_lock:
             _set(con, piece_id, status="generating")

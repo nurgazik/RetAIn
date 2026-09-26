@@ -135,14 +135,15 @@ def learning_words(con, user_id: str) -> list:
 
 
 def record_calls(con, user_id: str, piece_id: str | None, calls: list, prices: dict) -> float:
-    """calls: [(purpose, model, tokens_in, tokens_out[, ms])] → rows in `calls`; returns USD total."""
+    """calls: [(purpose, model, tokens_in, tokens_out[, ms[, billed_usd]])] → rows in `calls`; returns USD total."""
     total = 0.0
     with _lock:
         for c in calls:
             purpose, model, tin, tout = c[:4]
             ms = c[4] if len(c) > 4 else None
             p = prices.get(model, {"in": 0.0, "out": 0.0})
-            usd = tin / 1e6 * p["in"] + tout / 1e6 * p["out"]
+            billed = c[5] if len(c) > 5 else None  # OpenRouter reports the billed cost
+            usd = billed if billed is not None else tin / 1e6 * p["in"] + tout / 1e6 * p["out"]
             total += usd
             con.execute("INSERT INTO calls (user_id, piece_id, purpose, model, tokens_in, tokens_out, usd, ms, at) "
                         "VALUES (?,?,?,?,?,?,?,?,?)", (user_id, piece_id, purpose, model, tin, tout, usd, ms, now()))

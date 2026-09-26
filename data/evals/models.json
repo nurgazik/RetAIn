@@ -1,6 +1,6 @@
 {
   "_readme": "Eval model registry. name = model + settings (one model can appear with several settings). Prices are $/1M tokens, used when the provider does not report billed cost. Add OpenRouter models with `python src/evals add <slug>`.",
-  "baseline": "gemini-3.1-flash-lite",
+  "baseline": "gemma-4-26b-a4b-it@nothink",
   "grader": null,
   "models": [
     {

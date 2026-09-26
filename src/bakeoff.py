@@ -45,6 +45,9 @@ MODELS = [
      "base_url": "https://api.moonshot.ai/v1", "key_env": "KIMI_API_KEY"},
     {"provider": "openai", "model": "o3-mini", "in": 1.10, "out": 4.40},
     {"provider": "gemini", "model": "gemini-3.1-flash-lite", "in": 0.25, "out": 1.50},
+    # D42 production writer (OpenRouter list price 2026-09-26; the service prefers billed cost)
+    {"provider": "openai_compat", "model": "google/gemma-4-26b-a4b-it", "in": 0.068, "out": 0.225,
+     "base_url": "https://openrouter.ai/api/v1", "key_env": "OPENROUTER_API_KEY"},
 ]
 
 # per-model request tweaks (reasoning models need effort setting + token headroom)

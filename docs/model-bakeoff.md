@@ -30,6 +30,41 @@ All 11 ran in parallel; OpenRouter latency includes routing and rate-limit retri
 | mercury-2.5 | $0.00089 | −80% | 8.9 / 39.8 | 0.8 | 17% | rate-limited upstream |
 
 Qwen 3.7/3.8 not run: only Alibaba serves them on OpenRouter, not zero-retention (founder to decide).
+
+**Quality, 2026-09-26 — blind grading by Claude Code (Opus 5.5) on the founder's plan; 6 helper
+agents, one rubric, models hidden. Not yet checked against founder labels.**
+
+Full pipeline, each model self-checking (engine 99d1911f2c):
+
+| | Words graded | Idiomatic | Acceptable | Wrong | Inventions | Note problems |
+|---|---|---|---|---|---|---|
+| gemini-3.1-flash-lite | 69 | 36% | 48% | 16% | 20 (9/30 pieces) | 7 |
+| gemma-4-26b | 77 | 35% | 38% | 27% | 4 (4/30) | 11 |
+
+Writer only, checks off (engine cce7c6f829) — the apples-to-apples writer comparison:
+
+| | Words graded | Idiomatic | Wrong | Inventions | $/piece |
+|---|---|---|---|---|---|
+| gemini-3.1-flash-lite | 123 | 25% | 38% | 43 (18/30) | $0.00236 |
+| gemma-4-26b | 98 | 34% | 21% | 11 (7/30) | $0.00060 |
+
+Checker test (`src/evals judge`, production QC prompt, gold = the 367 graded words):
+
+| Checker | Catches wrong | Rejects idiomatic | Rejects acceptable |
+|---|---|---|---|
+| gpt-6-luna (none) | 91% | 15% | 56% |
+| deepseek-v4.1-flash | 86% | 15% | 47% |
+| gemini-3.1-flash-lite | 69% | 2% | 19% |
+| gemma-4-26b | 55% | 2% | 17% |
+| gpt-5.4-nano | 17% | 3% | 5% |
+
+Split roles, full pipeline (not yet graded): Gemma + luna checker $0.00107/piece, 4.6/16.0 s,
+coverage 45%; Gemma + deepseek checker $0.00122, 6.7/15.0 s, 46%; Flash-Lite alone $0.00395,
+4.9/11.1 s, 43%.
+
+**Decision (founder, D42):** Gemma 4 26B replaces Flash-Lite in production, self-checking as
+before; Flash-Lite becomes the fallback. Split writer/checker is the ready next step if
+misuse shows up.
 gemini-2.5-flash-lite is closed to new API users (404, 2026-09-26).
 
 ---

@@ -111,9 +111,7 @@ def add_word(body: WordIn, user=Depends(auth.current_user)):
             raw, _ = G.call_model(
                 "You write one-line dictionary definitions for an advanced ESL learner. Output STRICT "
                 "JSON only: {\"pos\": \"<verb|noun|adjective|adverb>\", \"definition\": \"<one plain sentence>\"}",
-                f"WORD: {word}", {"GEMINI_API_KEY": __import__('os').environ.get('GEMINI_API_KEY', ''),
-                                  "ANTHROPIC_API_KEY": __import__('os').environ.get('ANTHROPIC_API_KEY', '')},
-                purpose="card")
+                f"WORD: {word}", engine.model_env(), purpose="card")
             raw = raw.strip().strip("`").removeprefix("json").strip()
             card = json.loads(raw)
             definition, body.pos = card["definition"], body.pos or card.get("pos")

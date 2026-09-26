@@ -17,13 +17,16 @@ from datetime import datetime, timezone
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
 import store
-from bakeoff import load_env, parse_output, call_anthropic, call_gemini
+from bakeoff import load_env, parse_output, call_anthropic, call_gemini, make_openai_compat
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 
-# D5 (2026-07-26): Flash-Lite primary, Haiku fallback on provider failure
-PRIMARY = {"model": "gemini-3.1-flash-lite", "call": call_gemini, "key": "GEMINI_API_KEY"}
-FALLBACK = {"model": "claude-haiku-4-5", "call": call_anthropic, "key": "ANTHROPIC_API_KEY"}
+# D42 (2026-09-26): Gemma 4 26B via OpenRouter writes and self-checks (was D5: Flash-Lite);
+# zero-data-retention hosts only, thinking off. Flash-Lite (Google, direct) is the fallback.
+PRIMARY = {"model": "google/gemma-4-26b-a4b-it", "call": make_openai_compat("https://openrouter.ai/api/v1"),
+           "key": "OPENROUTER_API_KEY",
+           "params": {"provider": {"zdr": True}, "reasoning": {"enabled": False}}}
+FALLBACK = {"model": "gemini-3.1-flash-lite", "call": call_gemini, "key": "GEMINI_API_KEY"}
 
 CSS = """
   body { font-family: Georgia, 'Times New Roman', serif; background: #faf8f4;
@@ -538,7 +541,7 @@ def call_model(system: str, user: str, env: dict, purpose: str = "generate") -> 
         if not FALLBACK:
             raise
         print(f"[warn] {PRIMARY['model']} failed ({exc}); falling back to {FALLBACK['model']}")
-        r = FALLBACK["call"](FALLBACK["model"], system, user, env[FALLBACK["key"]])
+        r = FALLBACK["call"](FALLBACK["model"], system, user, env[FALLBACK["key"]], FALLBACK.get("params"))
         model = FALLBACK["model"]
     CALL_LOG.append((purpose, model, r.get("tokens_in", 0), r.get("tokens_out", 0), int((_t.time() - _t0) * 1000),
                      r.get("cost"), r.get("tokens_reasoning", 0)))

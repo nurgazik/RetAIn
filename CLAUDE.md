@@ -62,8 +62,9 @@ in `spikes/`.
   PoC → MVP → Future-state horizons — scope suggestions accordingly.
 - Rewrite quality bar: words only where genuinely idiomatic (awkward collocations teach
   wrong usage — worse than nothing); advanced reading level, never simplified.
-- Cost posture: rewrite model is gemini-3.1-flash-lite (~$0.0017/piece) with
-  claude-haiku-4-5 as fallback (PRD D5, docs/model-bakeoff.md). QC gate is ON (D19);
+- Cost posture: engine model is Gemma 4 26B via OpenRouter, zero-retention hosts,
+  ~$0.001/piece, self-checking; fallback gemini-3.1-flash-lite (PRD D42, docs/model-bakeoff.md).
+  Model changes go through `src/evals` first. QC gate is ON (D19);
   check its revisit triggers before MVP work or model changes.
 - Scope guards: link intake is out (D37); engine mode is rewrite with relaxed fidelity
   and the fact judge (D36); monetization undecided (P2) — decide before anyone but the
