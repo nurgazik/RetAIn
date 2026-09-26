@@ -6,19 +6,25 @@ first. Decisions live in PRD.md's log (D1–D34); this file is the narrative tim
 
 ---
 
-## NOW (as of 2026-09-26 morning)
+## NOW (as of 2026-09-26 night)
 
 **Phase: MVP build (Phase 2) — M1–M6 built and verified on the founder's phone; Sign in
 with Apple live; membership active; M8 (monetization) and M9 (TestFlight) remain.**
 PoC 1 (daily digest) closed 2026-09-24; PoC 2 passed its technical gates (D35). Product
 shape: capture words → share/copy whatever you're reading → sheet over the host app →
-piece with your words (sentence-scoped mode, edited sentences underlined) → My Reads.
-Spec/backlog: docs/poc2-transform.md §8. Service: `src/service/` on the Mac mini, public
-HTTPS via Tailscale Funnel. App: `ios/RetAIn/` (xcodegen). Engine mode + density is the
-open product question: D40 (2026-09-26) sets paragraph coverage as the target with
-three tiers; step 1 (tier tagging + tap-to-reveal original) built, step 2 (measure) next.
-D41 (2026-09-26): judges kept, but a rejection in sentence mode now reverts the sentence to
-the source instead of regenerating — ~2.8 s and ~$0.0023 per piece on the 5 fixtures.
+piece with your words → My Reads. Service: `src/service/` on the Mac mini, public HTTPS
+via Tailscale Funnel. App: `ios/RetAIn/` (xcodegen).
+
+**Engine + reader (D40/D41, live 2026-09-26):** one model call places words three ways —
+SUBSTITUTE, REPHRASE, or a SUPPLEMENT note (general background, inline, code-checked) —
+aiming for one word per ~120-word stretch; judges stay, a rejected word reverts its
+sentence (no re-runs). Reader: highlight + margin bracket per tier (green / blue / orange;
+founder's neon palette in dark mode), tap a bar for a hint, tap a sentence for the
+original, tap a word for its meaning. Safari shares are cleaned by Mozilla Readability.
+**Top open problem: density** — ~1.5–2 words per article; the model under-attempts and
+the checker rejects about half of its in-text words (backlog UX-1; test models via TD-13).
+**Next up:** UX-13 bar shape from the founder's Figma (Figma MCP now installed — use a new
+session); founder's call on stretch length; model evals on surviving words per article.
 
 **2026-09-26:** founder signed in with Apple on the real build (account
 u_152716…, nurgazy7@gmail.com); first transform on the real account ran; account seeded
@@ -29,7 +35,11 @@ copies: founder to decide on a purge).
 **Start here (new session, any model):** read this NOW block, then `docs/backlog.md`
 (pending decisions DEC-1..5 at the top; epics TD/MO/UX/AD), then PRD.md decisions D34–D39.
 Working agreement: commit locally as work lands, push in batches at milestones and say
-so; no `rm`; no installs without asking; product decisions discussed before code.
+so; no `rm`; no installs without asking; product decisions discussed before code;
+architecture choices proposed to the founder before code (he wants to learn them);
+restart the service after any `src/`/`prompts/` change, unasked.
+- Figma: remote MCP server installed at user scope and authenticated (2026-09-26); tools
+  load only in sessions started after that.
 - Service: launchd `com.retain.service` → http://127.0.0.1:8585 and
   https://rays-mac-mini.tailb493b3.ts.net (Tailscale Funnel). Restart:
   `launchctl kickstart -k gui/$(id -u)/com.retain.service`. Log: ~/Library/Logs/retain-service.log.
@@ -201,6 +211,18 @@ itself via the fetchers.
 - Visible side effect: coverage on these runs was 0–1 words per piece (2 pieces ended with
   0). That's the D40 coverage problem, not caused by this change, but the revert means no
   second attempt to place a word.
+
+### 2026-09-26 (closing) — Tap hints, bracket bars, dark palette; handoff
+
+- Margin bars became tap targets (left margin widened to 28px); tapping opens a hint card
+  (bar sample + label + one line; founder-approved copy). Bars are now one thick "("
+  bracket for every tier per the founder's mockup (colour-only; the hint is the
+  colour-blind fallback); dark mode uses #2BFF06 / #00FFFF / #FF5F1F with words on a
+  dimmed block. Verified by simulator renders in light and forced-dark; iOS tests green.
+- Founder: shape still not the Figma one → Figma remote MCP installed (user scope) and
+  authenticated; this session can't load its tools → UX-13 for a fresh session.
+- Docs brought current for handoff: NOW block, backlog DEC-1 / UX-1 / UX-11 / UX-13,
+  PRD D40 display clause. Commits are local; not pushed.
 
 ### 2026-09-26 (late night) — Tier colours; demo piece in the founder's account
 

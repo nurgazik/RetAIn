@@ -16,7 +16,7 @@ first because several items hang on them. The done ledger and Horizon 3 sit at t
 
 | # | Decision | Blocks |
 |---|---|---|
-| DEC-1 | ~~**Engine density.**~~ Decided 2026-09-26 → **D40**: every 25+-word paragraph carries a word; tiers SUBSTITUTE / REPHRASE / SUPPLEMENT (≤50% trial), all in one model call. | UX-1, TD-2 |
+| DEC-1 | ~~**Engine density.**~~ Decided 2026-09-26 → **D40**: no ~120-word stretch without a word (trial anchor, replaced per-paragraph); tiers SUBSTITUTE / REPHRASE / SUPPLEMENT (≤50% trial), all in one model call; checker kept as is (relaxing it is a future founder lever). | UX-1, TD-2 |
 | DEC-2 | **Monetization model (P2):** credits per transform / bring-your-own key / subscription with fair-use cap. Inputs: $0.0016–0.010 per transform, spend visible in Settings. | MO-1..MO-4 |
 | DEC-3 | **TestFlight thresholds (P3):** What is confidered a user forming a habbit? DAU?. | AD-6 verdict |
 | DEC-4 | **Seller entity before public launch (D39):** individual now, consulting corp later (D-U-N-S, domain email, website). Decided with DEC-2. | AD-7 |
@@ -54,7 +54,7 @@ first because several items hang on them. The done ledger and Horizon 3 sit at t
 
 | # | Item | Value | Trade-off | Implementation |
 |---|---|---|---|---|
-| UX-1 | **Engine density per DEC-1** | The core reading experience: how many words land, how faithful the text | Density vs fidelity; latency | D40: tier tagging + tap-to-reveal original — **done**; SUPPLEMENT notes in the same call — **done 2026-09-26** (5 fixtures: 12/24 paragraphs covered, 1.9–4.6 s). Open: go live (service restart + phone rebuild); in-text words rejected by the idiom check (8 of 13) are the main coverage loss; long unbroken texts need a length rule alongside the per-paragraph one |
+| UX-1 | **Engine density per DEC-1** | The core reading experience: how many words land, how faithful the text | Density vs fidelity; latency | D40 engine + reader **done and live 2026-09-26** (tier tagging, tap-to-reveal original, notes in one call, ~120-word stretches, tier colours + bracket bars + tap hints). Measured: 15 fixture pieces → 1.5 words/piece, 58% stretches covered; founder's first real share (CBC wastewater, ~1,000 words) → 2 words (model attempted 6 across ~8 stretches, checker rejected 4, the one note died with its word). **Open:** (a) model under-attempts and misuses words → test stronger models via TD-13 on surviving words per article; (b) stretch length (120 vs ~60) is a founder call — shorter = more words, mostly notes; (c) note quality is generic, occasional trend claim |
 | UX-2 | **Faster transforms** (user-facing half of TD-2) | The magic moment stays under ~6 s | See TD-2 | Phase labels already stream; add a "reading the first part now" partial for long pages if a cap is adopted |
 | UX-3 | **First-run experience** (a new account has zero words → nothing gets placed) | New users see the product work in minute one | Starter words must fit the reader's level | Onboarding: pick a level → starter set (e.g. 20 words); import from a list/Kindle export later; "add your first word" prompt |
 | UX-4 | **Word card enrichment** (PRD §8: register, collocations, nuance, 2–3 examples) | Capture becomes "better than a Kindle lookup" | One extra model call per capture (~$0.0001) | Extend the `card` prompt; store JSON fields on `words`; card view sections |
@@ -64,8 +64,9 @@ first because several items hang on them. The done ledger and Horizon 3 sit at t
 | UX-8 | **Word list quality-of-life:** sort by servings/age, bulk retire, notes | Managing 50–200 words stays pleasant | — | Sort controls; multi-select; optional note field |
 | UX-9 | **Reader typography controls** (size, serif/sans, line height) | Reading comfort; accessibility | Trivial with a native renderer (TD-10) | Settings → reader prefs → CSS variables or native fonts |
 | UX-10 | **App icon, launch screen, empty states** | The app looks like a product | Design time | Icon set; launch storyboard; empty-state copy for Words / My Reads |
-| UX-11 |: Currently all the text that is returned is just one big blob. No paragraph formation, no new lines. Meta data (such as article name, author etc), when present, also looks just like regular text.
+| UX-11 | **Clean, structured text in** (was: "one big blob", metadata looks like body text) | Words land in prose, not in page junk; paragraphs survive | — | **Partly done 2026-09-26:** Safari shares run Mozilla Readability 0.6.0 (clutter out, headline → title, byline/site/date as fields); `sentence_guard` no longer collapses a piece into one paragraph. **Open:** photo captions still pass (CBC); text shared from other apps is uncleaned (no DOM); byline/site/date captured but not shown — a proper header in the reader |
 | UX-12 |: Onboarding expeirence: we can't let the user start without any words. At least needs to have 20.
+| UX-13 | **Margin bar shape per the founder's Figma** (node 5265-7722 in "Incubator Projects – Personal") | Reader matches the design | — | Current bars are an even-thickness "(" bracket; the Figma shape differs (likely a crescent). Figma MCP installed + authenticated 2026-09-26 — read the node in a new session; edit `.bar::before` / `.swatch::before` in `ios/RetAIn/Shared/UI/PieceHTML.swift`; render the demo piece to check |
 
 
 ## Epic: Administration
@@ -90,5 +91,5 @@ clipboard offer, Settings with spend, Sign in with Apple, shared session) · M3 
 sheet · M4 Safari page action · M5 single-word capture · M6 clipboard intake · Sentence-
 scoped engine mode with mechanical guard + underline · Popup stats + "Got it" · Dark mode ·
 Foreground refresh · Tailscale Funnel HTTPS · Paid Apple Developer membership (D39) ·
-Device verification of all of the above on the founder's iPhone · D41 revert-on-reject (sentence mode).
+Device verification of all of the above on the founder's iPhone · D41 revert-on-reject (sentence mode) · D40 three tiers in one call (substitute / rephrase / note) with ~120-word stretches · Reader: tier colours, bracket margin bars, tap hints, tap-to-reveal original, founder's dark palette · Safari clutter removal (Readability) · Demo piece `p_demo_283d0c28f2` in the founder's account.
 
