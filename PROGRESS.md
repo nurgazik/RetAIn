@@ -18,13 +18,12 @@ via Tailscale Funnel. App: `ios/RetAIn/` (xcodegen).
 **Engine + reader (D40/D41, live 2026-09-26):** one model call places words three ways —
 SUBSTITUTE, REPHRASE, or a SUPPLEMENT note (general background, inline, code-checked) —
 aiming for one word per ~120-word stretch; judges stay, a rejected word reverts its
-sentence (no re-runs). Reader: highlight + margin bracket per tier (green / blue / orange;
-founder's neon palette in dark mode), tap a bar for a hint, tap a sentence for the
+sentence (no re-runs). Reader: highlight + margin bracket per tier (green / blue / yellow;
+founder's neon palette in dark mode; Figma "D" bar shapes, UX-13 done), tap a bar for a hint, tap a sentence for the
 original, tap a word for its meaning. Safari shares are cleaned by Mozilla Readability.
 **Top open problem: density** — ~1.5–2 words per article; the model under-attempts and
 the checker rejects about half of its in-text words (backlog UX-1; test models via TD-13).
-**Next up:** UX-13 bar shape from the founder's Figma (Figma MCP now installed — use a new
-session); founder's call on stretch length; model evals on surviving words per article.
+**Next up:** founder's call on light-mode bar colours (neon vs muted); founder's call on stretch length; model evals on surviving words per article.
 
 **2026-09-26:** founder signed in with Apple on the real build (account
 u_152716…, nurgazy7@gmail.com); first transform on the real account ran; account seeded
@@ -211,6 +210,19 @@ itself via the fetchers.
 - Visible side effect: coverage on these runs was 0–1 words per piece (2 pieces ended with
   0). That's the D40 coverage problem, not caused by this change, but the revert means no
   second attempt to place a word.
+
+### 2026-09-26 (afternoon) — UX-13: Figma bar shapes, yellow notes
+
+- Read the founder's three Figma nodes via Figma MCP: each bar is a filled "D" (flat left,
+  curved right), a different curve per tier; note colour is now yellow #FFCE1F (was orange).
+- Built as CSS masks from the exact Figma paths (`PieceHTML.swift`), stretched to bar
+  height; widths 10/13/12 px. Dark mode = Figma colours; light mode keeps muted green/blue
+  with amber-yellow #d9a800 (assistant's pick — Figma has no light palette; founder to
+  confirm). Disclaimer copy in `src/generate.py` updated (no more "dashed/dotted orange").
+- Verified: sample page rendered in simulator Safari, light + dark, by eye. pytest 28
+  green; service restarted, 200. **iOS unit tests not run** — simulator refuses to launch
+  com.retain.app ("Launchd job spawn failed"); likely needs the app uninstalled from the sim.
+- Seen on render: a one-line bar is a short stub (10×~28 px). Founder to judge.
 
 ### 2026-09-26 (closing) — Tap hints, bracket bars, dark palette; handoff
 

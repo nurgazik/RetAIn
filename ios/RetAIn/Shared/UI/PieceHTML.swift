@@ -22,21 +22,26 @@ enum PieceHTML {
           .note { font-style: italic; cursor: pointer; }
           /* a bar is a tap zone filling the left margin; the visible stripe is its ::before */
           .bar { position: absolute; left: 0; width: 1.75rem; cursor: pointer; }
-          /* the stripe: a thick "(" bracket in the tier colour (founder's mockup) */
-          .bar::before, .swatch::before { content: ""; position: absolute; top: 2px; bottom: 2px; width: 9px;
-                                          border-left: 5px solid var(--c); border-radius: 12px 0 0 12px; }
+          /* the stripe: a filled "D" in the tier colour; each tier's shape is the founder's Figma
+             path (UX-13: nodes 5265-7722 / 5267-7723 / 5267-7724), stretched to the bar's height */
+          .bar::before, .swatch::before { content: ""; position: absolute; top: 2px; bottom: 2px;
+                                          background: var(--c); -webkit-mask-size: 100% 100%; mask-size: 100% 100%;
+                                          -webkit-mask-repeat: no-repeat; mask-repeat: no-repeat; }
+          .bar-substitute::before { width: 10px; -webkit-mask-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 15.1593 169.676' preserveAspectRatio='none'><path d='M0.164967 3.22794C0.164967 3.22794 0.610333 -4.8847 8.61033 4.61237C16.6103 14.1094 18.2002 146.109 8.17691 162.425C-1.84634 178.741 0.164967 162.425 0.164967 162.425V3.22794Z'/></svg>"); mask-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 15.1593 169.676' preserveAspectRatio='none'><path d='M0.164967 3.22794C0.164967 3.22794 0.610333 -4.8847 8.61033 4.61237C16.6103 14.1094 18.2002 146.109 8.17691 162.425C-1.84634 178.741 0.164967 162.425 0.164967 162.425V3.22794Z'/></svg>"); }
+          .bar-rephrase::before { width: 13px; -webkit-mask-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 19.5703 165.445' preserveAspectRatio='none'><path d='M0 2.6425C0 2.6425 2.33502 -6.57598 8.83502 9.42299C15.335 25.422 25.335 113.915 15.335 145.415C5.33502 176.915 0 161.84 0 161.84V2.6425Z'/></svg>"); mask-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 19.5703 165.445' preserveAspectRatio='none'><path d='M0 2.6425C0 2.6425 2.33502 -6.57598 8.83502 9.42299C15.335 25.422 25.335 113.915 15.335 145.415C5.33502 176.915 0 161.84 0 161.84V2.6425Z'/></svg>"); }
+          .bar-note::before { width: 12px; -webkit-mask-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 18.5213 168.799' preserveAspectRatio='none'><path d='M0.164967 2.3505C0.164967 2.3505 7.11035 -5.78493 14.6104 8.21495C22.1104 22.2148 18.2002 145.232 8.17691 161.548C-1.84634 177.863 0.164967 161.548 0.164967 161.548V2.3505Z'/></svg>"); mask-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 18.5213 168.799' preserveAspectRatio='none'><path d='M0.164967 2.3505C0.164967 2.3505 7.11035 -5.78493 14.6104 8.21495C22.1104 22.2148 18.2002 145.232 8.17691 161.548C-1.84634 177.863 0.164967 161.548 0.164967 161.548V2.3505Z'/></svg>"); }
           .bar::before { left: .4rem; }
           #hint { position: absolute; display: none; z-index: 11; max-width: 270px; padding: .6rem .75rem .6rem .7rem;
                   background: #fffdf8; color: #26221c; border: 1px solid #e3dbcc; border-radius: 10px;
                   box-shadow: 0 4px 14px rgba(0,0,0,.12); font-family: -apple-system, sans-serif; font-size: .82rem;
                   line-height: 1.4; gap: .6rem; align-items: stretch; }
-          #hint .swatch { position: relative; flex: 0 0 10px; min-height: 2.2rem; }
+          #hint .swatch { position: relative; flex: 0 0 13px; min-height: 2.2rem; }
           #hint .swatch::before { left: 0; }
           #hint b { display: block; font-size: .85rem; margin-bottom: .15rem; }
           .substitute mark { background: linear-gradient(transparent 55%, #b5e3a1 55%); }
           .rephrase mark   { background: linear-gradient(transparent 55%, #b3d4f5 55%); }
-          .note mark       { background: linear-gradient(transparent 55%, #f8c9a0 55%); }
-          .bar-substitute { --c: #4c9a3a; } .bar-rephrase { --c: #3d7fc4; } .bar-note { --c: #d9772b; }
+          .note mark       { background: linear-gradient(transparent 55%, #f6e08a 55%); }
+          .bar-substitute { --c: #4c9a3a; } .bar-rephrase { --c: #3d7fc4; } .bar-note { --c: #d9a800; }
           #pop .orig { display: block; margin-top: .3rem; font-family: Georgia, serif; font-style: italic; }
           #pop { position: absolute; display: none; z-index: 10; max-width: 280px; padding: .6rem .8rem;
                  background: #26221c; color: #faf8f4; border-radius: 8px; font-family: -apple-system, sans-serif;
@@ -55,11 +60,11 @@ enum PieceHTML {
             .kicker { color: #c9a45c; } .attrib { color: #a39c90; border-top-color: #3a352e; } .attrib a { color: #c9a45c; }
             #pop { background: #faf8f4; color: #26221c; } #pop b { color: #8a6d3b; }
             /* founder's dark palette: neon bars; words on a dimmed block of the same colour */
-            .bar-substitute { --c: #2BFF06; } .bar-rephrase { --c: #00FFFF; } .bar-note { --c: #FF5F1F; }
+            .bar-substitute { --c: #2BFF06; } .bar-rephrase { --c: #00FFFF; } .bar-note { --c: #FFCE1F; }
             .substitute mark, .rephrase mark, .note mark { padding: 0 .15em; border-radius: 3px; }
             .substitute mark { background: rgba(43, 255, 6, .28); color: #c4ffb8; }
             .rephrase mark   { background: rgba(0, 255, 255, .26); color: #bfffff; }
-            .note mark       { background: rgba(255, 95, 31, .30); color: #ffc7ad; }
+            .note mark       { background: rgba(255, 206, 31, .30); color: #ffe9a3; }
             #hint { background: #2a2620; color: #ece7dd; border-color: #3f392f; box-shadow: 0 4px 14px rgba(0,0,0,.5); }
           }
         </style></head><body>

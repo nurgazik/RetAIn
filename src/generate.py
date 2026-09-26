@@ -574,9 +574,8 @@ AI_DISCLAIMER = (" Adapted with AI to carry your words: phrasing may be added or
                  "changed, facts should not be — check the original for anything "
                  "that matters.")
 SENTENCE_DISCLAIMER = (" Adapted with AI to carry your words (D40). Margin bars mark every "
-                       "change: dashed green, a word substituted; solid blue, a sentence "
-                       "rephrased; dotted orange, a note RetAIn added (general context, not "
-                       "from the source). Tap a changed sentence to see the original.")
+                       "change: green, a word substituted; blue, a sentence rephrased; "
+                       "yellow, a note RetAIn added (general context, not from the source). Tap a changed sentence to see the original.")
 
 
 def attribution_for(item, disclaimer: str = AI_DISCLAIMER) -> str:
