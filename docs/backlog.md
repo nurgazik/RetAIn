@@ -18,7 +18,7 @@ first because several items hang on them. The done ledger and Horizon 3 sit at t
 |---|---|---|
 | DEC-1 | **Engine density.** Sentence mode is live at ~2.4 words/1,000 (about one per piece); rewrite mode gives 5.6 with occasional invented colour. Founder has an idea ("a creative task"). | UX-1, TD-2 |
 | DEC-2 | **Monetization model (P2):** credits per transform / bring-your-own key / subscription with fair-use cap. Inputs: $0.0016–0.010 per transform, spend visible in Settings. | MO-1..MO-4 |
-| DEC-3 | **TestFlight thresholds (P3):** transforms/user/week that count as a habit; day-14 self-quiz bar. | AD-6 verdict |
+| DEC-3 | **TestFlight thresholds (P3):** What is confidered a user forming a habbit? DAU?. | AD-6 verdict |
 | DEC-4 | **Seller entity before public launch (D39):** individual now, consulting corp later (D-U-N-S, domain email, website). Decided with DEC-2. | AD-7 |
 | DEC-5 | **Purge `data/service.db` from git history** (holds the founder's Apple id, email, and every transformed text; private repo) or leave it. | TD-7 |
 
@@ -62,6 +62,8 @@ first because several items hang on them. The done ledger and Horizon 3 sit at t
 | UX-8 | **Word list quality-of-life:** sort by servings/age, bulk retire, notes | Managing 50–200 words stays pleasant | — | Sort controls; multi-select; optional note field |
 | UX-9 | **Reader typography controls** (size, serif/sans, line height) | Reading comfort; accessibility | Trivial with a native renderer (TD-10) | Settings → reader prefs → CSS variables or native fonts |
 | UX-10 | **App icon, launch screen, empty states** | The app looks like a product | Design time | Icon set; launch storyboard; empty-state copy for Words / My Reads |
+| UX-11 |: Currently all the text that is returned is just one big blob. No paragraph formation, no new lines. Meta data (such as article name, author etc), when present, also looks just like regular text. 
+
 
 ## Epic: Administration
 

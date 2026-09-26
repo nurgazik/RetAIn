@@ -23,6 +23,25 @@ with the 50 words from data/words.json (+ his own "adversity"). `data/service.db
 tracked in git by mistake — now untracked and ignored (history still contains earlier
 copies: founder to decide on a purge).
 
+**Start here (new session, any model):** read this NOW block, then `docs/backlog.md`
+(pending decisions DEC-1..5 at the top; epics TD/MO/UX/AD), then PRD.md decisions D34–D39.
+Working agreement: commit locally as work lands, push in batches at milestones and say
+so; no `rm`; no installs without asking; product decisions discussed before code.
+- Service: launchd `com.retain.service` → http://127.0.0.1:8585 and
+  https://rays-mac-mini.tailb493b3.ts.net (Tailscale Funnel). Restart:
+  `launchctl kickstart -k gui/$(id -u)/com.retain.service`. Log: ~/Library/Logs/retain-service.log.
+  Tests: `.venv/bin/python -m pytest -q tests`. DB: data/service.db (gitignored).
+  Secrets in .env.local (`RETAIN_DEV_TOKEN` for curl/simulator; `RETAIN_ENGINE_MODE`
+  defaults to `sentence`, `rewrite` restores D36).
+- App: `ios/RetAIn/` — `xcodegen generate`, then `xcodebuild -project RetAIn.xcodeproj
+  -scheme RetAIn -destination 'platform=iOS Simulator,name=iPhone 17' build`; unit tests
+  need `TEST_RUNNER_RETAIN_DEV_TOKEN=<token>`; UI test drives Safari (see
+  UITests/SafariActionTests.swift). Device builds: full project from Xcode GUI (team
+  UKGU6PX43H, paid) or `project-device.yml` variant headless (no entitlements, dev token).
+  Founder's real account exists (Sign in with Apple) with 51 words.
+- Engine: `src/generate.py` (`generate_piece`, `sentence_guard`, judges), prompts in
+  `prompts/`; measurement harness `src/g2_wordfit.py` on `data/g2-pieces/`.
+
 **Digest server status:** `src/serve.py` still runs (launchd agent, Tailscale) and becomes
 the host for Spike S0's `/transform` route. Fetchers, calendar slots and editions are
 retired but not deleted.
