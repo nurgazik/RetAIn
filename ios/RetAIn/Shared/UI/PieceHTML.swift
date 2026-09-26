@@ -18,6 +18,8 @@ enum PieceHTML {
           p { margin: 0 0 1.1rem; font-size: 1.06rem; }
           mark { background: linear-gradient(transparent 55%, #ffe08a 55%); padding: 0 .1em; border-radius: 2px; }
           .edited { text-decoration: underline; text-decoration-color: #e8c96a; text-decoration-thickness: 1.5px; text-underline-offset: 3px; }
+          .edited.rephrase { text-decoration-style: dashed; }
+          #pop .orig { display: block; margin-top: .3rem; font-family: Georgia, serif; font-style: italic; }
           #pop { position: absolute; display: none; z-index: 10; max-width: 280px; padding: .6rem .8rem;
                  background: #26221c; color: #faf8f4; border-radius: 8px; font-family: -apple-system, sans-serif;
                  font-size: .85rem; line-height: 1.45; }
@@ -61,6 +63,21 @@ enum PieceHTML {
               pop.style.left = Math.min(r.left + window.scrollX, window.innerWidth - 300) + 'px';
               pop.style.top = (r.bottom + window.scrollY + 8) + 'px';
               try { window.webkit.messageHandlers.tap.postMessage(m.textContent.trim()); } catch (err) {}
+            });
+          });
+          function showAt(html, x, y) {
+            pop.innerHTML = html;
+            pop.style.display = 'block';
+            pop.style.left = Math.min(x, window.innerWidth - 300) + 'px';
+            pop.style.top = (y + 8) + 'px';
+          }
+          // D40: tapping a changed sentence (not its word) reveals the source sentence.
+          document.querySelectorAll('.edited[data-orig]').forEach(sp => {
+            sp.addEventListener('click', e => {
+              e.stopPropagation();
+              const label = sp.dataset.tier === 'substitute' ? 'Word substituted' : 'Sentence rephrased';
+              showAt('<b>' + label + '</b> — original:<span class="orig"></span>', e.pageX, e.pageY + 12);
+              pop.querySelector('.orig').textContent = sp.dataset.orig;
             });
           });
           document.addEventListener('click', () => { pop.style.display = 'none'; });

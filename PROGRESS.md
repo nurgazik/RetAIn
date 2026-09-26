@@ -15,7 +15,8 @@ shape: capture words → share/copy whatever you're reading → sheet over the h
 piece with your words (sentence-scoped mode, edited sentences underlined) → My Reads.
 Spec/backlog: docs/poc2-transform.md §8. Service: `src/service/` on the Mac mini, public
 HTTPS via Tailscale Funnel. App: `ios/RetAIn/` (xcodegen). Engine mode + density is the
-open product question (founder has an idea).
+open product question: D40 (2026-09-26) sets paragraph coverage as the target with
+three tiers; step 1 (tier tagging + tap-to-reveal original) built, step 2 (measure) next.
 
 **2026-09-26:** founder signed in with Apple on the real build (account
 u_152716…, nurgazy7@gmail.com); first transform on the real account ran; account seeded
@@ -166,6 +167,20 @@ all needed for TestFlight and none waits on a decision.**
 vacation coding ends). Home Mac: clone normally with personal credentials; recreate
 `.env.local` (4 API keys — gitignored, never on GitHub) and `data/retain.db` refills
 itself via the fetchers.
+
+### 2026-09-26 — Density over fidelity: three embedding tiers (D40), step 1 built
+
+- Founder ruled density beats fidelity: the product's value is their words inside what
+  they read, and ~2.4/1,000 (≈1 per article) doesn't deliver it. Target is now **every
+  paragraph of 25+ words carries a word**; tiers SUBSTITUTE → REPHRASE → SUPPLEMENT (added
+  general-knowledge note, visually separate, up to 50% of words as a trial) → **D40**.
+- Built step 1: `sentence_guard` tags each edited sentence with its tier (decided by a
+  word-level diff: ≤4 words changed = substitute, else rephrase) and stores the original
+  (`data-orig`). Reader: rephrase = dashed underline; tapping a sentence reveals the
+  original, tapping the word still shows its meaning. Tests: pytest 11 green (4 new in
+  tests/test_guard.py); iOS ReaderPopupTests 2 green.
+- Next (step 2): permissive REPHRASE prompt, measure paragraph coverage on the 5 G2
+  fixtures; build SUPPLEMENT only if coverage falls short.
 
 ### 2026-09-25 — Apple Developer enrollment: individual (D39)
 

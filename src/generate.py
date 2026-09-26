@@ -38,6 +38,7 @@ CSS = """
          padding: 0 .1em; cursor: pointer; border-radius: 2px; }
   .edited { text-decoration: underline; text-decoration-color: #e8c96a;
             text-decoration-thickness: 1.5px; text-underline-offset: 3px; }
+  .edited.rephrase { text-decoration-style: dashed; }
   #pop { position: absolute; display: none; z-index: 10; max-width: 280px;
          padding: .6rem .8rem; background: #26221c; color: #faf8f4;
          border-radius: 8px; font-family: -apple-system, sans-serif;
@@ -289,12 +290,31 @@ def _key(sentence: str) -> str:
     return re.sub(r"[^a-z0-9]+", " ", t.lower()).strip()
 
 
+def edit_tier(src_sentence: str, out_sentence: str) -> str:
+    """D40 tier from a word-level diff: 'substitute' when the changes touch at most a
+    short phrase (≤4 words either side), else 'rephrase'."""
+    import difflib
+    a = _key(src_sentence).split()
+    b = _key(out_sentence).split()
+    ops = [op for op in difflib.SequenceMatcher(a=a, b=b, autojunk=False).get_opcodes() if op[0] != "equal"]
+    src_changed = sum(i2 - i1 for _, i1, i2, _, _ in ops)
+    out_changed = sum(j2 - j1 for _, _, _, j1, j2 in ops)
+    return "substitute" if ops and src_changed <= 4 and out_changed <= 4 else "rephrase"
+
+
+def edited_span(src_sentence: str, out_sentence: str) -> str:
+    """Wrap an edited sentence with its tier and the (already HTML-escaped) original, so
+    the reader can reveal it on tap."""
+    tier = edit_tier(src_sentence, out_sentence)
+    return f'<span class="edited {tier}" data-tier="{tier}" data-orig="{src_sentence}">{out_sentence}</span>'
+
+
 def sentence_guard(source_text: str, body: str) -> tuple:
     """Mechanical fidelity for sentence-scoped mode. Walks the SOURCE paragraph by
     paragraph and sentence by sentence; a sentence may differ from the source only if it
-    carries a <mark> (then it is wrapped in <span class="edited">…</span>); any other
-    difference is reverted to the source sentence; sentences the model added are dropped;
-    sentences it dropped are restored. Returns (body, stats)."""
+    carries a <mark> (then it is wrapped by edited_span with its tier and original); any
+    other difference is reverted to the source sentence; sentences the model added are
+    dropped; sentences it dropped are restored. Returns (body, stats)."""
     import difflib
     src_paras = [p.strip() for p in re.split(r"\n\s*\n", source_text.strip()) if p.strip()]
     if len(src_paras) == 1 and "\n" in source_text.strip():
@@ -315,7 +335,7 @@ def sentence_guard(source_text: str, body: str) -> tuple:
                 if len(src_chunk) == len(out_chunk):
                     for a, b in zip(src_chunk, out_chunk):
                         if "<mark>" in b:
-                            result.append(f'<span class="edited">{b}</span>'); stats["edited"] += 1
+                            result.append(edited_span(a, b)); stats["edited"] += 1
                         else:
                             result.append(a); stats["reverted"] += 1
                 else:  # uneven rewrite: keep marked output sentences, restore the rest from source
@@ -324,7 +344,7 @@ def sentence_guard(source_text: str, body: str) -> tuple:
                         # pair marked sentences with the closest source sentences by order
                         for idx, a in enumerate(src_chunk):
                             if idx < len(marked):
-                                result.append(f'<span class="edited">{marked[idx]}</span>'); stats["edited"] += 1
+                                result.append(edited_span(a, marked[idx])); stats["edited"] += 1
                             else:
                                 result.append(a); stats["restored"] += 1
                         stats["dropped"] += len(out_chunk) - len(marked)

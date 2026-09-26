@@ -32,6 +32,27 @@ final class ReaderPopupTests: XCTestCase {
         XCTAssertEqual(sink.messages["retain"], "bolster")
     }
 
+    /// D40: tapping the sentence reveals the original; tapping the word inside it still
+    /// shows the definition, not the original.
+    func testSentenceTapRevealsOriginalWordTapShowsMeaning() async throws {
+        let body = "<p><span class=\"edited rephrase\" data-tier=\"rephrase\" data-orig=\"They &quot;confirm&quot; it.\">"
+            + "They <mark data-def=\"to support\">bolster</mark> it.</span> Rest.</p>"
+        let html = PieceHTML.page(title: "T", label: "Your read", body: body, attrib: "attrib")
+        let web = WKWebView(frame: CGRect(x: 0, y: 0, width: 390, height: 800))
+        let nav = NavSink()
+        web.navigationDelegate = nav
+        web.loadHTMLString(html, baseURL: nil)
+        try await nav.wait()
+        _ = try await web.evaluateJavaScript("document.querySelector('.edited').click(); true")
+        let sentencePop = try await web.evaluateJavaScript("document.getElementById('pop').innerText") as? String ?? ""
+        XCTAssertTrue(sentencePop.contains("Sentence rephrased"), sentencePop)
+        XCTAssertTrue(sentencePop.contains("They \"confirm\" it."), sentencePop)
+        _ = try await web.evaluateJavaScript("document.querySelector('mark').click(); true")
+        let wordPop = try await web.evaluateJavaScript("document.getElementById('pop').innerText") as? String ?? ""
+        XCTAssertTrue(wordPop.contains("to support"), wordPop)
+        XCTAssertFalse(wordPop.contains("original"), wordPop)
+    }
+
     final class Sink: NSObject, WKScriptMessageHandler {
         var messages: [String: String] = [:]
         func userContentController(_ c: WKUserContentController, didReceive m: WKScriptMessage) {
