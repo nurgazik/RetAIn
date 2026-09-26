@@ -22,9 +22,162 @@
         "reasoning_effort": "none"
       },
       "price_source": "developers.openai.com model page via research 2026-09-26 (re-verify before run)"
+    },
+    {
+      "name": "nemotron-3.5-lightning@nothink",
+      "provider": "openrouter",
+      "model": "nvidia/nemotron-3.5-lightning",
+      "in": 0.08,
+      "out": 0.2,
+      "params": {
+        "reasoning": {
+          "enabled": false
+        }
+      },
+      "price_source": "openrouter /api/v1/models (list price)",
+      "added": "2026-09-26"
+    },
+    {
+      "name": "gemma-4-26b-a4b-it@nothink",
+      "provider": "openrouter",
+      "model": "google/gemma-4-26b-a4b-it",
+      "in": 0.0675,
+      "out": 0.225,
+      "params": {
+        "reasoning": {
+          "enabled": false
+        }
+      },
+      "price_source": "openrouter /api/v1/models (list price)",
+      "added": "2026-09-26"
+    },
+    {
+      "name": "deepseek-v4.1-flash@nothink",
+      "provider": "openrouter",
+      "model": "deepseek/deepseek-v4.1-flash",
+      "in": 0.035,
+      "out": 0.29,
+      "params": {
+        "reasoning": {
+          "enabled": false
+        }
+      },
+      "price_source": "openrouter /api/v1/models (list price)",
+      "added": "2026-09-26"
+    },
+    {
+      "name": "mimo-v2.6-flash@nothink",
+      "provider": "openrouter",
+      "model": "xiaomi/mimo-v2.6-flash",
+      "in": 0.14,
+      "out": 0.28,
+      "params": {
+        "reasoning": {
+          "enabled": false
+        }
+      },
+      "price_source": "openrouter /api/v1/models (list price)",
+      "added": "2026-09-26"
+    },
+    {
+      "name": "qwen3.7-flash@nothink",
+      "provider": "openrouter",
+      "model": "qwen/qwen3.7-flash",
+      "in": 0.03,
+      "out": 0.13,
+      "params": {
+        "reasoning": {
+          "enabled": false
+        }
+      },
+      "price_source": "openrouter /api/v1/models (list price)",
+      "added": "2026-09-26",
+      "blocked": "only Alibaba serves it and Alibaba is not zero-retention on OpenRouter (2026-09-26)"
+    },
+    {
+      "name": "qwen3.8-flash@nothink",
+      "provider": "openrouter",
+      "model": "qwen/qwen3.8-flash",
+      "in": 0.15,
+      "out": 0.47,
+      "params": {
+        "reasoning": {
+          "enabled": false
+        }
+      },
+      "price_source": "openrouter /api/v1/models (list price)",
+      "added": "2026-09-26",
+      "blocked": "only Alibaba serves it and Alibaba is not zero-retention on OpenRouter (2026-09-26)"
+    },
+    {
+      "name": "ling-3.0-flash@nothink",
+      "provider": "openrouter",
+      "model": "inclusionai/ling-3.0-flash",
+      "in": 0.021,
+      "out": 0.063,
+      "params": {
+        "reasoning": {
+          "enabled": false
+        }
+      },
+      "price_source": "openrouter /api/v1/models (list price)",
+      "added": "2026-09-26"
+    },
+    {
+      "name": "mercury-2.5@nothink",
+      "provider": "openrouter",
+      "model": "inception/mercury-2.5",
+      "in": 0.04,
+      "out": 0.15,
+      "params": {
+        "reasoning": {
+          "enabled": false
+        }
+      },
+      "price_source": "openrouter /api/v1/models (list price)",
+      "added": "2026-09-26"
+    },
+    {
+      "name": "gpt-5.4-nano@nothink",
+      "provider": "openrouter",
+      "model": "openai/gpt-5.4-nano",
+      "in": 0.2,
+      "out": 1.25,
+      "params": {
+        "reasoning": {
+          "enabled": false
+        }
+      },
+      "price_source": "openrouter /api/v1/models (list price)",
+      "added": "2026-09-26"
+    },
+    {
+      "name": "solar-mini4@nothink",
+      "provider": "openrouter",
+      "model": "upstage/solar-mini4",
+      "in": 0.05,
+      "out": 0.2,
+      "params": {
+        "reasoning": {
+          "enabled": false
+        }
+      },
+      "price_source": "openrouter /api/v1/models (list price)",
+      "added": "2026-09-26"
+    },
+    {
+      "name": "glm-5.3-flash",
+      "provider": "openrouter",
+      "model": "z-ai/glm-5.3-flash",
+      "in": 0.04,
+      "out": 0.5,
+      "params": {},
+      "price_source": "openrouter /api/v1/models (list price)",
+      "added": "2026-09-26"
     }
   ],
   "_retired": [
-    "gemini-2.5-flash-lite: 404 'no longer available to new users' (2026-09-26)"
+    "gemini-2.5-flash-lite: 404 'no longer available to new users' (2026-09-26)",
+    "glm-5.3-flash@nothink: reasoning mandatory, cannot be disabled (2026-09-26)"
   ]
 }

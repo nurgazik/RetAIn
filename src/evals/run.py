@@ -29,9 +29,10 @@ def run(name: str, only: list = None, resume: int = None) -> int:
         done = {r[0] for r in con.execute("SELECT piece_id FROM results WHERE run_id=?", (run_id,))}
     else:
         run_id = con.execute(
-            "INSERT INTO runs (model_name, spec, dataset, engine_mode, started_at) VALUES (?,?,?,?,?)",
-            (name, json.dumps(spec), dataset.version(), ENGINE_MODE,
-             datetime.now(timezone.utc).isoformat())).lastrowid
+            "INSERT INTO runs (model_name, spec, dataset, engine_mode, engine, commit_id, started_at) "
+            "VALUES (?,?,?,?,?,?,?)",
+            (name, json.dumps(spec), dataset.version(), ENGINE_MODE, results.engine_fingerprint(ENGINE_MODE),
+             results.git_commit(), datetime.now(timezone.utc).isoformat())).lastrowid
         con.commit()
         done = set()
 
@@ -47,7 +48,8 @@ def run(name: str, only: list = None, resume: int = None) -> int:
             r = G.generate_piece(None, item, wrapper, chosen, env, words=words, record=False, **kwargs)
             err = None
         except Exception as exc:
-            r, err = None, f"{type(exc).__name__}: {exc}"[:500]
+            detail = exc.read().decode(errors="replace")[:300] if hasattr(exc, "read") else ""
+            r, err = None, f"{type(exc).__name__}: {exc} {detail}".strip()[:500]
         seconds = time.time() - t0
         calls = list(G.CALL_LOG)
         cost = 0.0
@@ -57,17 +59,19 @@ def run(name: str, only: list = None, resume: int = None) -> int:
             con.execute("INSERT INTO calls VALUES (?,?,?,?,?,?,?,?,?)",
                         (run_id, p["id"], purpose, model, tin, tout, reasoning, ms, c))
         cov = (r or {}).get("coverage") or {}
+        coverage = cov.get("coverage")
+        if coverage is None and cov.get("stretches"):  # D40 anchor trial: ~120-word stretches
+            coverage = round(cov.get("covered", 0) / cov["stretches"], 2)
         con.execute(
             "INSERT OR REPLACE INTO results VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
             (run_id, p["id"], int(r is not None), err, r and r["title"], r and r["body"],
              round(seconds, 2), cost, sum(c[2] for c in calls), sum(c[3] for c in calls),
-             sum(c[6] for c in calls), len(calls), r and r["marks"], cov.get("coverage"),
+             sum(c[6] for c in calls), len(calls), r and r["marks"], coverage,
              json.dumps({k: r[k] for k in ("attempts", "qc_rejected", "invented_numbers",
                                            "invented_unmarked", "word_count", "words_used")}
-                        | {"tiers": cov.get("tiers"), "eligible": cov.get("eligible_paragraphs"),
-                           "source_words": p["words"]} if r else {})))
+                        | {"coverage": cov, "source_words": p["words"]} if r else {})))
         con.commit()
-        status = f"{r['marks']} marks, coverage {cov.get('coverage')}" if r else f"FAILED {err}"
+        status = f"{r['marks']} marks, coverage {coverage}" if r else f"FAILED {err}"
         print(f"[evals] {i}/{len(pieces)} {p['id']}: {seconds:.1f}s ${cost:.5f} {status}")
     con.execute("UPDATE runs SET finished_at=? WHERE id=?", (datetime.now(timezone.utc).isoformat(), run_id))
     con.commit()

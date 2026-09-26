@@ -18,6 +18,8 @@ CREATE TABLE IF NOT EXISTS runs (
     spec        TEXT NOT NULL,      -- registry entry as run (prices, params)
     dataset     TEXT NOT NULL,      -- golden-set version hash: only same-version runs compare
     engine_mode TEXT NOT NULL,
+    engine      TEXT,               -- fingerprint of pipeline code + prompts: only same-engine runs compare
+    commit_id   TEXT,               -- git HEAD at run time (+ "-dirty"), for reading history
     started_at  TEXT NOT NULL,
     finished_at TEXT
 );
@@ -69,11 +71,37 @@ CREATE TABLE IF NOT EXISTS marks (
 """
 
 
+ENGINE_FILES = ["src/generate.py", "src/service/engine.py", "src/bakeoff.py", "prompts/*.md"]
+
+
 def connect() -> sqlite3.Connection:
-    con = sqlite3.connect(DB_PATH)
+    con = sqlite3.connect(DB_PATH, timeout=30)
     con.row_factory = sqlite3.Row
     con.executescript(SCHEMA)
+    for col in ("engine TEXT", "commit_id TEXT"):
+        try:  # migration for dbs created before these columns existed
+            con.execute(f"ALTER TABLE runs ADD COLUMN {col}")
+        except sqlite3.OperationalError:
+            pass
     return con
+
+
+def engine_fingerprint(mode: str) -> str:
+    """Hash of everything that shapes a piece besides the model: pipeline code, prompts, mode.
+    The engine is under active development; a run on a different engine isn't comparable."""
+    import hashlib
+    h = hashlib.sha1(mode.encode())
+    for pattern in ENGINE_FILES:
+        for f in sorted(ROOT.glob(pattern)):
+            h.update(f.name.encode() + f.read_bytes())
+    return h.hexdigest()[:10]
+
+
+def git_commit() -> str:
+    import subprocess
+    run = lambda *a: subprocess.run(["git", *a], cwd=ROOT, capture_output=True, text=True).stdout.strip()
+    dirty = run("status", "--porcelain", "--", "src", "prompts")
+    return run("rev-parse", "--short", "HEAD") + ("-dirty" if dirty else "")
 
 
 # --- model registry -------------------------------------------------------------------
