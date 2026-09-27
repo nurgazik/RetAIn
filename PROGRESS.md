@@ -26,8 +26,8 @@ the checker rejects about half of its in-text words (backlog UX-1; test models v
 **Next up:** founder's call on stretch length; model evals on surviving words per article.
 **2026-09-27 (sharing, D45):** every app's Share button should work — one source at a time.
 Sharing is now one reader per source behind a router (`ios/RetAIn/Shared/Sharing/`): selection,
-Safari page, plain text, Reddit (post or the linked comment), any web link (Chrome — verified on
-device). Reddit needs a device test. Next: Facebook, X (each needs research + a decision).
+Safari page, plain text, Reddit (post or the linked comment), any web link (Chrome) — all
+verified on device. Next: Facebook, X (each needs research + a decision).
 Reddit terms risk accepted while the founder is the only user — revisit before others (D45).
 **2026-09-27 (D44):** Safari shares keep page metadata (byline, site, date, sub-headline)
 out of the body and show it as a reader header; never sent to the model. Verified on device.
@@ -207,7 +207,10 @@ itself via the fetchers.
   header fields, loader waits past a check page, web page script, Reddit post / comment / old
   permalink / short post). Live probe (opt-in, 3 links): Reddit post 221 words 1.5 s, Reddit
   comment 125 words 1.3 s, Wikipedia 2,192 words 0.8 s. D44 date test still fails (below).
-- **Pending:** founder device test — Reddit post and comment shares.
+- **Verified on device 2026-09-27** (4 shares, all done, no unusable-share rows): Reddit post
+  ×2 (`p_26294cec…`, 763 chars, u/Pelican_Ceramic · r/AskACanadian), Reddit comment
+  (`p_bd92b31d…`, 627 chars, only the linked comment), Chrome fandom wiki (`p_64e7d6c0…`,
+  web-readability, 6,530 chars). One word placed per Reddit piece (UX-1 density, not sharing).
 
 ### 2026-09-27 — Link-only shares read on the phone (Chrome; D37 fallback built)
 
