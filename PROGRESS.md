@@ -25,8 +25,7 @@ original, tap a word for its meaning. Safari shares are cleaned by Mozilla Reada
 the checker rejects about half of its in-text words (backlog UX-1; test models via TD-13).
 **Next up:** founder's call on stretch length; model evals on surviving words per article.
 **2026-09-27 (D44):** Safari shares keep page metadata (byline, site, date, sub-headline)
-out of the body and show it as a reader header; never sent to the model. Needs a device
-re-share of a CBC article to confirm.
+out of the body and show it as a reader header; never sent to the model. Verified on device.
 **2026-09-27 (D43):** notes may now sit in a stretch that already has a word (max one
 note per stretch). Open: empty stretches get no second chance (gap-fill call proposed),
 and most notes die on "needs exactly one marked word".
@@ -206,8 +205,11 @@ itself via the fetchers.
 - Verified: iOS unit tests 10/10 (new: CBC fixture cut from the real page; lede-stays test;
   reader header + escaping); pytest 32/32; full real CBC page run in the simulator → body
   starts at the story's first paragraph, byline/site/date/dek correct. Service restarted,
-  healthz ok, new fields returned. **Not yet on device**; existing pieces are unchanged
-  (re-share to see the fix). Safari UI test not run.
+  healthz ok, new fields returned. Existing pieces are unchanged (re-share to see the fix).
+  Safari UI test not run.
+- **Verified on device (same day):** founder re-shared the article → `p_2884d8f2c0ab4814`;
+  body starts at the story, no dateline/audio note/summary; byline, site, date and dek
+  stored; founder confirmed the header UI. (11.2 s vs 3.5–6.5 s recently — cause not checked.)
 
 ### 2026-09-27 — Reader font: New York + Dynamic Type (UX-9, partial)
 
