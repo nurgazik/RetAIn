@@ -52,6 +52,15 @@ struct ShareInput {
                 }
             }
         }
+        r.promoteLinkText()
         return r
+    }
+
+    /// Some apps (Facebook) share a link as plain text: text that is only a web address is a link.
+    mutating func promoteLinkText() {
+        guard url == nil, let t = text?.trimmingCharacters(in: .whitespacesAndNewlines), !t.contains(where: \.isWhitespace),
+              let u = URL(string: t), ["http", "https"].contains(u.scheme?.lowercased() ?? ""), u.host != nil else { return }
+        url = t
+        text = nil
     }
 }

@@ -23,25 +23,32 @@ final class PageLoader: NSObject, WKNavigationDelegate {
     static func open(_ url: URL, until ready: String, timeout: Duration = .seconds(10)) async -> PageLoader? {
         let page = PageLoader()
         page.web.load(URLRequest(url: url))
-        return await page.wait(until: ready, timeout: timeout) ? page : nil
+        return await page.settle(until: ready, timeout: timeout)
     }
     /// Tests: a saved page, as if it had loaded from `baseURL`.
     static func open(html: String, baseURL: URL, until ready: String, timeout: Duration = .seconds(10)) async -> PageLoader? {
         let page = PageLoader()
         page.web.loadHTMLString(html, baseURL: baseURL)
-        return await page.wait(until: ready, timeout: timeout) ? page : nil
+        return await page.settle(until: ready, timeout: timeout)
     }
 
     func evaluate(_ js: String) async -> Any? { try? await web.evaluateJavaScript(js) }
     var currentURL: URL? { web.url }
 
-    private func wait(until ready: String, timeout: Duration) async -> Bool {
+    /// Polls `ready` (a JavaScript expression): true once it holds, false on timeout or a failed load.
+    /// Also for a second step after interacting with the page (e.g. waiting for "See more" to expand).
+    func wait(until ready: String, timeout: Duration) async -> Bool {
         let clock = ContinuousClock(), end = clock.now + timeout
         while clock.now < end && !failed {
             if await evaluate("!!(\(ready))") as? Bool == true { return true }
             try? await Task.sleep(for: .milliseconds(250))
         }
-        return !failed
+        return false
+    }
+    /// After the first load: the page whether or not it got ready (readers judge what's there), nil if it failed.
+    private func settle(until ready: String, timeout: Duration) async -> PageLoader? {
+        _ = await wait(until: ready, timeout: timeout)
+        return failed ? nil : self
     }
 
     // A redirect cancels the navigation before it (NSURLErrorCancelled): that isn't a failure.

@@ -27,7 +27,8 @@ the checker rejects about half of its in-text words (backlog UX-1; test models v
 **2026-09-27 (sharing, D45):** every app's Share button should work — one source at a time.
 Sharing is now one reader per source behind a router (`ios/RetAIn/Shared/Sharing/`): selection,
 Safari page, plain text, Reddit (post or the linked comment), any web link (Chrome) — all
-verified on device. Next: Facebook, X (each needs research + a decision).
+verified on device. Facebook (D46) built: public posts read; private groups / friends-only
+posts get specific messages; device test pending. Next: X (needs research + a decision).
 Reddit terms risk accepted while the founder is the only user — revisit before others (D45).
 **2026-09-27 (D44):** Safari shares keep page metadata (byline, site, date, sub-headline)
 out of the body and show it as a reader header; never sent to the model. Verified on device.
@@ -188,6 +189,30 @@ all needed for TestFlight and none waits on a decision.**
 vacation coding ends). Home Mac: clone normally with personal credentials; recreate
 `.env.local` (4 API keys — gitignored, never on GitHub) and `data/retain.db` refills
 itself via the fetchers.
+
+### 2026-09-27 — Facebook reader (D46)
+
+- Founder: Facebook can't share a link to a comment, so a Facebook link means its post. He
+  wanted messages as specific as Facebook allows when a post can't be read.
+- Probed his 3 links logged out: public page post → the post (cut at "See more"; comments
+  and the page's other posts on the same page); private group post → the group's front page
+  (`/groups/<id>/`, name + "Private group · 70.2K members", no post); friend's post → `/login/`.
+- Found: no Facebook share had ever reached the server as a link. The 17:44 unusable row
+  (plain text, 1 word) was likely his Facebook share — Facebook sends the link as text
+  (inferred). `ShareInput.promoteLinkText` now treats text that is only a web address as a link.
+- Built `FacebookReader`: waits past `/share/` redirect pages; group front page checked before
+  posts (its About text matches its preview text); finds the post by its preview text
+  (og:description — Facebook's class names are generated), taps the post text's own collapsed
+  container (the separate "... See more" button does nothing), retries until it grows.
+  Messages: private group (named), login ("probably friends only"), anything else (generic).
+  `PageLoader.wait` now returns false on timeout (it used to report success).
+- Tests: 4 new (public post + See more, private group named, login wall, link-as-text); 13
+  sharing tests pass. Live, 3 links: public post 618 words 1.3 s; group message named; login
+  message. Full suite: 23 tests, only the D44 date test fails (known).
+- Process slip: removing a probe with `git checkout` wiped uncommitted tests in the same file;
+  re-added. Probes now go in a separate throwaway file.
+- **Pending:** founder device test — share a public post, the group post and a friend's post
+  from the Facebook app straight to RetAIn.
 
 ### 2026-09-27 — Sharing rebuilt as readers per source; Reddit posts and comments (D45)
 

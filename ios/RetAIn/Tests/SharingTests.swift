@@ -122,18 +122,93 @@ final class SharingTests: XCTestCase {
         XCTAssertTrue(detail.contains("share that comment"), detail)
     }
 
+    // MARK: Facebook
+
+    /// A public page's post as Facebook serves it logged out (2026-09-27), trimmed: the post's
+    /// text cut at "... See more", a separate See more button, and the page's other posts.
+    private static let fbPost = """
+        <html><head><title>Short Stories - After my affair came to light… | Facebook</title>
+        <meta property="og:title" content="Short Stories">
+        <meta property="og:description" content="After my affair came to light, my husband never touched me again. For 18 years...">
+        </head><body>
+        <div data-successful-render-id="122141952087346577">
+          <div role="button" aria-expanded="false" id="toggle"><div dir="auto" id="post">After my affair came to light, my husband never touched me again. For 18 years...</div></div>
+          <div role="button" id="more"><span>... See more</span></div>
+          <div dir="auto">PART 2: a long comment by the page that must not be read, \(article)</div>
+          <div dir="auto">Another post by the page… <div role="button" id="other"><span>... See more</span></div></div>
+        </div>
+        <script>
+        document.getElementById('other').addEventListener('click', function () { document.getElementById('post').innerText = 'WRONG BUTTON'; });
+        document.getElementById('toggle').addEventListener('click', function () {
+          setTimeout(function () {
+            document.getElementById('post').innerText = 'After my affair came to light, my husband never touched me again. For 18 years, we lived under the same roof like strangers. \(article) Her expression changed...';
+          }, 300);
+        });
+        </script></body></html>
+        """
+    private func facebook(_ url: String, html: String) async throws -> ReaderResult {
+        let loaded = await PageLoader.open(html: html, baseURL: URL(string: url)!, until: FacebookReader.ready, timeout: .seconds(2))
+        return await FacebookReader().extract(from: try XCTUnwrap(loaded))
+    }
+
+    func testFacebookPublicPostExpandsSeeMore() async throws {
+        guard case .text(let r) = try await facebook("https://www.facebook.com/story.php?story_fbid=122141952087346577&id=61590397333180",
+                                                     html: Self.fbPost) else { return XCTFail() }
+        XCTAssertEqual(r.extractor, "facebook-post")
+        XCTAssertTrue(r.text.hasPrefix("After my affair came to light"), r.text)
+        XCTAssertTrue(r.text.hasSuffix("Her expression changed..."), r.text)      // the page's own cliffhanger stays
+        XCTAssertFalse(r.text.contains("PART 2"))
+        XCTAssertEqual(r.sourceFields, ["byline": "Short Stories", "site_name": "Facebook"])
+    }
+
+    func testFacebookPrivateGroupIsNamed() async throws {
+        let html = """
+            <html><head><meta property="og:title" content="Built with Science Private Community | Facebook">
+            <meta property="og:description" content="Welcome to the Built With Science Private Community!"></head>
+            <body><div dir="auto">Welcome to the Built With Science Private Community! This community is for members only.</div>
+            Private group · 70.2K members. Log in to see posts and join the conversation.</body></html>
+            """
+        guard case .unusable(let title, let detail) = try await facebook("https://www.facebook.com/groups/2282990221717294/", html: html)
+        else { return XCTFail() }
+        XCTAssertEqual(title, "This post is in a private group")
+        XCTAssertTrue(detail.contains("“Built with Science Private Community”"), detail)
+    }
+
+    func testFacebookLoginWall() async throws {
+        let html = """
+            <html><head><meta property="og:title" content="Log into Facebook | Facebook"></head>
+            <body>Mobile number or email Password Log in</body></html>
+            """
+        guard case .unusable(let title, _) = try await facebook("https://m.facebook.com/login/?next=https%3A%2F%2Fwww.facebook.com%2Fshare%2Fp%2Fx", html: html)
+        else { return XCTFail() }
+        XCTAssertEqual(title, "Facebook wants a login for this post")
+    }
+
+    /// Facebook's share sheet sends the link as plain text; it must still reach the link readers.
+    func testLinkSharedAsTextIsALink() {
+        var i = input(text: " https://www.facebook.com/share/1DZxoEEMzn/?mibextid=wwXIfr\n")
+        i.promoteLinkText()
+        XCTAssertEqual(i.url, "https://www.facebook.com/share/1DZxoEEMzn/?mibextid=wwXIfr")
+        XCTAssertNil(i.text)
+        XCTAssertEqual(claimant(i), "facebook")
+        var words = input(text: "see https://example.com for more")
+        words.promoteLinkText()
+        XCTAssertNil(words.url)
+    }
+
     /// Real sites over the network; opt-in (RETAIN_NET_PROBE=1) since it depends on them.
     func testLiveLinks() async throws {
         guard ProcessInfo.processInfo.environment["RETAIN_NET_PROBE"] == "1" else { throw XCTSkip("RETAIN_NET_PROBE not set") }
         let web = WebPageReader(script: Self.pageScript)
-        let router = ShareRouter(readers: [RedditReader(), web])
+        let router = ShareRouter(readers: [RedditReader(), FacebookReader(), web])
         for s in ["https://www.reddit.com/r/ClaudeAI/s/nlvL3JzYxD", "https://www.reddit.com/r/economy/s/RP0roaa0QK",
-                  "https://en.wikipedia.org/wiki/Readability"] {
+                  "https://en.wikipedia.org/wiki/Readability", "https://www.facebook.com/share/1DZxoEEMzn/?mibextid=wwXIfr",
+                  "https://www.facebook.com/share/p/189EK24aX6/?mibextid=wwXIfr", "https://www.facebook.com/share/p/189qwrP5XX/?mibextid=wwXIfr"] {
             let t0 = Date()
             let out: String
             switch await router.route(input(url: s)) {
             case .read(let r, let reader): out = "\(reader) \(r.extractor) words=\(Words.count(r.text)) title=\(r.title ?? "") fields=\(r.sourceFields) url=\(r.url ?? "") head=\(r.text.prefix(80))"
-            case .unusable(let t, _, let reader): out = "\(reader) UNUSABLE \(t)"
+            case .unusable(let t, let d, let reader): out = "\(reader) UNUSABLE \(t) — \(d)"
             case .capture: out = "capture"
             }
             print(String(format: "PROBE %.1fs ", Date().timeIntervalSince(t0)) + s + " → " + out)

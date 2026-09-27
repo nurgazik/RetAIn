@@ -19,6 +19,7 @@
 		2243ABEBD73326BA72AFE21B /* ShareRouter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3C2A57F69AB9CC53F9AF4AA3 /* ShareRouter.swift */; };
 		271362F177DE0909E5D1F556 /* SelectionReader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 845D026321A73AF82D70075B /* SelectionReader.swift */; };
 		2B12D75EBF646B551703B6FA /* PageLoader.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD974EFE030D5357F6ECA002 /* PageLoader.swift */; };
+		2C4A1AF8FAA1CCD72F4F12FA /* FacebookReader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 50ADD8EE0AC3F92D504CDBF6 /* FacebookReader.swift */; };
 		2C77B7706686EBE301B95F45 /* ReaderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57DA24DE4F40E1FBFDECAFDA /* ReaderView.swift */; };
 		34C58729A57C23999AF1F640 /* WebPageReader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0481AC92CBA02B1813E439FC /* WebPageReader.swift */; };
 		3CE212035726D0ACB5718B0E /* RedditReader.swift in Sources */ = {isa = PBXBuildFile; fileRef = DB2FD1996BFFC3729A1494B7 /* RedditReader.swift */; };
@@ -74,6 +75,7 @@
 		DC0AE76264DD05EF825D1A75 /* ShareRouter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3C2A57F69AB9CC53F9AF4AA3 /* ShareRouter.swift */; };
 		E02EE78A74B27E260E13D74C /* SSEReader.swift in Sources */ = {isa = PBXBuildFile; fileRef = F466E598D86A53E8A56E882B /* SSEReader.swift */; };
 		E18EDEFDA1067F27D3791DCE /* SelectionReader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 845D026321A73AF82D70075B /* SelectionReader.swift */; };
+		E5271E9263BBB3740F9F822F /* FacebookReader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 50ADD8EE0AC3F92D504CDBF6 /* FacebookReader.swift */; };
 		E714FD5C7180A5B7AED0ACD3 /* WordCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1DC5A72E818D1C8038029AD0 /* WordCardView.swift */; };
 		E8DF680845AF3B485293AF1D /* SessionStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC3A20A78E389B481F0B403E /* SessionStore.swift */; };
 		EBFC0BC84EB14AFE4C87A932 /* RetAInPage.js in Resources */ = {isa = PBXBuildFile; fileRef = 2D286AEEB8FABB1977DFEA0B /* RetAInPage.js */; };
@@ -81,6 +83,7 @@
 		ECC3DB9D9D9B34068C243B8F /* ShareViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5469DA26719F2A9BF63488DA /* ShareViewController.swift */; };
 		EF59A594806595A7F9DDF6BE /* ReadsStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = C31DA02FC3DE821DB8C935EB /* ReadsStore.swift */; };
 		F38ED0ECFCA2589D522EDD48 /* ShareInput.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4E9A5365D42B838132B93A9 /* ShareInput.swift */; };
+		F4B51E3A9681EB71551ED78D /* FacebookReader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 50ADD8EE0AC3F92D504CDBF6 /* FacebookReader.swift */; };
 		FD7C31DF8055378FA635F7F1 /* SSEReader.swift in Sources */ = {isa = PBXBuildFile; fileRef = F466E598D86A53E8A56E882B /* SSEReader.swift */; };
 /* End PBXBuildFile section */
 
@@ -143,6 +146,7 @@
 		3990B0E5EE1BEBC61D4BBCEF /* SourceReader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SourceReader.swift; sourceTree = "<group>"; };
 		3C2A57F69AB9CC53F9AF4AA3 /* ShareRouter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareRouter.swift; sourceTree = "<group>"; };
 		4E530360080D7321EA7C481E /* TransformView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TransformView.swift; sourceTree = "<group>"; };
+		50ADD8EE0AC3F92D504CDBF6 /* FacebookReader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FacebookReader.swift; sourceTree = "<group>"; };
 		5469DA26719F2A9BF63488DA /* ShareViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareViewController.swift; sourceTree = "<group>"; };
 		57DA24DE4F40E1FBFDECAFDA /* ReaderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReaderView.swift; sourceTree = "<group>"; };
 		7841D581AED07D5C5D9DA657 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
@@ -183,6 +187,7 @@
 		16468024AF6C257519B37638 /* Readers */ = {
 			isa = PBXGroup;
 			children = (
+				50ADD8EE0AC3F92D504CDBF6 /* FacebookReader.swift */,
 				3119962DDACEB36DE6A99A58 /* PlainTextReader.swift */,
 				DB2FD1996BFFC3729A1494B7 /* RedditReader.swift */,
 				D195EDAB7D89B0CFA8C9CB3E /* SafariPageReader.swift */,
@@ -497,6 +502,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				E5271E9263BBB3740F9F822F /* FacebookReader.swift in Sources */,
 				1A2BF3817B25324FFD7DF7C7 /* Models.swift in Sources */,
 				A053AE96DCD60E2AABEFE9B7 /* PageLoader.swift in Sources */,
 				86C449B356325FEB79D09E8D /* PieceHTML.swift in Sources */,
@@ -530,6 +536,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				2C4A1AF8FAA1CCD72F4F12FA /* FacebookReader.swift in Sources */,
 				AEA8B60DD6F84B7A630758B9 /* Models.swift in Sources */,
 				D9FA7A40FE0247FAA069C8BC /* PageLoader.swift in Sources */,
 				54F589D3634DE80EB35F3D65 /* PieceHTML.swift in Sources */,
@@ -557,6 +564,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				F4B51E3A9681EB71551ED78D /* FacebookReader.swift in Sources */,
 				0ABF5FC779EC5A24E7F11342 /* Models.swift in Sources */,
 				2B12D75EBF646B551703B6FA /* PageLoader.swift in Sources */,
 				D9FD7972FE9C34737BB26CE8 /* PieceHTML.swift in Sources */,
