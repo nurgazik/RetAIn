@@ -24,6 +24,10 @@ original, tap a word for its meaning. Safari shares are cleaned by Mozilla Reada
 **Top open problem: density** — ~1.5–2 words per article; the model under-attempts and
 the checker rejects about half of its in-text words (backlog UX-1; test models via TD-13).
 **Next up:** founder's call on stretch length; model evals on surviving words per article.
+**2026-09-27 (link shares, step 1):** a share that arrives as a link only (Chrome, most apps'
+Share buttons) is now read on the phone: hidden web view + the Safari page script. Open pages
+only; paywalls/logins get "Couldn't read this page". Needs founder device test from Chrome.
+Next sources, one by one: Reddit, Facebook, X (each needs its own research + decision).
 **2026-09-27 (D44):** Safari shares keep page metadata (byline, site, date, sub-headline)
 out of the body and show it as a reader header; never sent to the model. Verified on device.
 **2026-09-27 (D43):** notes may now sit in a stretch that already has a word (max one
@@ -183,6 +187,27 @@ all needed for TestFlight and none waits on a decision.**
 vacation coding ends). Home Mac: clone normally with personal credentials; recreate
 `.env.local` (4 API keys — gitignored, never on GitHub) and `data/retain.db` refills
 itself via the fetchers.
+
+### 2026-09-27 — Link-only shares read on the phone (Chrome; D37 fallback built)
+
+- Founder: Chrome's Share button gave "Only a link arrived". Cause: only Safari runs an
+  extension's page script (JavaScript preprocessing); Chrome sends `public.url` only. Evidence:
+  all 6 diagnostics rows to date were URL-only unusable shares.
+- Founder's learning: nobody will select text and share it. Every source needs a one-tap
+  Share-button route; solve them one by one, open-web articles first.
+- No decision change: D37 already allowed a URL fetch as the fallback for non-Safari apps.
+  Built it on the phone, not the server (agreed): `Shared/PageFetcher.swift` loads the link in a
+  hidden WKWebView (no cookies), waits for load or 10 s, runs the same `RetAInPage.js`.
+  `ExtensionInput.readLink` runs it only when no usable text arrived. The sheet shows
+  "Reading the page…" meanwhile. Diagnostics/meta carry `linkFetch` (ok / short / failed) and
+  `extractor: fetched-readability`.
+- Tests: 5 new in `Tests/LinkFetchTests.swift`, all pass; opt-in live probe
+  (`TEST_RUNNER_RETAIN_NET_PROBE=1`): 3 pages — Wikipedia 2,192 words <1 s, a BBC URL 1,471
+  words ~1 s (page identity unchecked), TechCrunch homepage 78 (not an article, expected).
+- Found, not fixed: `ReaderPopupTests.testHeaderShowsDekAndSourceLine` fails — a date-only
+  `published` ("2026-09-26") is parsed as UTC midnight and shown in local time, so Pacific
+  shows Sep 25 (D44 header, `PieceHTML.displayDate`).
+- **Pending:** founder device test from Chrome (3–5 open articles + 1 paywalled page).
 
 ### 2026-09-27 — Page metadata out of the body, into a reader header (D44, UX-11)
 

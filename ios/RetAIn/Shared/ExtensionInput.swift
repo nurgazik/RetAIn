@@ -12,6 +12,9 @@ struct ExtensionInput {
     /// Page metadata from the Safari page script, for the reader's header (never the model):
     /// request field → value, empty values left out.
     var sourceFields: [String: String] = [:]
+    /// A link-only share read on the phone (PageFetcher): "ok", "short" (too little text,
+    /// e.g. paywall or login) or "failed" (didn't load). nil when no fetch was needed.
+    var linkFetch: String?
     var typeLog: [String] = []
     var source: String = "share-ext"
 
@@ -31,6 +34,9 @@ struct ExtensionInput {
     }
     /// Why nothing was usable — shown to the reader and logged (metadata only).
     var unusableReason: (title: String, detail: String) {
+        if linkFetch == "short" || linkFetch == "failed" {
+            return ("Couldn't read this page", "It may need a login or a subscription. Select the text you're reading and share the selection instead.")
+        }
         let longest = max(Self.words(selection), Self.words(pageText), Self.words(text))
         if longest > 0 {
             return ("A little more, please", "That's \(longest) word\(longest == 1 ? "" : "s"); RetAIn needs about \(Self.minWords) to work with. Select a bit more and share again.")
@@ -43,7 +49,7 @@ struct ExtensionInput {
     var diagnosticPayload: [String: Any] {
         ["types": typeLog, "textWords": Self.words(text), "pageWords": Self.words(pageText),
          "selectionWords": Self.words(selection), "hasUrl": url != nil, "source": source,
-         "extractor": extractor ?? "none"]
+         "extractor": extractor ?? "none", "linkFetch": linkFetch ?? "none"]
     }
 
     static func gather(from context: NSExtensionContext?, source: String) async -> ExtensionInput {
@@ -56,15 +62,7 @@ struct ExtensionInput {
                     if let any = try? await provider.loadItem(forTypeIdentifier: UTType.propertyList.identifier),
                        let dict = any as? [String: Any],
                        let res = dict[NSExtensionJavaScriptPreprocessingResultsKey] as? [String: Any] {
-                        r.pageText = res["text"] as? String
-                        r.selection = res["selection"] as? String
-                        r.extractor = res["extractor"] as? String
-                        for (key, field) in [("byline", "byline"), ("siteName", "site_name"),
-                                             ("publishedTime", "published"), ("dek", "dek")] {
-                            if let v = res[key] as? String, !v.isEmpty { r.sourceFields[field] = v }
-                        }
-                        r.url = r.url ?? (res["url"] as? String)
-                        r.title = r.title ?? (res["title"] as? String)
+                        r.apply(res)
                     }
                 } else if provider.hasItemConformingToTypeIdentifier(UTType.plainText.identifier) {
                     if let any = try? await provider.loadItem(forTypeIdentifier: UTType.plainText.identifier) {
@@ -78,6 +76,30 @@ struct ExtensionInput {
                 }
             }
         }
+        await r.readLink()
         return r
+    }
+
+    /// The page script's results (Safari's pre-step, or PageFetcher on a link) into the input.
+    mutating func apply(_ res: [String: Any]) {
+        pageText = res["text"] as? String
+        selection = res["selection"] as? String
+        extractor = res["extractor"] as? String
+        for (key, field) in [("byline", "byline"), ("siteName", "site_name"),
+                             ("publishedTime", "published"), ("dek", "dek")] {
+            if let v = res[key] as? String, !v.isEmpty { sourceFields[field] = v }
+        }
+        url = url ?? (res["url"] as? String)
+        title = title ?? (res["title"] as? String)
+    }
+
+    /// Chrome and most apps' Share buttons send only a link: read that page on the phone.
+    mutating func readLink(using fetch: (URL) async -> [String: Any]? = { await PageFetcher.fetch($0) }) async {
+        guard effectiveText == nil, singleWord == nil, pageText == nil,
+              let s = url, let u = URL(string: s), ["http", "https"].contains(u.scheme?.lowercased() ?? "") else { return }
+        guard let res = await fetch(u) else { linkFetch = "failed"; return }
+        apply(res)
+        extractor = "fetched-" + (extractor ?? "none")
+        linkFetch = effectiveText == nil ? "short" : "ok"
     }
 }

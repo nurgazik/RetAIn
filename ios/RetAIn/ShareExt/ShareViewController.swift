@@ -10,6 +10,7 @@ final class ShareViewController: UIViewController {
         view.backgroundColor = .systemBackground
         let source = (Bundle.main.bundleIdentifier ?? "").hasSuffix("action") ? "action-ext" : "share-ext"
         Task { @MainActor in
+            show(AnyView(ProgressView("Reading the page…")))  // a link-only share takes a few seconds
             let input = await ExtensionInput.gather(from: extensionContext, source: source)
             let done: () -> Void = { [weak self] in self?.extensionContext?.completeRequest(returningItems: nil) }
             let root: AnyView
@@ -20,7 +21,7 @@ final class ShareViewController: UIViewController {
             } else if let text = input.effectiveText {
                 let meta: [String: Any] = ["types": input.typeLog, "hasSelection": (input.selection?.count ?? 0) > 0,
                                            "pageChars": input.pageText?.count ?? 0, "textChars": input.text?.count ?? 0,
-                                           "extractor": input.extractor ?? "none",
+                                           "extractor": input.extractor ?? "none", "linkFetch": input.linkFetch ?? "none",
                                            "build": Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? "?"]
                 root = AnyView(SheetView(text: text, title: input.title, url: input.url, source: source, meta: meta,
                                          sourceFields: input.sourceFields, onDone: done))
@@ -29,13 +30,18 @@ final class ShareViewController: UIViewController {
                 root = AnyView(MessageView(title: why.title, detail: why.detail, onDone: done))
                 Task { await RetAInClient.shared.diagnostic(kind: "unusable-share", payload: input.diagnosticPayload) }
             }
-            let host = UIHostingController(rootView: root)
-            addChild(host)
-            host.view.frame = view.bounds
-            host.view.autoresizingMask = [.flexibleWidth, .flexibleHeight]
-            view.addSubview(host.view)
-            host.didMove(toParent: self)
+            show(root)
         }
+    }
+
+    private func show(_ root: AnyView) {
+        for old in children { old.willMove(toParent: nil); old.view.removeFromSuperview(); old.removeFromParent() }
+        let host = UIHostingController(rootView: root)
+        addChild(host)
+        host.view.frame = view.bounds
+        host.view.autoresizingMask = [.flexibleWidth, .flexibleHeight]
+        view.addSubview(host.view)
+        host.didMove(toParent: self)
     }
 }
 
