@@ -779,6 +779,9 @@ def generate_piece(con, item, wrapper_file: str, chosen: list, env: dict,
             parsed["marks"] = len(re.findall(r"<mark>", parsed["body"]))
 
     if wrapper_file == "transform-sentence.md":
+        # a change counts only if it seats a word from the user's list: unwrap any other
+        # mark, so the guard reverts its sentence to source and drops its note
+        parsed["body"] = demote_marks(parsed["body"], unlisted_marks(parsed["body"], defs))
         parsed["body"], guard = sentence_guard(source_text, parsed["body"])
         parsed["marks"] = len(re.findall(r"<mark>", parsed["body"]))
         print(f"[guard] edited={guard['edited']} reverted={guard['reverted']} "

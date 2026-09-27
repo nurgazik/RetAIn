@@ -205,6 +205,11 @@ itself via the fetchers.
   counts one mark and keeps the note; later the unlisted mark is unwrapped, so the reader
   gets a yellow note with no target word — pure added text. Rerun p_205aa1f52b474d2c
   shipped 3 such notes. Also explains many "needs exactly one marked word" drops.
+- **Fixed (founder: "a note counts only when it carries a word from the list"):** before
+  the guard, marks on unlisted words are unwrapped — their notes drop and their edited
+  sentences revert to the author's text (D40 already says a sentence changes only to seat
+  a target word; 4 such substitutions shipped in the same piece). Test added.
+- Backlog TD-14: Langfuse tracing, around TestFlight.
 
 ### 2026-09-26 (night) — Engine switched to Gemma 4 26B (D42)
 

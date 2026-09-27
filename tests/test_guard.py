@@ -91,6 +91,19 @@ def test_note_kept_when_stretch_already_has_word():  # D43
     assert "unveiled" in out and "note supplement" in out
 
 
+def test_unlisted_marks_revert_edits_and_drop_notes():
+    """A change counts only if it seats a word from the user's list (p_205aa1f52b474d2c)."""
+    src = LONG + " It folded towels."
+    body = (f"<p>{LONG.replace('showed', '<mark>unveiled</mark>')} "
+            "<aside>Sensory <mark>overload</mark> is common.</aside> It <mark>folded</mark> towels.</p>")
+    body = G.demote_marks(body, G.unlisted_marks(body, {"ubiquitous": "d"}))
+    out, stats = G.sentence_guard(src, body)
+    assert "unveiled" not in out and stats["reverted"] == 1 and stats["edited"] == 0
+    assert stats["notes_dropped"] == 1 and stats["notes_kept"] == 0
+    listed = f"<p>{LONG}</p>\n{NOTE}"
+    assert G.demote_marks(listed, G.unlisted_marks(listed, {"ubiquitous": "d"})) == listed
+
+
 def test_rejected_note_word_drops_the_note():
     body = G.unmark_sentences(f"<p>{LONG}</p>\n{NOTE}", ["ubiquitous"])
     out, stats = G.sentence_guard(LONG, body)
