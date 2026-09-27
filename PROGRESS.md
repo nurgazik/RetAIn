@@ -189,8 +189,8 @@ itself via the fetchers.
   follow the iOS text-size setting via `html { font: -apple-system-body }` (all rems scale;
   `p` 1.06rem → 1rem keeps the default size ~17px). CSS-only, `Shared/UI/PieceHTML.swift`.
 - Verified: unit tests 7/7 pass; simulator Safari render of `PieceHTML.page` shows New York,
-  scales at XXL (updated live without reload in Safari), and dark mode looks right. Not yet
-  checked inside the app's own reader on device.
+  scales at XXL (updated live without reload in Safari), and dark mode looks right.
+  **Founder confirmed on device (same day):** New York shows, size follows the founder's system setting.
 
 ### 2026-09-27 — Notes allowed beside words (D43)
 
