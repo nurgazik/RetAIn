@@ -23,9 +23,9 @@ struct TransformView: View {
                     .overlay(alignment: .topLeading) {
                         if text.isEmpty { Text("Paste the article, post, or thread you're reading…").foregroundStyle(.tertiary).padding(12).allowsHitTesting(false) }
                     }
-                Text("\(wordCount) words (min \(ExtensionInput.minWords))").font(.caption).foregroundStyle(.secondary)
+                Text("\(wordCount) words (min \(Words.min))").font(.caption).foregroundStyle(.secondary)
                 Button { showSheet = true } label: { Label("Work the magic", systemImage: "sparkles").frame(maxWidth: .infinity) }
-                    .buttonStyle(.borderedProminent).disabled(wordCount < ExtensionInput.minWords)
+                    .buttonStyle(.borderedProminent).disabled(wordCount < Words.min)
                 Spacer()
             }
             .padding()
@@ -33,7 +33,7 @@ struct TransformView: View {
             .onAppear {
                 if CommandLine.arguments.contains("-autorun") { text = Sample.text; showSheet = true; return }
                 if UIPasteboard.general.hasStrings, let s = UIPasteboard.general.string,
-                   s.split(whereSeparator: { $0.isWhitespace }).count >= ExtensionInput.minWords, s != text { clipboardOffer = s }
+                   s.split(whereSeparator: { $0.isWhitespace }).count >= Words.min, s != text { clipboardOffer = s }
             }
             .sheet(isPresented: $showSheet) {
                 SheetView(text: text, source: "app-paste") { showSheet = false }

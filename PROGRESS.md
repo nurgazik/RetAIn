@@ -24,10 +24,11 @@ original, tap a word for its meaning. Safari shares are cleaned by Mozilla Reada
 **Top open problem: density** — ~1.5–2 words per article; the model under-attempts and
 the checker rejects about half of its in-text words (backlog UX-1; test models via TD-13).
 **Next up:** founder's call on stretch length; model evals on surviving words per article.
-**2026-09-27 (link shares, step 1):** a share that arrives as a link only (Chrome, most apps'
-Share buttons) is now read on the phone: hidden web view + the Safari page script. Open pages
-only; paywalls/logins get "Couldn't read this page". Needs founder device test from Chrome.
-Next sources, one by one: Reddit, Facebook, X (each needs its own research + decision).
+**2026-09-27 (sharing, D45):** every app's Share button should work — one source at a time.
+Sharing is now one reader per source behind a router (`ios/RetAIn/Shared/Sharing/`): selection,
+Safari page, plain text, Reddit (post or the linked comment), any web link (Chrome — verified on
+device). Reddit needs a device test. Next: Facebook, X (each needs research + a decision).
+Reddit terms risk accepted while the founder is the only user — revisit before others (D45).
 **2026-09-27 (D44):** Safari shares keep page metadata (byline, site, date, sub-headline)
 out of the body and show it as a reader header; never sent to the model. Verified on device.
 **2026-09-27 (D43):** notes may now sit in a stretch that already has a word (max one
@@ -187,6 +188,26 @@ all needed for TestFlight and none waits on a decision.**
 vacation coding ends). Home Mac: clone normally with personal credentials; recreate
 `.env.local` (4 API keys — gitignored, never on GitHub) and `data/retain.db` refills
 itself via the fetchers.
+
+### 2026-09-27 — Sharing rebuilt as readers per source; Reddit posts and comments (D45)
+
+- Chrome worked on device (Wikipedia piece, `linkFetch: ok`). Reddit's Share button gave
+  "Couldn't read this page". One diagnostic load (founder's link) showed why: Reddit serves a
+  JavaScript check page first (1 word at 1.1 s; the real post at 2.2 s) and we read on the first
+  load; and Readability picked a 463-word comment over the ~220-word post.
+- Founder: a share should read what the user meant — the post or a comment. A comment link
+  lands on `/comments/<post>/comment/<id>/` (verified with his r/economy link), so the link
+  decides; no guessing. Founder accepted the Reddit terms risk for now (D45).
+- Founder asked for a proper structure since sharing is core. Agreed and built (Strategy
+  pattern): `ShareInput` (what arrived) → `ShareRouter` asks `SourceReader`s in order —
+  Selection, SafariPage, PlainText, Reddit, WebPage — first to claim reads. `PageLoader` (hidden
+  web view) now polls each reader's own "ready" test instead of trusting the first load.
+  Replaces `ExtensionInput` + `PageFetcher`. Diagnostics/meta now carry `reader`.
+- Tests: `Tests/SharingTests.swift`, 8 pass (routing order, capture/fallback messages, Safari
+  header fields, loader waits past a check page, web page script, Reddit post / comment / old
+  permalink / short post). Live probe (opt-in, 3 links): Reddit post 221 words 1.5 s, Reddit
+  comment 125 words 1.3 s, Wikipedia 2,192 words 0.8 s. D44 date test still fails (below).
+- **Pending:** founder device test — Reddit post and comment shares.
 
 ### 2026-09-27 — Link-only shares read on the phone (Chrome; D37 fallback built)
 

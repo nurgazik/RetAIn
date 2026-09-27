@@ -2,8 +2,8 @@ import SwiftUI
 import UIKit
 
 /// Principal class for both the share extension and the Safari action. No login here:
-/// the session token comes from the app-group keychain. A single shared word → capture;
-/// longer text → the transform sheet.
+/// the session token comes from the app-group keychain. What a share means is the
+/// ShareRouter's job (Shared/Sharing/): a word → capture, readable text → the transform sheet.
 final class ShareViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -11,24 +11,27 @@ final class ShareViewController: UIViewController {
         let source = (Bundle.main.bundleIdentifier ?? "").hasSuffix("action") ? "action-ext" : "share-ext"
         Task { @MainActor in
             show(AnyView(ProgressView("Reading the page…")))  // a link-only share takes a few seconds
-            let input = await ExtensionInput.gather(from: extensionContext, source: source)
+            let input = await ShareInput.gather(from: extensionContext, source: source)
             let done: () -> Void = { [weak self] in self?.extensionContext?.completeRequest(returningItems: nil) }
             let root: AnyView
             if !SessionStore.isSignedIn {
                 root = AnyView(MessageView(title: "Open RetAIn once to sign in", detail: "Then sharing works from anywhere.", onDone: done))
-            } else if let word = input.singleWord {
-                root = AnyView(CaptureView(word: word, onDone: done))
-            } else if let text = input.effectiveText {
-                let meta: [String: Any] = ["types": input.typeLog, "hasSelection": (input.selection?.count ?? 0) > 0,
-                                           "pageChars": input.pageText?.count ?? 0, "textChars": input.text?.count ?? 0,
-                                           "extractor": input.extractor ?? "none", "linkFetch": input.linkFetch ?? "none",
-                                           "build": Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? "?"]
-                root = AnyView(SheetView(text: text, title: input.title, url: input.url, source: source, meta: meta,
-                                         sourceFields: input.sourceFields, onDone: done))
             } else {
-                let why = input.unusableReason
-                root = AnyView(MessageView(title: why.title, detail: why.detail, onDone: done))
-                Task { await RetAInClient.shared.diagnostic(kind: "unusable-share", payload: input.diagnosticPayload) }
+                switch await ShareRouter().route(input) {
+                case .capture(let word):
+                    root = AnyView(CaptureView(word: word, onDone: done))
+                case .read(let read, let reader):
+                    let meta: [String: Any] = ["types": input.typeLog, "reader": reader, "extractor": read.extractor,
+                                               "textChars": read.text.count,
+                                               "build": Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? "?"]
+                    root = AnyView(SheetView(text: read.text, title: read.title, url: read.url ?? input.url, source: source,
+                                             meta: meta, sourceFields: read.sourceFields, onDone: done))
+                case .unusable(let title, let detail, let reader):
+                    root = AnyView(MessageView(title: title, detail: detail, onDone: done))
+                    var payload = input.diagnosticPayload
+                    payload["reader"] = reader
+                    Task { await RetAInClient.shared.diagnostic(kind: "unusable-share", payload: payload) }
+                }
             }
             show(root)
         }
