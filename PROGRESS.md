@@ -182,6 +182,16 @@ vacation coding ends). Home Mac: clone normally with personal credentials; recre
 `.env.local` (4 API keys — gitignored, never on GitHub) and `data/retain.db` refills
 itself via the fetchers.
 
+### 2026-09-27 — Reader font: New York + Dynamic Type (UX-9, partial)
+
+- Founder asked which reading font the app uses (Georgia, fixed size) and what iOS uses for
+  extended reading. Agreed: switch to Apple's New York (`ui-serif`, Georgia fallback) and
+  follow the iOS text-size setting via `html { font: -apple-system-body }` (all rems scale;
+  `p` 1.06rem → 1rem keeps the default size ~17px). CSS-only, `Shared/UI/PieceHTML.swift`.
+- Verified: unit tests 7/7 pass; simulator Safari render of `PieceHTML.page` shows New York,
+  scales at XXL (updated live without reload in Safari), and dark mode looks right. Not yet
+  checked inside the app's own reader on device.
+
 ### 2026-09-27 — Notes allowed beside words (D43)
 
 - Founder asked why the NZT-48 piece had substitutions/rephrases but no yellow notes. Log:

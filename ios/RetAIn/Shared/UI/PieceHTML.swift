@@ -10,12 +10,14 @@ enum PieceHTML {
         <!DOCTYPE html><html lang="en"><head><meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <style>
-          body { font-family: Georgia, 'Times New Roman', serif; background: #faf8f4; color: #26221c;
+          /* Dynamic Type: root size follows the iOS text-size setting (17px at default); every rem scales */
+          html { font: -apple-system-body; }
+          body { font-family: ui-serif, Georgia, 'Times New Roman', serif; background: #faf8f4; color: #26221c;
                  margin: 0; padding: 1.25rem 1.25rem 4rem 1.75rem; line-height: 1.65; -webkit-text-size-adjust: 100%; }
           .kicker { font-family: -apple-system, sans-serif; font-size: .75rem; letter-spacing: .12em;
                     text-transform: uppercase; color: #8a6d3b; margin-bottom: .5rem; }
           h1 { font-size: 1.5rem; line-height: 1.25; margin: 0 0 1.25rem; }
-          p { margin: 0 0 1.1rem; font-size: 1.06rem; }
+          p { margin: 0 0 1.1rem; font-size: 1rem; }
           mark { background: linear-gradient(transparent 55%, #ffe08a 55%); padding: 0 .1em; border-radius: 2px; }
           /* D40: no underlines — how a sentence was changed lives in the margin, per line */
           .edited { cursor: pointer; }
@@ -42,7 +44,7 @@ enum PieceHTML {
           .rephrase mark   { background: linear-gradient(transparent 55%, #b0ecf0 55%); }
           .note mark       { background: linear-gradient(transparent 55%, #fbe48c 55%); }
           .bar-substitute { --c: #28a012; } .bar-rephrase { --c: #0097a7; } .bar-note { --c: #d4a200; }
-          #pop .orig { display: block; margin-top: .3rem; font-family: Georgia, serif; font-style: italic; }
+          #pop .orig { display: block; margin-top: .3rem; font-family: ui-serif, Georgia, serif; font-style: italic; }
           #pop { position: absolute; display: none; z-index: 10; max-width: 280px; padding: .6rem .8rem;
                  background: #26221c; color: #faf8f4; border-radius: 8px; font-family: -apple-system, sans-serif;
                  font-size: .85rem; line-height: 1.45; }
