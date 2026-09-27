@@ -6,7 +6,7 @@ first. Decisions live in PRD.md's log (D1–D34); this file is the narrative tim
 
 ---
 
-## NOW (as of 2026-09-26 night)
+## NOW (as of 2026-09-27)
 
 **Phase: MVP build (Phase 2) — M1–M6 built and verified on the founder's phone; Sign in
 with Apple live; membership active; M8 (monetization) and M9 (TestFlight) remain.**
@@ -24,6 +24,9 @@ original, tap a word for its meaning. Safari shares are cleaned by Mozilla Reada
 **Top open problem: density** — ~1.5–2 words per article; the model under-attempts and
 the checker rejects about half of its in-text words (backlog UX-1; test models via TD-13).
 **Next up:** founder's call on stretch length; model evals on surviving words per article.
+**2026-09-27 (D43):** notes may now sit in a stretch that already has a word (max one
+note per stretch). Open: empty stretches get no second chance (gap-fill call proposed),
+and most notes die on "needs exactly one marked word".
 
 **2026-09-26:** founder signed in with Apple on the real build (account
 u_152716…, nurgazy7@gmail.com); first transform on the real account ran; account seeded
@@ -178,6 +181,21 @@ all needed for TestFlight and none waits on a decision.**
 vacation coding ends). Home Mac: clone normally with personal credentials; recreate
 `.env.local` (4 API keys — gitignored, never on GitHub) and `data/retain.db` refills
 itself via the fetchers.
+
+### 2026-09-27 — Notes allowed beside words (D43)
+
+- Founder asked why the NZT-48 piece had substitutions/rephrases but no yellow notes. Log:
+  the model wrote one on-topic note (after "Memory Loss", stretch 7) and `sentence_guard`
+  deleted it because *grapple* was already in that stretch; stretches 6 and 8 stayed empty.
+- Founder ruling (D43): the stretch target is a floor — notes stay where a word already
+  is. Guard, prompt and SENTENCE_REQUEST changed; cap of one note per stretch kept; test
+  flipped; 30/30 tests pass; service restarted, healthz ok.
+- Rerun of the NZT-48 text 4× on the dev account (different 54-word list, ~$0.005): 5 words
+  each, 1 note kept (in an empty stretch), 7 notes dropped — 1 for a quote, 1 for a
+  QC-rejected word (astute), the rest "needs exactly one marked word". The D43 path (note
+  beside a word) was not hit live; only the unit test covers it.
+- Open: (1) gap-fill for stretches still empty after the guard; (2) why notes come back
+  without exactly one <mark> — inspect raw model output before changing anything.
 
 ### 2026-09-26 (night) — Engine switched to Gemma 4 26B (D42)
 

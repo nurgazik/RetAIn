@@ -29,9 +29,11 @@ sentences that now carry a target word and a few short notes (D40, below).
     the source's people did, said, or intend — the note is background, not news.
   - **Never define or explain the target word itself** — the reader recalls its meaning
     on their own; the note uses the word, it is not about the word.
-  - At most one note per stretch, and never in a stretch that already carries a word. The
-    note serves the sentence it follows — it must read as relevant background to it, not a
-    digression. If every note you can think of would be strained, leave the stretch empty.
+  - At most one note per stretch. Notes are not only for empty stretches: a stretch that
+    already carries a word may still take a note when it is genuinely relevant background
+    (D43) — more words are welcome as long as each is used well. The note serves the
+    sentence it follows — it must read as relevant background to it, not a digression. If
+    every note you can think of would be strained, add none.
   - Example. Source paragraph: "Tesla showed a new version of its Optimus robot folding
     laundry at its Fremont factory on Tuesday, a task the company called its hardest yet."
     Note after that sentence: `<aside>Industrial robot arms are <mark>ubiquitous</mark> on factory floors,

@@ -90,5 +90,5 @@ clipboard offer, Settings with spend, Sign in with Apple, shared session) · M3 
 sheet · M4 Safari page action · M5 single-word capture · M6 clipboard intake · Sentence-
 scoped engine mode with mechanical guard + underline · Popup stats + "Got it" · Dark mode ·
 Foreground refresh · Tailscale Funnel HTTPS · Paid Apple Developer membership (D39) ·
-Device verification of all of the above on the founder's iPhone · D41 revert-on-reject (sentence mode) · D40 three tiers in one call (substitute / rephrase / note) with ~120-word stretches · Reader: tier colours, bracket margin bars, tap hints, tap-to-reveal original, founder's dark palette · Safari clutter removal (Readability) · Demo piece `p_demo_283d0c28f2` in the founder's account.
+Device verification of all of the above on the founder's iPhone · D43 notes allowed in stretches that already carry a word (2026-09-27) · D41 revert-on-reject (sentence mode) · D40 three tiers in one call (substitute / rephrase / note) with ~120-word stretches · Reader: tier colours, bracket margin bars, tap hints, tap-to-reveal original, founder's dark palette · Safari clutter removal (Readability) · Demo piece `p_demo_283d0c28f2` in the founder's account.
 

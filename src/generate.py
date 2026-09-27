@@ -274,7 +274,9 @@ SENTENCE_REQUEST = ("place a candidate word by changing ONLY the sentence it lan
                     "stretch listed below must end up carrying at least one word (more is "
                     "welcome where each fits naturally): where a stretch has no natural slot, "
                     "add one <aside> note right after one of its sentences, as the system "
-                    "prompt describes; skip any candidate that fits neither way")
+                    "prompt describes. A stretch that already carries a word may still take "
+                    "one note where it is genuinely relevant background; skip any candidate "
+                    "that fits neither way")
 
 NOTE_RE = re.compile(r"<aside[^>]*>(.*?)</aside>", re.S)
 STRETCH_WORDS = 120  # D40: about one phone screen — no stretch this long without a word
@@ -386,8 +388,8 @@ def sentence_guard(source_text: str, body: str) -> tuple:
     edited_span with its tier and original); any other difference is reverted; sentences
     the model added are dropped; sentences it dropped are restored. D40 notes (<aside>,
     anywhere) are the one allowed addition: each is kept inline after the source sentence
-    it follows, only if its stretch has no word of its own and no other note, and it passes
-    note_problem. Returns (body, stats)."""
+    it follows if its stretch has no other note and it passes note_problem — a stretch
+    that already carries a word may still take one (D43). Returns (body, stats)."""
     import difflib
     src_s, para_of, stretch_of = source_sentences(source_text)
     n_paras = len(source_paragraphs(source_text))
@@ -450,17 +452,19 @@ def sentence_guard(source_text: str, body: str) -> tuple:
 
     worded = {stretch_of[i] for i, h in result.items() if "<mark>" in h}
     placed = {}  # source sentence index -> note html
+    noted = set()  # stretches that already hold a note — at most one each (D43)
     for n_before, note in notes:
         after = src_for.get(n_before - 1) if n_before and src_s else None
         sid = stretch_of[after] if after is not None else None
         why = ("nothing to follow" if after is None
-               else "its stretch already carries a word" if sid in worded
+               else "its stretch already has a note" if sid in noted
                else note_problem(note, source_text))
         if why:
             stats["notes_dropped"] += 1
             print(f"[note] dropped ({why}): \"{re.sub(r'<[^>]+>', '', note)[:110]}\"")
             continue
         placed[after] = note
+        noted.add(sid)
         worded.add(sid)
         stats["notes_kept"] += 1
     stats["stretches"] = (max(stretch_of) + 1) if stretch_of else 0

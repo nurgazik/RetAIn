@@ -84,10 +84,11 @@ def test_note_rules_drop_bad_notes():
         assert stats["notes_dropped"] == 1 and stats["notes_kept"] == 0, why
 
 
-def test_note_dropped_when_stretch_already_has_word():
+def test_note_kept_when_stretch_already_has_word():  # D43
     marked = LONG.replace("showed", "<mark>unveiled</mark>")
-    _, stats = G.sentence_guard(LONG, f"<p>{marked}</p>\n{NOTE}")
-    assert stats["notes_dropped"] == 1
+    out, stats = G.sentence_guard(LONG, f"<p>{marked}</p>\n{NOTE}")
+    assert stats["notes_kept"] == 1 and stats["notes_dropped"] == 0
+    assert "unveiled" in out and "note supplement" in out
 
 
 def test_rejected_note_word_drops_the_note():
