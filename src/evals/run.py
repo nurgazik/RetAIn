@@ -90,7 +90,7 @@ def run(name: str, only: list = None, resume: int = None, checks: bool = True, c
         seconds = time.time() - t0
         calls = list(G.CALL_LOG)
         cost = 0.0
-        for purpose, model, tin, tout, ms, billed, reasoning in calls:
+        for purpose, model, tin, tout, ms, billed, reasoning in (c[:7] for c in calls):
             c = results.call_cost(specs.get(model, spec), tin, tout, billed)
             cost += c
             con.execute("INSERT INTO calls VALUES (?,?,?,?,?,?,?,?,?)",

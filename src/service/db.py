@@ -69,7 +69,9 @@ CREATE TABLE IF NOT EXISTS calls (
     tokens_out INTEGER,
     usd        REAL,
     ms         INTEGER,
-    at         TEXT NOT NULL
+    at         TEXT NOT NULL,
+    response   TEXT,                -- the model's raw output, before any parsing or guard
+    prompt_sha TEXT                 -- first 12 hex of sha1(system prompt): which prompt version
 );
 """
 
@@ -92,7 +94,8 @@ def connect() -> sqlite3.Connection:
 def init() -> None:
     con = connect()
     con.executescript(SCHEMA)
-    for stmt in ("ALTER TABLE pieces ADD COLUMN meta TEXT", "ALTER TABLE calls ADD COLUMN ms INTEGER"):
+    for stmt in ("ALTER TABLE pieces ADD COLUMN meta TEXT", "ALTER TABLE calls ADD COLUMN ms INTEGER",
+                 "ALTER TABLE calls ADD COLUMN response TEXT", "ALTER TABLE calls ADD COLUMN prompt_sha TEXT"):
         try:  # migrations for DBs created before these columns
             con.execute(stmt)
         except sqlite3.OperationalError:
@@ -135,7 +138,8 @@ def learning_words(con, user_id: str) -> list:
 
 
 def record_calls(con, user_id: str, piece_id: str | None, calls: list, prices: dict) -> float:
-    """calls: [(purpose, model, tokens_in, tokens_out[, ms[, billed_usd]])] → rows in `calls`; returns USD total."""
+    """calls: [(purpose, model, tokens_in, tokens_out[, ms[, billed_usd[, reasoning, response, prompt_sha]]])]
+    → rows in `calls`; returns USD total."""
     total = 0.0
     with _lock:
         for c in calls:
@@ -145,7 +149,9 @@ def record_calls(con, user_id: str, piece_id: str | None, calls: list, prices: d
             billed = c[5] if len(c) > 5 else None  # OpenRouter reports the billed cost
             usd = billed if billed is not None else tin / 1e6 * p["in"] + tout / 1e6 * p["out"]
             total += usd
-            con.execute("INSERT INTO calls (user_id, piece_id, purpose, model, tokens_in, tokens_out, usd, ms, at) "
-                        "VALUES (?,?,?,?,?,?,?,?,?)", (user_id, piece_id, purpose, model, tin, tout, usd, ms, now()))
+            response, prompt_sha = (c[7], c[8]) if len(c) > 8 else (None, None)
+            con.execute("INSERT INTO calls (user_id, piece_id, purpose, model, tokens_in, tokens_out, usd, ms, at, "
+                        "response, prompt_sha) VALUES (?,?,?,?,?,?,?,?,?,?,?)",
+                        (user_id, piece_id, purpose, model, tin, tout, usd, ms, now(), response, prompt_sha))
         con.commit()
     return total

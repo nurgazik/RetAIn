@@ -8,6 +8,7 @@ Usage:
   python3 src/generate.py <item_id_substring> <wrapper.md> <word1,word2,...> [out.html]
 """
 
+import hashlib
 import html as html_mod
 import json
 import pathlib
@@ -530,7 +531,8 @@ def unmark_sentences(body: str, words: list) -> str:
     return re.sub(r"<(p|aside)>(.*?)</\1>", fix_para, body, flags=re.S)
 
 
-CALL_LOG = []  # (purpose, model, tokens_in, tokens_out, ms, billed_usd|None, reasoning_tokens) per call; the service drains it
+CALL_LOG = []  # (purpose, model, tokens_in, tokens_out, ms, billed_usd|None, reasoning_tokens,
+#               response text, prompt_sha) per call; the service drains it
 
 
 def call_model(system: str, user: str, env: dict, purpose: str = "generate") -> tuple:
@@ -548,7 +550,8 @@ def call_model(system: str, user: str, env: dict, purpose: str = "generate") -> 
         r = FALLBACK["call"](FALLBACK["model"], system, user, env[FALLBACK["key"]], FALLBACK.get("params"))
         model = FALLBACK["model"]
     CALL_LOG.append((purpose, model, r.get("tokens_in", 0), r.get("tokens_out", 0), int((_t.time() - _t0) * 1000),
-                     r.get("cost"), r.get("tokens_reasoning", 0)))
+                     r.get("cost"), r.get("tokens_reasoning", 0), r["text"],
+                     hashlib.sha1(system.encode()).hexdigest()[:12]))  # which system prompt produced it
     return r["text"], model
 
 

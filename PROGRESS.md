@@ -196,6 +196,15 @@ itself via the fetchers.
   beside a word) was not hit live; only the unit test covers it.
 - Open: (1) gap-fill for stretches still empty after the guard; (2) why notes come back
   without exactly one <mark> — inspect raw model output before changing anything.
+- Dev account's words replaced with a one-off copy of the founder's 235 (will drift).
+- **Raw model output now stored:** `calls.response` (text as returned, before parsing or
+  guard) + `calls.prompt_sha` (sha1 of the system prompt, 12 hex) for every call. No
+  retention limit yet — decide before other users (with P2).
+- **Bug found with it (unfixed, awaiting founder):** the model often `<mark>`s words that
+  are NOT on the user's list inside notes (plasticity, overload, cognitive). The guard
+  counts one mark and keeps the note; later the unlisted mark is unwrapped, so the reader
+  gets a yellow note with no target word — pure added text. Rerun p_205aa1f52b474d2c
+  shipped 3 such notes. Also explains many "needs exactly one marked word" drops.
 
 ### 2026-09-26 (night) — Engine switched to Gemma 4 26B (D42)
 
