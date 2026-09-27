@@ -44,6 +44,17 @@ def test_transform_lifecycle_and_events(client):
     assert me["spend_today_usd"] > 0
 
 
+def test_page_metadata_stored_for_header(client):
+    r = client.post("/v1/transform", json={"text": TEXT, "source": "test", "byline": "Arden McLeod",
+                                           "site_name": "CBC", "published": "2026-09-26T12:00:00.000Z",
+                                           "dek": "Summary line\n\nSub-headline"})
+    piece = client.get(f"/v1/pieces/{r.json()['piece_id']}").json()
+    assert (piece["byline"], piece["site_name"], piece["published"], piece["dek"]) == \
+        ("Arden McLeod", "CBC", "2026-09-26T12:00:00.000Z", "Summary line\n\nSub-headline")
+    bare = client.get(f"/v1/pieces/{client.post('/v1/transform', json={'text': TEXT}).json()['piece_id']}").json()
+    assert bare["byline"] is None and bare["dek"] is None
+
+
 def test_daily_cap(client):
     for _ in range(3):
         assert client.post("/v1/transform", json={"text": TEXT}).status_code == 202

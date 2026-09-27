@@ -21,6 +21,11 @@ struct Piece: Codable, Identifiable, Hashable {
     let url: String?
     let bodyHtml: String?
     let attrib: String?
+    // page metadata for the header (Safari shares); nil for other shares and older reads
+    var byline: String? = nil
+    var siteName: String? = nil
+    var published: String? = nil
+    var dek: String? = nil
     let offeredWords: [String]?
     let wordsUsed: [String]?
     let status: String

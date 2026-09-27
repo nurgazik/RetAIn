@@ -22,7 +22,8 @@ final class ShareViewController: UIViewController {
                                            "pageChars": input.pageText?.count ?? 0, "textChars": input.text?.count ?? 0,
                                            "extractor": input.extractor ?? "none",
                                            "build": Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? "?"]
-                root = AnyView(SheetView(text: text, title: input.title, url: input.url, source: source, meta: meta, onDone: done))
+                root = AnyView(SheetView(text: text, title: input.title, url: input.url, source: source, meta: meta,
+                                         sourceFields: input.sourceFields, onDone: done))
             } else {
                 let why = input.unusableReason
                 root = AnyView(MessageView(title: why.title, detail: why.detail, onDone: done))

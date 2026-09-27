@@ -9,6 +9,7 @@ struct SheetView: View {
     var url: String? = nil
     let source: String
     var meta: [String: Any]? = nil
+    var sourceFields: [String: String] = [:]
     let onDone: () -> Void
 
     enum Phase { case sending, working(String), done(Piece), failed(String) }
@@ -55,7 +56,8 @@ struct SheetView: View {
 
     private func run() async {
         do {
-            let accepted = try await RetAInClient.shared.transform(text: text, title: title, url: url, source: source, meta: meta)
+            let accepted = try await RetAInClient.shared.transform(text: text, title: title, url: url, source: source, meta: meta,
+                                                                          sourceFields: sourceFields)
             for try await ev in try RetAInClient.shared.events(pieceId: accepted.pieceId) {
                 switch ev {
                 case .phase(let p): phase = .working(p)

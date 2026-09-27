@@ -59,8 +59,11 @@ final class RetAInClient {
     }
 
     // MARK: transform
-    func transform(text: String, title: String?, url: String?, source: String, meta: [String: Any]? = nil) async throws -> TransformAccepted {
+    /// sourceFields: byline / site_name / published / dek — shown in the reader's header only.
+    func transform(text: String, title: String?, url: String?, source: String, meta: [String: Any]? = nil,
+                   sourceFields: [String: String] = [:]) async throws -> TransformAccepted {
         var body: [String: Any] = ["text": text, "title": title ?? "", "url": url ?? "", "source": source]
+        body.merge(sourceFields) { current, _ in current }
         if let meta { body["meta"] = meta }
         return try await send(request("v1/transform", method: "POST", body: body), as: TransformAccepted.self)
     }

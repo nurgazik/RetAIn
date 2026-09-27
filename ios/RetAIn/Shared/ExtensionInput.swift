@@ -9,6 +9,9 @@ struct ExtensionInput {
     var pageText: String?
     var selection: String?
     var extractor: String?   // Safari page script: "readability" or "innerText"
+    /// Page metadata from the Safari page script, for the reader's header (never the model):
+    /// request field → value, empty values left out.
+    var sourceFields: [String: String] = [:]
     var typeLog: [String] = []
     var source: String = "share-ext"
 
@@ -56,6 +59,10 @@ struct ExtensionInput {
                         r.pageText = res["text"] as? String
                         r.selection = res["selection"] as? String
                         r.extractor = res["extractor"] as? String
+                        for (key, field) in [("byline", "byline"), ("siteName", "site_name"),
+                                             ("publishedTime", "published"), ("dek", "dek")] {
+                            if let v = res[key] as? String, !v.isEmpty { r.sourceFields[field] = v }
+                        }
                         r.url = r.url ?? (res["url"] as? String)
                         r.title = r.title ?? (res["title"] as? String)
                     }

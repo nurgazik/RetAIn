@@ -7,6 +7,20 @@ import XCTest
 /// post the retain message.
 @MainActor
 final class ReaderPopupTests: XCTestCase {
+    /// Page metadata shows under the headline as the source had it: dek lines, then one
+    /// "byline · site · date" line; escaped, and absent entirely when a piece has none.
+    func testHeaderShowsDekAndSourceLine() {
+        let html = PieceHTML.page(title: "T", label: "Your read", body: "<p>b</p>", attrib: "a",
+                                  dek: "'Tip of the iceberg': more <b>could</b> follow\n\nSecond line",
+                                  byline: "Arden McLeod", siteName: "CBC", published: "2026-09-26T12:00:00.000Z")
+        XCTAssertTrue(html.contains("<p class=\"dek\">'Tip of the iceberg': more &lt;b&gt;could&lt;/b&gt; follow</p><p class=\"dek\">Second line</p>"))
+        XCTAssertTrue(html.contains("<div class=\"byline\">Arden McLeod · CBC · Sep 26, 2026</div>"))
+        let bare = PieceHTML.page(title: "T", label: "Your read", body: "<p>b</p>", attrib: "a")
+        XCTAssertFalse(bare.contains("class=\"standfirst\""))
+        XCTAssertEqual(PieceHTML.displayDate("2026-09-26"), "Sep 26, 2026")
+        XCTAssertNil(PieceHTML.displayDate("yesterday"))
+    }
+
     func testPopupShowsStatsAndPostsRetain() async throws {
         let html = PieceHTML.page(title: "T", label: "Your read",
                                   body: "<p>We <mark data-def=\"to support\">bolster</mark> it.</p>",

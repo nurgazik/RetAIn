@@ -4,8 +4,17 @@ import Foundation
 /// message to Swift on every highlight tap (so the tap reaches the served ledger).
 enum PieceHTML {
     /// stats: word (lowercased) → [id, servings]; drives "Seen N times" and "Got it".
-    static func page(title: String, label: String, body: String, attrib: String, stats: [String: [Int]] = [:]) -> String {
+    /// dek: the page's summary / sub-headline lines; byline, siteName, published: the source
+    /// line under them. All optional (only Safari shares carry them); shown, never rewritten.
+    static func page(title: String, label: String, body: String, attrib: String, stats: [String: [Int]] = [:],
+                     dek: String? = nil, byline: String? = nil, siteName: String? = nil, published: String? = nil) -> String {
         let statsJSON = (try? String(data: JSONSerialization.data(withJSONObject: stats), encoding: .utf8)) ?? "{}"
+        let dekHTML = (dek ?? "").components(separatedBy: "\n\n").map { $0.trimmingCharacters(in: .whitespaces) }
+            .filter { !$0.isEmpty }.map { "<p class=\"dek\">\(escape($0))</p>" }.joined()
+        let source = [byline, siteName, displayDate(published)].compactMap { $0?.trimmingCharacters(in: .whitespaces) }
+            .filter { !$0.isEmpty }
+        let sourceHTML = source.isEmpty ? "" : "<div class=\"byline\">\(escape(source.joined(separator: " · ")))</div>"
+        let header = dekHTML.isEmpty && sourceHTML.isEmpty ? "" : "<div class=\"standfirst\">\(dekHTML)\(sourceHTML)</div>"
         return """
         <!DOCTYPE html><html lang="en"><head><meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -17,6 +26,11 @@ enum PieceHTML {
           .kicker { font-family: -apple-system, sans-serif; font-size: .75rem; letter-spacing: .12em;
                     text-transform: uppercase; color: #8a6d3b; margin-bottom: .5rem; }
           h1 { font-size: 1.5rem; line-height: 1.25; margin: 0 0 1.25rem; }
+          /* the page's own summary, sub-headline and source line: shown as the source had them */
+          h1:has(+ .standfirst) { margin-bottom: .6rem; }
+          .standfirst { margin: 0 0 1.4rem; }
+          .dek { font-size: 1.05rem; line-height: 1.45; color: #5b5449; margin: 0 0 .5rem; }
+          .byline { font-family: -apple-system, sans-serif; font-size: .78rem; color: #6d675e; }
           p { margin: 0 0 1.1rem; font-size: 1rem; }
           mark { background: linear-gradient(transparent 55%, #ffe08a 55%); padding: 0 .1em; border-radius: 2px; }
           /* D40: no underlines — how a sentence was changed lives in the margin, per line */
@@ -59,6 +73,7 @@ enum PieceHTML {
           @media (prefers-color-scheme: dark) {
             body { background: #1c1a17; color: #ece7dd; }
             mark { background: linear-gradient(transparent 55%, #7a5d13 55%); color: inherit; }
+            .dek { color: #b9b1a4; } .byline { color: #a39c90; }
             .kicker { color: #c9a45c; } .attrib { color: #a39c90; border-top-color: #3a352e; } .attrib a { color: #c9a45c; }
             #pop { background: #faf8f4; color: #26221c; } #pop b { color: #8a6d3b; }
             /* founder's dark palette: neon bars; words on a dimmed block of the same colour */
@@ -70,7 +85,7 @@ enum PieceHTML {
             #hint { background: #2a2620; color: #ece7dd; border-color: #3f392f; box-shadow: 0 4px 14px rgba(0,0,0,.5); }
           }
         </style></head><body>
-        <div class="kicker">\(label)</div><h1>\(title)</h1>
+        <div class="kicker">\(label)</div><h1>\(title)</h1>\(header)
         \(body)
         <div class="attrib">\(attrib)</div>
         <div id="pop"></div>
@@ -173,5 +188,24 @@ enum PieceHTML {
           if (document.fonts) document.fonts.ready.then(drawBars);
         </script></body></html>
         """
+    }
+
+    private static func escape(_ s: String) -> String {
+        s.replacingOccurrences(of: "&", with: "&amp;").replacingOccurrences(of: "<", with: "&lt;")
+            .replacingOccurrences(of: ">", with: "&gt;").replacingOccurrences(of: "\"", with: "&quot;")
+    }
+
+    /// "2026-09-26T12:00:00.000Z" → "Sep 26, 2026"; nil when the page's date isn't ISO 8601.
+    static func displayDate(_ iso: String?) -> String? {
+        guard let iso, !iso.isEmpty else { return nil }
+        let f = ISO8601DateFormatter()
+        f.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        var date = f.date(from: iso)
+        if date == nil { f.formatOptions = [.withInternetDateTime]; date = f.date(from: iso) }
+        if date == nil { f.formatOptions = [.withFullDate]; date = f.date(from: String(iso.prefix(10))) }
+        guard let date else { return nil }
+        let out = DateFormatter()
+        out.locale = Locale(identifier: "en_US_POSIX"); out.dateFormat = "MMM d, yyyy"
+        return out.string(from: date)
     }
 }

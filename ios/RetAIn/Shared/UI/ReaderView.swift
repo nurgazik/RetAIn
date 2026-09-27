@@ -11,7 +11,9 @@ struct ReaderView: View {
         Group {
             if loaded {
                 PieceWebView(html: PieceHTML.page(title: piece.title ?? "", label: "Your read",
-                                                  body: piece.bodyHtml ?? "", attrib: piece.attrib ?? "", stats: stats),
+                                                  body: piece.bodyHtml ?? "", attrib: piece.attrib ?? "", stats: stats,
+                                                  dek: piece.dek, byline: piece.byline, siteName: piece.siteName,
+                                                  published: piece.published),
                              onTap: { word in Task { try? await RetAInClient.shared.tap(pieceId: piece.id, word: word) } },
                              onRetain: { word in
                                  guard let id = stats[word]?.first else { return }

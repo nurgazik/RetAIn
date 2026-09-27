@@ -146,6 +146,11 @@ class TransformIn(BaseModel):
     url: str | None = None
     source: str = "app"
     meta: dict | None = None   # client diagnostics, stored verbatim
+    # page metadata (Safari extension) for the reader's header; never sent to the model
+    byline: str | None = None
+    site_name: str | None = None
+    published: str | None = None
+    dek: str | None = None
 
 
 def _piece_out(r) -> dict:
@@ -170,11 +175,12 @@ def transform(body: TransformIn, user=Depends(auth.current_user)):
         if n_today >= DAILY_CAP:
             raise HTTPException(429, f"daily cap of {DAILY_CAP} transforms reached")
         pid = db.new_id("p")
-        con.execute("INSERT INTO pieces (id, user_id, created_at, source, title, url, source_text, status, meta) "
-                    "VALUES (?,?,?,?,?,?,?,?,?)",
+        con.execute("INSERT INTO pieces (id, user_id, created_at, source, title, url, source_text, status, meta, "
+                    "byline, site_name, published, dek) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)",
                     (pid, user["id"], db.now(), body.source, (body.title or "").strip() or None,
                      (body.url or "").strip() or None, text, "queued",
-                     json.dumps(body.meta) if body.meta else None))
+                     json.dumps(body.meta) if body.meta else None,
+                     *((v or "").strip()[:2000] or None for v in (body.byline, body.site_name, body.published, body.dek))))
         con.commit()
     finally:
         con.close()

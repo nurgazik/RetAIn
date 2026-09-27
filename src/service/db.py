@@ -41,7 +41,11 @@ CREATE TABLE IF NOT EXISTS pieces (
     error         TEXT,
     latency_ms    INTEGER,
     cost_usd      REAL,
-    meta          TEXT             -- JSON: client diagnostics (payload types, app build)
+    meta          TEXT,            -- JSON: client diagnostics (payload types, app build)
+    byline        TEXT,             -- page metadata from the Safari extension, shown in the
+    site_name     TEXT,             -- reader's header; never sent to the model
+    published     TEXT,
+    dek           TEXT              -- summary / sub-headline lines, blank-line separated
 );
 CREATE INDEX IF NOT EXISTS idx_pieces_user ON pieces (user_id, created_at);
 CREATE TABLE IF NOT EXISTS events (
@@ -95,7 +99,9 @@ def init() -> None:
     con = connect()
     con.executescript(SCHEMA)
     for stmt in ("ALTER TABLE pieces ADD COLUMN meta TEXT", "ALTER TABLE calls ADD COLUMN ms INTEGER",
-                 "ALTER TABLE calls ADD COLUMN response TEXT", "ALTER TABLE calls ADD COLUMN prompt_sha TEXT"):
+                 "ALTER TABLE calls ADD COLUMN response TEXT", "ALTER TABLE calls ADD COLUMN prompt_sha TEXT",
+                 "ALTER TABLE pieces ADD COLUMN byline TEXT", "ALTER TABLE pieces ADD COLUMN site_name TEXT",
+                 "ALTER TABLE pieces ADD COLUMN published TEXT", "ALTER TABLE pieces ADD COLUMN dek TEXT"):
         try:  # migrations for DBs created before these columns
             con.execute(stmt)
         except sqlite3.OperationalError:

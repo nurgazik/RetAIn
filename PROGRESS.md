@@ -24,6 +24,9 @@ original, tap a word for its meaning. Safari shares are cleaned by Mozilla Reada
 **Top open problem: density** — ~1.5–2 words per article; the model under-attempts and
 the checker rejects about half of its in-text words (backlog UX-1; test models via TD-13).
 **Next up:** founder's call on stretch length; model evals on surviving words per article.
+**2026-09-27 (D44):** Safari shares keep page metadata (byline, site, date, sub-headline)
+out of the body and show it as a reader header; never sent to the model. Needs a device
+re-share of a CBC article to confirm.
 **2026-09-27 (D43):** notes may now sit in a stretch that already has a word (max one
 note per stretch). Open: empty stretches get no second chance (gap-fill call proposed),
 and most notes die on "needs exactly one marked word".
@@ -181,6 +184,30 @@ all needed for TestFlight and none waits on a decision.**
 vacation coding ends). Home Mac: clone normally with personal credentials; recreate
 `.env.local` (4 API keys — gitignored, never on GitHub) and `data/retain.db` refills
 itself via the fetchers.
+
+### 2026-09-27 — Page metadata out of the body, into a reader header (D44, UX-11)
+
+- Founder flagged CBC piece `p_0344f5cd95bd43ba`: summary, sub-headline, "Posted | Last
+  Updated" line and an "audio version is AI-generated" note rendered as body paragraphs.
+  Diagnosis: all four were in `source_text` (extraction, not the model). Readability kept
+  CBC's header block; our 8-words-or-punctuation fragment rule passed it; and the byline /
+  site / date the page script already extracted were dropped by `ExtensionInput.swift`.
+  Sample: 4 of 8 readability pieces affected, all CBC.
+- Founder rejected an LLM cleanup call (it adds wait). Built, deterministic
+  (`ActionExt/RetAInPage.src.js`): short text the reader can't see (<80 words,
+  `checkVisibility`) is removed before Readability; the fragment rule now runs first; leading
+  datelines are dropped; a leading sub-headline, and a summary matching the page's meta
+  description, move to a `dek` field (the summary only when a sub-headline or dateline
+  confirms the header area, so a description that is just the lede stays in the body).
+- Byline, site, date and dek travel app → service (4 new nullable `pieces` columns) → reader
+  header under the headline ("Arden McLeod · CBC · Sep 26, 2026"). Never sent to the model.
+- Found on the real page: CBC hides its summary at every width (`display: none`), so it is
+  now dropped entirely, matching what CBC shows; the dek is the sub-headline only.
+- Verified: iOS unit tests 10/10 (new: CBC fixture cut from the real page; lede-stays test;
+  reader header + escaping); pytest 32/32; full real CBC page run in the simulator → body
+  starts at the story's first paragraph, byline/site/date/dek correct. Service restarted,
+  healthz ok, new fields returned. **Not yet on device**; existing pieces are unchanged
+  (re-share to see the fix). Safari UI test not run.
 
 ### 2026-09-27 — Reader font: New York + Dynamic Type (UX-9, partial)
 
