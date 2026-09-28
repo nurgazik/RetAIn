@@ -620,21 +620,23 @@ DENSITY_REQUEST = ("embed one in EVERY event block or paragraph where one sits n
 def generate_piece(con, item, wrapper_file: str, chosen: list, env: dict,
                    digest_date: str = None, density_floor: bool = True,
                    request: str = None, words: list = None, record: bool = True,
-                   progress=None) -> dict:
+                   progress=None, poc: bool = False) -> dict:
     """Full pipeline for one piece: prompt build, validation retry, QC with
     regeneration (D29), annotation. Records the piece; returns it.
     density_floor=False drops the D28 floor from the retry criteria (G2 measurement);
     request overrides the D28 density sentence in the user message.
     words: per-user word dicts (service); default = data/words.json (PoC).
     record=False skips the PoC ledger insert (the service keeps its own tables).
-    progress: optional callback(phase: str) for the app's "working the magic" moment."""
+    progress: optional callback(phase: str) for the app's "working the magic" moment.
+    poc: density PoC (2026-09-28, not in production) — salvage drafts with off-list marks
+    instead of ranking them last, and use the stricter-notes prompt variant."""
     if words is None:
         words = json.loads((ROOT / "data" / "words.json").read_text())["words"]
     progress = progress or (lambda phase: None)
     defs = {w["word"]: w["definition"] for w in words if w["word"] in chosen}
 
     system = ((ROOT / "prompts" / "core.md").read_text() + "\n\n---\n\n"
-              + (ROOT / "prompts" / wrapper_file).read_text())
+              + (ROOT / "prompts" / (wrapper_file.replace(".md", "-poc.md") if poc else wrapper_file)).read_text())
     source_text = re.sub(r"<[^>]+>", " ", item["content_html"])
     source_text = html_mod.unescape(re.sub(r"[ \t]+", " ", source_text)).strip()
 
@@ -671,6 +673,9 @@ def generate_piece(con, item, wrapper_file: str, chosen: list, env: dict,
     def parse(raw: str) -> dict:
         p = parse_output(raw)
         p["body"] = normalize_bc_years(p["body"])
+        if poc:  # revert only the sentences with off-list marks; the draft's valid words stay
+            p["body"] = unmark_sentences(p["body"], unlisted_marks(p["body"], defs))
+            p["marks"] = len(re.findall(r"<mark>", p["body"]))
         return p
 
     print(f"[gen] {item['id']} via {PRIMARY['model']}...")

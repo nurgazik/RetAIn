@@ -193,6 +193,22 @@ vacation coding ends). Home Mac: clone normally with personal credentials; recre
 `.env.local` (4 API keys — gitignored, never on GitHub) and `data/retain.db` refills
 itself via the fetchers.
 
+### 2026-09-28 — Density PoC: salvage drafts + stricter notes (no gain)
+
+Founder: 235 learning words, density still ~1–2 per piece. Hypothesis (from one piece,
+p_64e7: drafts of 9/8/2 marks shipped 2): (1) drafts with any off-list mark rank last,
+(2) notes come back without a target word. PoC behind `generate_piece(poc=True)` (off in
+production) + `prompts/transform-sentence-poc.md`; replay `spikes/density_poc.py` on the
+founder's 20 most recent distinct shares, 2 runs per mode (80 runs, $0.08).
+- **Density unchanged:** 2.33 → 2.30 words/piece; 0.49 per 100 source words both; 59%
+  stretches covered both. Long (>250 w, n=22 runs): 3.27 → 3.41. Short (n=18): 1.17 → 0.94.
+- Why (1) didn't help: production's retries on off-list marks were acting as extra rolls
+  (18 retries vs 2); salvaging saves calls, not words. p_64e7 was an unlucky roll.
+- Why (2) didn't help: the stricter note rule barely moved empty notes (25 → 23 drops).
+- Side effect: long pieces 21.6 s → 12.9 s, cost −22%. Checker reverts 6 → 13.
+- Conclusion: words aren't lost after the fact; the model under-attempts (~41% of stretches
+  get nothing). Levers left: stronger model (TD-13), stretch length, gap-fill call.
+
 ### 2026-09-28 — X reader via oEmbed (D47)
 
 - Founder's X share said "may need a login or a subscription" — our generic message. One probe:
