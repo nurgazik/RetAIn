@@ -30,17 +30,21 @@ struct TodaysWordsProvider: TimelineProvider {
         let e = current(); if context.isPreview, case .noCache = e.state { completion(.sample) } else { completion(e) }
     }
     func getTimeline(in context: Context, completion: @escaping (Timeline<TodaysWordsEntry>) -> Void) {
-        let midnight = Calendar.current.startOfDay(for: .now.addingTimeInterval(86_400))
-        completion(Timeline(entries: [current()], policy: .after(midnight)))
+        // Tomorrow's first word is scheduled for midnight, so the switch happens even if the
+        // system delays the reload it's asked for (reload times are only a request).
+        let cal = Calendar.current
+        let midnight = cal.date(byAdding: .day, value: 1, to: cal.startOfDay(for: .now))!
+        completion(Timeline(entries: [current(), entry(at: midnight)], policy: .after(midnight)))
     }
 
-    private func current() -> TodaysWordsEntry {
-        guard let all = WordsStore.load() else { return .init(date: .now, state: .noCache) }
-        let day = WordsStore.dayKey()
+    private func current() -> TodaysWordsEntry { entry(at: .now) }
+    private func entry(at date: Date) -> TodaysWordsEntry {
+        guard let all = WordsStore.load() else { return .init(date: date, state: .noCache) }
+        let day = WordsStore.dayKey(date)
         let today = WordsStore.todaysWords(from: all, day: day)
-        guard !today.isEmpty else { return .init(date: .now, state: .noLearning) }
+        guard !today.isEmpty else { return .init(date: date, state: .noLearning) }
         let i = min(WordsStore.position(day: day), today.count - 1)
-        return .init(date: .now, state: .word(today[i], index: i, count: today.count))
+        return .init(date: date, state: .word(today[i], index: i, count: today.count))
     }
 }
 
