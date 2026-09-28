@@ -24,7 +24,7 @@ original, tap a word for its meaning. Safari shares are cleaned by Mozilla Reada
 **Top open problem: density** — ~1.5–2 words per article; the model under-attempts and
 the checker rejects about half of its in-text words (backlog UX-1; test models via TD-13).
 **2026-09-28 (UX-14):** home-screen widget "Today's words" built — 5 learning words a day,
-one at a time with meaning, › to advance; awaits the founder's device check (install from Xcode).
+one at a time with meaning, › to advance; verified on the founder's phone. Bottom row reads "Today's words · n / 5".
 **Next up:** founder's call on stretch length; model evals on surviving words per article.
 **2026-09-27 (sharing, D45):** every app's Share button should work — one source at a time.
 Sharing is now one reader per source behind a router (`ios/RetAIn/Shared/Sharing/`): selection,

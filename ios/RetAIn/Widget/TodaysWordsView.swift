@@ -18,7 +18,7 @@ struct TodaysWordsView: View {
                     Text(w.definition).font(.subheadline).foregroundStyle(.secondary).lineLimit(3)
                     Spacer(minLength: 0)
                     HStack {
-                        Text("\(i + 1) / \(n)").font(.caption).foregroundStyle(.secondary).monospacedDigit()
+                        Text("Today's words · \(i + 1) / \(n)").font(.caption).foregroundStyle(.secondary).monospacedDigit()
                         Spacer()
                         if n > 1 {
                             Button(intent: NextWordIntent()) { Image(systemName: "chevron.right") }
