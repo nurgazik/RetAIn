@@ -210,3 +210,40 @@ direction (D33). All licenses below verified by fetching the cited page on 2026-
 License-tier note: 11 of 15 finds are CC0/PD (zero attribution burden); the CC BY-SA
 tier (Wikimedia family + PDR) inherits the share-alike posture already accepted for
 Global Voices; Wikiquote's fair-use-adjacent tier is the only weak one.
+
+## Dictionary sources for word cards (2026-09-27, PRD D48)
+
+Question: where does a word card's definition, pronunciation and sense list come from, given
+we store each word once and show it to every user (a shared cache)?
+
+**Chosen: Wiktionary via Wiktextract** (kaikki.org English extraction, CC BY-SA 4.0 + GFDL;
+comply under CC BY-SA). Downloaded 2026-09-25 build (3.3 GB JSONL) to `data/dictionary/`
+(gitignored). The pre-built file is marked "DEPRECATED, will be removed" — keep our copy; the
+fallback is running wiktextract (MIT) on the Wiktionary dump ourselves. Fields: senses in
+Wiktionary order with pos, glosses, tags (formal/slang/figuratively/archaic…), examples
+(`type`: example vs quotation), `form_of`/`alt_of` redirects, sounds (IPA with US/UK tags,
+ogg/mp3 URLs). Attribution: a link back to the wiktionary.org entry satisfies the license
+(Wiktionary:Copyrights). Share-alike covers adapted definitions, not our code or
+separately-authored fields (our reading, not legal advice — check before other users).
+
+Spike on the founder's 235 words (`spikes/wiktionary_coverage.py`, 33 s scan):
+235/235 found (belabor via belabour), IPA 233 (99%), audio 234 (100%), senses median 3
+after dropping archaic/obsolete/rare/dated (46 words still >5; undercut 17), a modern
+usage example for 145 (62%), quotations only 88, register tag 51 (22%). Weakness: sense
+order is historical, not learner-first (linchpin, nebulous, facade put the literal sense
+first). The list is established advanced vocabulary; slang/neologisms untested.
+
+Complements (open, commercial OK): CMUdict (US pronunciation fallback, unrestricted),
+Open English WordNet 2025 (CC BY 4.0, no IPA), CEFR-J A1–B2 + Octanove C1/C2 (levels),
+SUBTLEX-US (frequency).
+
+Ruled out:
+- **Commercial APIs** — no public plan allows a permanent shared cache: Oxford only on an
+  enterprise licence (from £5k/yr/language); Merriam-Webster (incl. Learner's) free key is
+  non-commercial and bars copying; Wordnik session-only caching; WordsAPI 24 h; Lexicala by
+  contact. Cambridge/Collins terms unverifiable (pages blocked).
+- **iOS system dictionary** — `UIReferenceLibraryViewController` only shows Apple's sheet;
+  no iOS API returns definition text (macOS-only `DCSCopyTextDefinition`); the content is
+  Oxford's, licensed to Apple.
+- **dictionaryapi.dev** — no data license, no SLA, returned HTTP 522 when tested.
+- **English Vocabulary Profile** — terms bar commercial use.
