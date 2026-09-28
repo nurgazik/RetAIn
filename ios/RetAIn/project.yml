@@ -40,6 +40,8 @@ targets:
         embed: true
       - target: RetAInAction
         embed: true
+      - target: RetAInWidget
+        embed: true
   RetAInShare:
     type: app-extension
     platform: iOS
@@ -99,6 +101,25 @@ targets:
               NSExtensionActivationSupportsText: true
               NSExtensionActivationSupportsWebURLWithMaxCount: 1
               NSExtensionActivationSupportsWebPageWithMaxCount: 1
+  RetAInWidget:
+    type: app-extension
+    platform: iOS
+    settings: {base: {PRODUCT_BUNDLE_IDENTIFIER: com.retain.app.widget}}
+    sources:                                                  # only what the widget needs: extensions have a small memory budget
+      - Widget
+      - Shared/API/Models.swift
+      - Shared/Store/SessionStore.swift
+      - Shared/Store/WordsStore.swift
+    entitlements:
+      path: Config/Widget.entitlements
+      properties:
+        com.apple.security.application-groups: [group.com.retain.app]
+    info:
+      path: Config/Widget-Info.plist
+      properties:
+        CFBundleDisplayName: RetAIn
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.widgetkit-extension
   RetAInTests:
     type: bundle.unit-test
     platform: iOS

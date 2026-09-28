@@ -1,4 +1,5 @@
 import SwiftUI
+import WidgetKit
 
 struct WordsView: View {
     @State private var words: [Word] = []
@@ -49,7 +50,10 @@ struct WordsView: View {
         }
     }
     private func load() async {
-        do { words = try await RetAInClient.shared.words(); error = nil } catch { self.error = error.localizedDescription }
+        do {
+            words = try await RetAInClient.shared.words(); error = nil
+            WordsStore.replaceAll(words); WidgetCenter.shared.reloadAllTimelines()
+        } catch { self.error = error.localizedDescription }
     }
     private func add() async {
         let w = newWord.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()

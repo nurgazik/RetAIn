@@ -23,6 +23,8 @@ founder's neon palette in dark mode; Figma "D" bar shapes, UX-13 done), tap a ba
 original, tap a word for its meaning. Safari shares are cleaned by Mozilla Readability.
 **Top open problem: density** — ~1.5–2 words per article; the model under-attempts and
 the checker rejects about half of its in-text words (backlog UX-1; test models via TD-13).
+**2026-09-28 (UX-14):** home-screen widget "Today's words" built — 5 learning words a day,
+one at a time with meaning, › to advance; awaits the founder's device check (install from Xcode).
 **Next up:** founder's call on stretch length; model evals on surviving words per article.
 **2026-09-27 (sharing, D45):** every app's Share button should work — one source at a time.
 Sharing is now one reader per source behind a router (`ios/RetAIn/Shared/Sharing/`): selection,
@@ -192,6 +194,23 @@ all needed for TestFlight and none waits on a decision.**
 vacation coding ends). Home Mac: clone normally with personal credentials; recreate
 `.env.local` (4 API keys — gitignored, never on GitHub) and `data/retain.db` refills
 itself via the fetchers.
+
+### 2026-09-28 — Home-screen widget: today's words (UX-14)
+
+- Founder asked for a swipeable 5-words-a-day widget. WidgetKit can't take swipes (only
+  button/toggle taps via App Intents), so: medium widget, one word at a time with part of
+  speech and meaning, "n / 5" counter, › button to advance (wraps). Learning words only;
+  meaning always shown (founder's calls). Founder waived the product discussion.
+- Structure: the phone had no copy of the word list, so the app now writes `/v1/words` to
+  `words.json` in the app group (`Shared/Store/WordsStore.swift`, same pattern as
+  `ReadsStore`) whenever it becomes active and whenever Words loads, then reloads the widget.
+  The widget picks today's 5 with a shuffle seeded by the local date (same set all day, new
+  at midnight); its position lives in app-group defaults. New target `RetAInWidget`
+  (`ios/RetAIn/Widget/`) compiles only the three Shared files it needs.
+- Apple docs confirm a widget button "always guarantee[s] a timeline reload".
+- Tests: `WordsStoreTests` 5/5 pass; full unit suite 30 tests, 3 skipped (no dev token),
+  1 failure = known TD-15 date bug. Not done: simulator home-screen check (adding a widget
+  needs manual gestures) — founder to add it on the phone after installing from Xcode.
 
 ### 2026-09-28 — Density PoC: salvage drafts + stricter notes (no gain)
 
