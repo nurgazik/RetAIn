@@ -34,6 +34,7 @@
 		4521A4A97A596BB9E182B1A9 /* WebPageReader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0481AC92CBA02B1813E439FC /* WebPageReader.swift */; };
 		479B2FD2A934B89023F81C6C /* WordsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BDC7D50B9741A715AB5990D5 /* WordsView.swift */; };
 		4E04A48BAD655B7D82550D32 /* RetAInClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 075C0D559D6C67C564CE18E8 /* RetAInClient.swift */; };
+		4E4D76C10835917DE7105946 /* RetAInShortcuts.swift in Sources */ = {isa = PBXBuildFile; fileRef = 77FDBCC5117DAF0F9F4BFF59 /* RetAInShortcuts.swift */; };
 		5275414800DBF2CB5B6CE524 /* NextWordIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A57E76970271F8BE0C34F12 /* NextWordIntent.swift */; };
 		53E51D41F4CF77B9F6961BAD /* ShareInput.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4E9A5365D42B838132B93A9 /* ShareInput.swift */; };
 		543BAF0C2C15D0BF4967C7DC /* RetAInAction.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 95771CB064C3DCC0F0FCE3EE /* RetAInAction.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
@@ -45,6 +46,8 @@
 		6B63945322A0948C73F7756C /* WordsStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BA2840B78F0910547681061B /* WordsStoreTests.swift */; };
 		6D66E70F1C5D5CBF4B89E2D6 /* PlainTextReader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3119962DDACEB36DE6A99A58 /* PlainTextReader.swift */; };
 		6D6BFDA781AD0B18826B28AA /* SheetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCC378FFCDCE34EEC4FDC93C /* SheetView.swift */; };
+		6E97B6EFEB3F480B80684A05 /* WordInput.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6D5EA44A1819CA367E35D593 /* WordInput.swift */; };
+		6F2E9C5F92700555A16AAC35 /* WordInput.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6D5EA44A1819CA367E35D593 /* WordInput.swift */; };
 		746B734785713EB4E9905B50 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7841D581AED07D5C5D9DA657 /* SettingsView.swift */; };
 		77DCB73ED87D31E044598367 /* ReadsStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = C31DA02FC3DE821DB8C935EB /* ReadsStore.swift */; };
 		7C7EDA928C5C5CC0E914F111 /* RetAInShare.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 293E390A139672E14211590E /* RetAInShare.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
@@ -57,6 +60,7 @@
 		86C449B356325FEB79D09E8D /* PieceHTML.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD249C58E4F455185FAFB480 /* PieceHTML.swift */; };
 		8A3E677E12E6DA721D319BC8 /* SheetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCC378FFCDCE34EEC4FDC93C /* SheetView.swift */; };
 		8B02FB1C710B62AA3F12B644 /* SSEReader.swift in Sources */ = {isa = PBXBuildFile; fileRef = F466E598D86A53E8A56E882B /* SSEReader.swift */; };
+		90E7F7DC6266D3D1FA981C44 /* WordInput.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6D5EA44A1819CA367E35D593 /* WordInput.swift */; };
 		92AAE41C5DC27F5A872013F7 /* WordCardTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 03A4D5946ACD43F89AC5B4DC /* WordCardTests.swift */; };
 		92DCDE64643B9828381448EF /* ReadsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A57D8FD6FE288C5B4C5DC0EF /* ReadsView.swift */; };
 		93464BF72D0E33AEB275D7F9 /* SourceReader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3990B0E5EE1BEBC61D4BBCEF /* SourceReader.swift */; };
@@ -89,6 +93,7 @@
 		E18EDEFDA1067F27D3791DCE /* SelectionReader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 845D026321A73AF82D70075B /* SelectionReader.swift */; };
 		E5271E9263BBB3740F9F822F /* FacebookReader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 50ADD8EE0AC3F92D504CDBF6 /* FacebookReader.swift */; };
 		E714FD5C7180A5B7AED0ACD3 /* WordCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1DC5A72E818D1C8038029AD0 /* WordCardView.swift */; };
+		E85385EAD0A79DE310275AF9 /* AddWordIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBED22FDEE6758F6AACE316C /* AddWordIntent.swift */; };
 		E8DF680845AF3B485293AF1D /* SessionStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC3A20A78E389B481F0B403E /* SessionStore.swift */; };
 		EBFC0BC84EB14AFE4C87A932 /* RetAInPage.js in Resources */ = {isa = PBXBuildFile; fileRef = 2D286AEEB8FABB1977DFEA0B /* RetAInPage.js */; };
 		EC4C8F3D2A95BF85296AD93F /* PieceWebView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9E0D70C43F12FCE9F01B048 /* PieceWebView.swift */; };
@@ -177,6 +182,8 @@
 		5469DA26719F2A9BF63488DA /* ShareViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareViewController.swift; sourceTree = "<group>"; };
 		551A718B4EDB1B76BAF6859F /* XReader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = XReader.swift; sourceTree = "<group>"; };
 		57DA24DE4F40E1FBFDECAFDA /* ReaderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReaderView.swift; sourceTree = "<group>"; };
+		6D5EA44A1819CA367E35D593 /* WordInput.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WordInput.swift; sourceTree = "<group>"; };
+		77FDBCC5117DAF0F9F4BFF59 /* RetAInShortcuts.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RetAInShortcuts.swift; sourceTree = "<group>"; };
 		7841D581AED07D5C5D9DA657 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		7C7CB8A1BE28B008906CDF1A /* RetAIn.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = RetAIn.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		845D026321A73AF82D70075B /* SelectionReader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SelectionReader.swift; sourceTree = "<group>"; };
@@ -191,6 +198,7 @@
 		BDC7D50B9741A715AB5990D5 /* WordsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WordsView.swift; sourceTree = "<group>"; };
 		C0F0AAD59DF3DC10A9A3B788 /* RetAInApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RetAInApp.swift; sourceTree = "<group>"; };
 		C31DA02FC3DE821DB8C935EB /* ReadsStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReadsStore.swift; sourceTree = "<group>"; };
+		CBED22FDEE6758F6AACE316C /* AddWordIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddWordIntent.swift; sourceTree = "<group>"; };
 		CC3A20A78E389B481F0B403E /* SessionStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionStore.swift; sourceTree = "<group>"; };
 		CCC378FFCDCE34EEC4FDC93C /* SheetView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SheetView.swift; sourceTree = "<group>"; };
 		D195EDAB7D89B0CFA8C9CB3E /* SafariPageReader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SafariPageReader.swift; sourceTree = "<group>"; };
@@ -258,6 +266,7 @@
 				E4E9A5365D42B838132B93A9 /* ShareInput.swift */,
 				3C2A57F69AB9CC53F9AF4AA3 /* ShareRouter.swift */,
 				3990B0E5EE1BEBC61D4BBCEF /* SourceReader.swift */,
+				6D5EA44A1819CA367E35D593 /* WordInput.swift */,
 				16468024AF6C257519B37638 /* Readers */,
 			);
 			path = Sharing;
@@ -298,6 +307,15 @@
 			path = Widget;
 			sourceTree = "<group>";
 		};
+		6E5A54CC0ADECD13C6E5BA7A /* Intents */ = {
+			isa = PBXGroup;
+			children = (
+				CBED22FDEE6758F6AACE316C /* AddWordIntent.swift */,
+				77FDBCC5117DAF0F9F4BFF59 /* RetAInShortcuts.swift */,
+			);
+			path = Intents;
+			sourceTree = "<group>";
+		};
 		8B9E696B74A4E85A58A0402B /* ShareExt */ = {
 			isa = PBXGroup;
 			children = (
@@ -316,6 +334,7 @@
 				B23933E956B42C4E8017AEC5 /* SignInView.swift */,
 				4E530360080D7321EA7C481E /* TransformView.swift */,
 				BDC7D50B9741A715AB5990D5 /* WordsView.swift */,
+				6E5A54CC0ADECD13C6E5BA7A /* Intents */,
 			);
 			path = App;
 			sourceTree = "<group>";
@@ -587,6 +606,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				E85385EAD0A79DE310275AF9 /* AddWordIntent.swift in Sources */,
 				E5271E9263BBB3740F9F822F /* FacebookReader.swift in Sources */,
 				1A2BF3817B25324FFD7DF7C7 /* Models.swift in Sources */,
 				A053AE96DCD60E2AABEFE9B7 /* PageLoader.swift in Sources */,
@@ -599,6 +619,7 @@
 				A9EDCA4423DBC667ECF56D47 /* RedditReader.swift in Sources */,
 				42688B5B403E04D31DCF81C0 /* RetAInApp.swift in Sources */,
 				B64BE8C3FA03C3C3D293126A /* RetAInClient.swift in Sources */,
+				4E4D76C10835917DE7105946 /* RetAInShortcuts.swift in Sources */,
 				5F2BFFF271819AD5A6FED9C7 /* RootView.swift in Sources */,
 				FD7C31DF8055378FA635F7F1 /* SSEReader.swift in Sources */,
 				851F263921EB1D504F1622D9 /* SafariPageReader.swift in Sources */,
@@ -613,6 +634,7 @@
 				D26A93182F443C460B706384 /* TransformView.swift in Sources */,
 				34C58729A57C23999AF1F640 /* WebPageReader.swift in Sources */,
 				C0B0AB6AF28349866D2E08A4 /* WordCardView.swift in Sources */,
+				6E97B6EFEB3F480B80684A05 /* WordInput.swift in Sources */,
 				0B9FA92238C5BD902DE4E127 /* WordsStore.swift in Sources */,
 				479B2FD2A934B89023F81C6C /* WordsView.swift in Sources */,
 				EF10916634731FB6750A1EBD /* XReader.swift in Sources */,
@@ -644,6 +666,7 @@
 				93464BF72D0E33AEB275D7F9 /* SourceReader.swift in Sources */,
 				4521A4A97A596BB9E182B1A9 /* WebPageReader.swift in Sources */,
 				8586B30820C3B4E353CDF595 /* WordCardView.swift in Sources */,
+				6F2E9C5F92700555A16AAC35 /* WordInput.swift in Sources */,
 				3EA804B1DB5CE827662A729C /* WordsStore.swift in Sources */,
 				ECC1495B1B3940D2A33B5036 /* XReader.swift in Sources */,
 			);
@@ -674,6 +697,7 @@
 				824F0F48455FC38A816CDD1A /* SourceReader.swift in Sources */,
 				438F59CF887FFF754A049541 /* WebPageReader.swift in Sources */,
 				E714FD5C7180A5B7AED0ACD3 /* WordCardView.swift in Sources */,
+				90E7F7DC6266D3D1FA981C44 /* WordInput.swift in Sources */,
 				809D5DA9F5627AC5D72925B9 /* WordsStore.swift in Sources */,
 				63389E0FCE56CB25BF608402 /* XReader.swift in Sources */,
 			);

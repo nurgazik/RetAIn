@@ -23,6 +23,9 @@ founder's neon palette in dark mode; Figma "D" bar shapes, UX-13 done), tap a ba
 original, tap a word for its meaning. Safari shares are cleaned by Mozilla Readability.
 **Top open problem: density** — ~1.5–2 words per article; the model under-attempts and
 the checker rejects about half of its in-text words (backlog UX-1; test models via TD-13).
+**2026-09-28 (D50, UX-15):** Siri capture built — "Hey Siri, add a word to RetAIn" → "Which word?"
+(Apple allows no free word inside the trigger phrase). Builds and unit-tests on the simulator;
+**not yet tried on the phone** (Siri, locked phone, time to answer on a new word).
 **2026-09-28 (UX-14):** home-screen widget "Today's words" built — 5 learning words a day,
 one at a time with meaning, › to advance; verified on the founder's phone. Bottom row reads "Today's words · n / 5".
 **Next up:** founder's call on stretch length; model evals on surviving words per article.
@@ -202,6 +205,29 @@ all needed for TestFlight and none waits on a decision.**
 vacation coding ends). Home Mac: clone normally with personal credentials; recreate
 `.env.local` (4 API keys — gitignored, never on GitHub) and `data/retain.db` refills
 itself via the fetchers.
+
+### 2026-09-28 — Siri word capture (D50, UX-15)
+
+- **Constraint found first:** "Hey Siri, add the word *X* to RetAIn" in one sentence can't be
+  built. App Shortcut phrases carry only values the app declares ahead of time (WWDC22: "it's not
+  possible to gather an arbitrary string from the user in the initial utterance"); iOS 27 App
+  Schemas cover fixed domains only. Founder approved the two-turn flow: "Add a word to RetAIn" →
+  "Which word?".
+- **Built:** `ios/RetAIn/App/Intents/AddWordIntent.swift` (asks for the word, re-asks if it isn't
+  one word, calls the existing `addWord`, refreshes the widget cache, speaks "Added X" or "Saved X,
+  but I couldn't find it in the dictionary. Check the spelling." for unverified words, shows a
+  small card) and `RetAInShortcuts.swift` (4 phrases). The share sheet's one-word rule moved to
+  `Shared/Sharing/WordInput.swift` so both paths use it; a punctuation-only share now gives no
+  capture instead of an empty word. Runs inside the app: no new target, entitlement or server change.
+- **Verified:** simulator build succeeds; the built app's App Intents metadata lists
+  `AddWordIntent` with all 4 phrases. Unit tests 34/35 pass, including the new rule test and the
+  existing share-capture test. The 1 failure is unrelated and older: the reader header shows
+  "Sep 25" for 2026-09-26 in Pacific time → logged as TD-18.
+- **Not verified yet (needs the phone):** Siri end to end, locked-phone run, and latency — a new
+  word waits for its card call (p50 3.7 s; the 5 s hedge caps the tail), and Siri's time limit
+  isn't confirmed. If too slow: return right after saving and let backfill build the card
+  (server change, founder decides). Device test list: common word, rare word (*sesquipedalian*),
+  a word already saved, a nonsense word.
 
 ### 2026-09-28 — Speed first: host order, Flash-Lite race, word-only live (D49)
 

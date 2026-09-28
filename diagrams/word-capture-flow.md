@@ -1,11 +1,14 @@
 # Word capture: where a word card comes from
 
-Decision: PRD D48 (2026-09-27). Research and spike numbers: `docs/content-sources.md`,
+Decisions: PRD D48 (2026-09-27); Siri entry point D50 (2026-09-28). Research and spike numbers: `docs/content-sources.md`,
 "Dictionary sources for word cards".
 
 ```mermaid
 flowchart TD
-    A([User adds a word]) --> B{Already in the<br/>shared list?}
+    SH([Share sheet:<br/>one highlighted word]) --> A
+    SI(["Siri: “Add a word to RetAIn”<br/>→ “Which word?”"]) --> A
+    WL([Word list:<br/>Add field]) --> A
+    A([POST /v1/words]) --> B{Already in the<br/>shared list?}
     B -- yes --> Z([Return the saved card<br/>no model call, instant])
     B -- no --> C["Look up in Wiktionary<br/>(stored on our server;<br/>follows ran→run and spelling variants)"]
     C -- found --> D["<b>From Wiktionary</b><br/>meanings in Wiktionary order<br/>part of speech · labels<br/>pronunciation · audio"]
@@ -25,6 +28,11 @@ flowchart TD
   Wiktionary whenever it has the word; the model never rewrites them. The model always writes
   the examples, because only 62% of the founder's 235 words have a modern Wiktionary example,
   usually on the literal sense.
+- **Three ways in, one server call.** Share sheet, Siri and the word list's Add field all
+  send the same request. The share sheet and Siri share one rule for what counts as a word
+  (`WordInput.normalize`: one word, up to 40 letters, lowercased, punctuation stripped).
+- **Siri's spelling check is the unverified flag.** A misheard word usually isn't in the
+  dictionary, so Siri says "check the spelling" and shows what it saved.
 - **At most one model call per new word, zero for a word already in the shared list.**
 - **Unverified words stay private.** They never enter the shared list, so one user's typo
   cannot become everyone's entry.

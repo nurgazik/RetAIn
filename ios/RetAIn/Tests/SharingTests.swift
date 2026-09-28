@@ -36,6 +36,16 @@ final class SharingTests: XCTestCase {
         guard case .unusable("Nothing to read here", _, "none") = await ShareRouter().route(input()) else { return XCTFail("empty") }
     }
 
+    /// One rule for the share sheet and Siri (AddWordIntent).
+    func testWordInputNormalize() {
+        XCTAssertEqual(WordInput.normalize("Obsequious."), "obsequious")
+        XCTAssertEqual(WordInput.normalize("  bolster\n"), "bolster")
+        XCTAssertNil(WordInput.normalize("the word"))
+        XCTAssertNil(WordInput.normalize("..."))
+        XCTAssertNil(WordInput.normalize(String(repeating: "a", count: 41)))
+        XCTAssertNil(WordInput.normalize(nil))
+    }
+
     func testSafariPageKeepsHeaderFields() async {
         let page: [String: Any] = ["text": Self.article, "title": "Archives swamped", "extractor": "readability",
                                    "byline": "Elizabeth Thompson", "siteName": "CBC", "dek": ""]

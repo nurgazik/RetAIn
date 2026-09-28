@@ -16,11 +16,7 @@ struct ShareInput {
         return u
     }
     /// A single shared word is a capture (M5), not a read.
-    var singleWord: String? {
-        guard let t = text?.trimmingCharacters(in: .whitespacesAndNewlines), !t.isEmpty,
-              t.count <= 40, !t.contains(" "), pageScript == nil else { return nil }
-        return t.lowercased().trimmingCharacters(in: .punctuationCharacters)
-    }
+    var singleWord: String? { pageScript == nil ? WordInput.normalize(text) : nil }
     /// Metadata only, never content.
     var diagnosticPayload: [String: Any] {
         ["types": typeLog, "textWords": Words.count(text), "pageWords": Words.count(pageScript?["text"] as? String),
