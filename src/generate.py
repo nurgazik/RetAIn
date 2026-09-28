@@ -127,12 +127,28 @@ Every marked word gets exactly one verdict. When genuinely unsure, fail it — t
 silently un-highlights failed words; a false demotion costs little, a bad usage costs trust."""
 
 
-def qc_gate(body: str, defs: dict, env: dict) -> list:
+RELAXED_QC_SYSTEM = """You are a native-English-speaker usage checker for an advanced ESL reading app.
+You receive reader-facing text in which target vocabulary words are wrapped in <mark> tags,
+plus the word list with definitions.
+
+Judge each MARKED word on one test — is it close enough? PASS a usage when the meaning is
+right and the sentence is grammatical, even if a native writer would more often choose
+another word, the collocation is less common, or the register is a notch too formal.
+FAIL only a usage a native speaker would correct: wrong meaning (the word does not mean
+this), wrong part of speech or ungrammatical, a collocation that is simply wrong
+("bolster my altitude"), or the wrong connotation ("windfall" for a loss).
+
+Output STRICT JSON only — no prose, no code fences:
+{"verdicts": [{"word": "<marked word as it appears>", "ok": true},
+              {"word": "...", "ok": false, "reason": "<short reason>"}]}
+Every marked word gets exactly one verdict."""
+
+def qc_gate(body: str, defs: dict, env: dict, system: str = QC_SYSTEM) -> list:
     """D19 gate: per-word native-writer check (~$0.0005/piece). Returns marked
     words to demote. Fails open — a judge error demotes nothing."""
     word_list = "\n".join(f"- {w}: {d}" for w, d in defs.items())
     try:
-        raw, _ = call_model(QC_SYSTEM, f"WORD LIST:\n{word_list}\n\nTEXT:\n{body}", env, purpose="qc")
+        raw, _ = call_model(system, f"WORD LIST:\n{word_list}\n\nTEXT:\n{body}", env, purpose="qc")
         raw = re.sub(r"^```(json)?\s*|\s*```$", "", raw.strip(), flags=re.M).strip()
         bad = [v for v in json.loads(raw)["verdicts"] if not v.get("ok")]
         for v in bad:
@@ -278,6 +294,10 @@ SENTENCE_REQUEST = ("place a candidate word by changing ONLY the sentence it lan
                     "prompt describes. A stretch that already carries a word may still take "
                     "one note where it is genuinely relevant background; skip any candidate "
                     "that fits neither way")
+
+RELAXED_REQUEST = SENTENCE_REQUEST.replace(
+    "(more is welcome where each fits naturally)",
+    "(more is welcome wherever the meaning is right, even if the fit is not perfect)")
 
 NOTE_RE = re.compile(r"<aside[^>]*>(.*?)</aside>", re.S)
 STRETCH_WORDS = 120  # D40: about one phone screen — no stretch this long without a word
@@ -495,12 +515,12 @@ def coverage_stats(body: str) -> dict:
     return {"tiers": tiers, "longest_gap_words": max(len(re.sub(r"<[^>]+>", " ", r).split()) for r in runs)}
 
 
-def run_judges(body: str, defs: dict, source_text: str, env: dict) -> tuple:
+def run_judges(body: str, defs: dict, source_text: str, env: dict, qc_system: str = QC_SYSTEM) -> tuple:
     """Idiomatic QC (D19) and the fact judge (D36) are independent: run them in parallel
     (~1 s saved per round). Returns (demoted_words, (invented_words, invented_unmarked))."""
     from concurrent.futures import ThreadPoolExecutor
     with ThreadPoolExecutor(max_workers=2) as ex:
-        f_qc = ex.submit(qc_gate, body, defs, env)
+        f_qc = ex.submit(qc_gate, body, defs, env, qc_system)
         f_fact = ex.submit(fact_qc, source_text, strip_notes(body), env)  # D40 notes are added by design
         return f_qc.result(), f_fact.result()
 
@@ -620,7 +640,7 @@ DENSITY_REQUEST = ("embed one in EVERY event block or paragraph where one sits n
 def generate_piece(con, item, wrapper_file: str, chosen: list, env: dict,
                    digest_date: str = None, density_floor: bool = True,
                    request: str = None, words: list = None, record: bool = True,
-                   progress=None, poc: bool = False) -> dict:
+                   progress=None, poc: bool = False, relaxed: bool = False) -> dict:
     """Full pipeline for one piece: prompt build, validation retry, QC with
     regeneration (D29), annotation. Records the piece; returns it.
     density_floor=False drops the D28 floor from the retry criteria (G2 measurement);
@@ -629,13 +649,15 @@ def generate_piece(con, item, wrapper_file: str, chosen: list, env: dict,
     record=False skips the PoC ledger insert (the service keeps its own tables).
     progress: optional callback(phase: str) for the app's "working the magic" moment.
     poc: density PoC (2026-09-28, not in production) — salvage drafts with off-list marks
-    instead of ranking them last, and use the stricter-notes prompt variant."""
+    instead of ranking them last, and use the stricter-notes prompt variant.
+    relaxed: usage PoC (2026-09-28, not in production) — "close enough" beats "idiomatic
+    only" in the writer prompt, the request and the usage checker."""
     if words is None:
         words = json.loads((ROOT / "data" / "words.json").read_text())["words"]
     progress = progress or (lambda phase: None)
     defs = {w["word"]: w["definition"] for w in words if w["word"] in chosen}
 
-    system = ((ROOT / "prompts" / "core.md").read_text() + "\n\n---\n\n"
+    system = ((ROOT / "prompts" / ("core-relaxed.md" if relaxed else "core.md")).read_text() + "\n\n---\n\n"
               + (ROOT / "prompts" / (wrapper_file.replace(".md", "-poc.md") if poc else wrapper_file)).read_text())
     source_text = re.sub(r"<[^>]+>", " ", item["content_html"])
     source_text = html_mod.unescape(re.sub(r"[ \t]+", " ", source_text)).strip()
@@ -717,7 +739,8 @@ def generate_piece(con, item, wrapper_file: str, chosen: list, env: dict,
     # usage AND confuses. Regenerate without the failed words; un-highlighting
     # is only the last-resort floor.
     progress("checking")
-    demoted, (invented_words, invented_unmarked) = run_judges(parsed["body"], defs, source_text, env)
+    demoted, (invented_words, invented_unmarked) = run_judges(parsed["body"], defs, source_text, env,
+                                                             RELAXED_QC_SYSTEM if relaxed else QC_SYSTEM)
     for w in invented_words:
         if not any(w.lower().startswith(d.strip().lower()[:6]) for d in demoted):
             demoted.append(w)

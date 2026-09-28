@@ -212,6 +212,24 @@ itself via the fetchers.
   1 failure = known TD-15 date bug. Not done: simulator home-screen check (adding a widget
   needs manual gestures) — founder to add it on the phone after installing from Xcode.
 
+### 2026-09-28 — Relaxed-usage PoC ("close enough" words)
+
+Founder's north star: each word used in the right context, repeatedly. PoC: writer prompt
+(`prompts/core-relaxed.md`), request (`RELAXED_REQUEST`) and usage checker
+(`RELAXED_QC_SYSTEM`) accept right-meaning-but-not-ideal usage; `generate_piece(relaxed=True)`,
+off in production. Replay: same 20 shares × 2 runs × {prod, relaxed} (80 runs, $0.10), then
+all 197 placed words blind-graded by a Claude helper (2 natural / 1 close enough / 0 wrong).
+- Words per 100 source words: 0.46 → 0.58 (+27%); stretches covered 83 → 101 of 144.
+- Graded usable (natural + close): 0.40 → 0.53 per 100 (+31%); natural only 0.30 → 0.34.
+- Wrong usages: prod 10/86 (12%), relaxed 11/111 (10%) — the rate did not rise.
+- The strict checker would have rejected 24/109 relaxed words; the grader called 6 of those
+  natural, 13 close, 7 wrong — the strict checker is noisy in both directions.
+- Cost: mean latency 14 s → 36 s (median 6 → 18 s; cause not isolated), $ +18%.
+- **Found: production already ships ~12% wrong usages** (deft tasks, tenuous gap, nascent
+  for "newest") **and puts words inside direct quotes** ("succinct" in an Iranian
+  diplomat's quote) — the checker and fact judge miss both.
+- Caveat: one AI grader, not yet checked against the founder's labels (TD-13).
+
 ### 2026-09-28 — Density PoC: salvage drafts + stricter notes (no gain)
 
 Founder: 235 learning words, density still ~1–2 per piece. Hypothesis (from one piece,
