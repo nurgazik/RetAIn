@@ -28,7 +28,7 @@ the checker rejects about half of its in-text words (backlog UX-1; test models v
 Sharing is now one reader per source behind a router (`ios/RetAIn/Shared/Sharing/`): selection,
 Safari page, plain text, Reddit (post or the linked comment), any web link (Chrome) — all
 verified on device. Facebook (D46) built: public posts read; private groups / friends-only
-posts get specific messages; device test pending. Next: X (needs research + a decision).
+posts get specific messages; verified on device. Next: X (needs research + a decision).
 Reddit terms risk accepted while the founder is the only user — revisit before others (D45).
 **2026-09-27 (D44):** Safari shares keep page metadata (byline, site, date, sub-headline)
 out of the body and show it as a reader header; never sent to the model. Verified on device.
@@ -211,8 +211,10 @@ itself via the fetchers.
   message. Full suite: 23 tests, only the D44 date test fails (known).
 - Process slip: removing a probe with `git checkout` wiped uncommitted tests in the same file;
   re-added. Probes now go in a separate throwaway file.
-- **Pending:** founder device test — share a public post, the group post and a friend's post
-  from the Facebook app straight to RetAIn.
+- **Verified on device 2026-09-28 (founder: "works well"):** a sponsored post (ad) from
+  Campers & Canopies BC was read (`facebook-post`), arriving as `public.plain-text` — confirms
+  Facebook shares links as text. One unusable Facebook share 16 s earlier; founder closed it,
+  no investigation.
 
 ### 2026-09-27 — Sharing rebuilt as readers per source; Reddit posts and comments (D45)
 
