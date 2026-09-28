@@ -15,7 +15,10 @@ struct TodaysWordsView: View {
                         if let pos = w.pos { Text(pos).font(.caption.smallCaps()).foregroundStyle(.secondary) }
                         Spacer()
                     }
-                    Text(w.definition).font(.subheadline).foregroundStyle(.secondary).lineLimit(3)
+                    Text(w.firstDefinition).font(.subheadline).foregroundStyle(.secondary).lineLimit(3)
+                    if let more = w.card.map({ $0.senses.count - 1 }), more > 0 {
+                        Text("+\(more) more meaning\(more == 1 ? "" : "s")").font(.caption2).foregroundStyle(.tertiary)
+                    }
                     Spacer(minLength: 0)
                     HStack {
                         Text("Today's words · \(i + 1) / \(n)").font(.caption).foregroundStyle(.secondary).monospacedDigit()
@@ -26,6 +29,7 @@ struct TodaysWordsView: View {
                         }
                     }
                 }
+                .widgetURL(WordLink.url(w.id))  // tap anywhere but the chevron: open this word in the app
             }
         }
         .containerBackground(.fill.tertiary, for: .widget)

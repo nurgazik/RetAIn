@@ -11,6 +11,25 @@ struct Word: Codable, Identifiable, Hashable {
     var status: String
     let added: String
     var servings: Int?
+    // D48: the shared word card, and whether the word was found anywhere. Optional so the
+    // widget's cached words.json from older builds still decodes.
+    var card: Card? = nil
+    var unverified: Bool? = nil
+
+    /// The widget's line and the list's subtitle: the card's first meaning, else the stored one.
+    var firstDefinition: String { card?.senses.first?.gloss ?? definition }
+    var isUnverified: Bool { unverified ?? false }
+}
+
+/// A word card (D48): meanings in Wiktionary's order, examples written by the model.
+struct Card: Codable, Hashable {
+    let headword: String
+    let source: String            // wiktionary | model
+    let ipa: [Pronunciation]
+    let sourceUrl: String?
+    let senses: [Sense]
+    struct Pronunciation: Codable, Hashable { let ipa: String; let tags: [String] }
+    struct Sense: Codable, Hashable { let pos: String?; let gloss: String; let tags: [String]; let examples: [String] }
 }
 
 struct Piece: Codable, Identifiable, Hashable {
@@ -59,5 +78,14 @@ enum APIError: LocalizedError {
         case .noSession: return "Not signed in"
         case .decode(let m): return "Bad response: \(m)"
         }
+    }
+}
+
+/// retain://word/<id> — the widget's tap target (the chevron still advances; UX-14).
+enum WordLink {
+    static func url(_ id: Int) -> URL { URL(string: "retain://word/\(id)")! }
+    static func id(from url: URL) -> Int? {
+        guard url.scheme == "retain", url.host() == "word" else { return nil }
+        return Int(url.lastPathComponent)
     }
 }

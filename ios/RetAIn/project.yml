@@ -35,6 +35,9 @@ targets:
         RETAIN_SERVER: $(RETAIN_SERVER)
         RETAIN_DEV_TOKEN: $(RETAIN_DEV_TOKEN)
         NSAppTransportSecurity: {NSAllowsLocalNetworking: true}
+        CFBundleURLTypes:                                     # retain://word/<id>: the widget opens a word
+          - CFBundleURLName: com.retain.app
+            CFBundleURLSchemes: [retain]
     dependencies:
       - target: RetAInShare
         embed: true

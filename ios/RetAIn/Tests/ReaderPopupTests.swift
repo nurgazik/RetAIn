@@ -21,33 +21,30 @@ final class ReaderPopupTests: XCTestCase {
         XCTAssertNil(PieceHTML.displayDate("yesterday"))
     }
 
-    func testPopupShowsStatsAndPostsRetain() async throws {
+    /// D48: a word tap opens the native card sheet: the page draws no popup, lifts the word
+    /// into the top half and posts the word to Swift (which also records the tap).
+    func testWordTapPostsToSwiftWithoutPopup() async throws {
         let html = PieceHTML.page(title: "T", label: "Your read",
-                                  body: "<p>We <mark data-def=\"to support\">bolster</mark> it.</p>",
-                                  attrib: "attrib", stats: ["bolster": [7, 2]])
+                                  body: "<p>We <mark data-def=\"to support\">bolster</mark> it.</p>", attrib: "attrib")
         let cfg = WKWebViewConfiguration()
         let sink = Sink()
         cfg.userContentController.add(sink, name: "tap")
-        cfg.userContentController.add(sink, name: "retain")
         let web = WKWebView(frame: CGRect(x: 0, y: 0, width: 390, height: 800), configuration: cfg)
         let nav = NavSink()
         web.navigationDelegate = nav
         web.loadHTMLString(html, baseURL: nil)
         try await nav.wait()
         _ = try await web.evaluateJavaScript("document.querySelector('mark').click(); true")
-        let popText = try await web.evaluateJavaScript("document.getElementById('pop').innerText") as? String ?? ""
-        XCTAssertTrue(popText.contains("bolster"), popText)
-        XCTAssertTrue(popText.contains("to support"), popText)
-        XCTAssertTrue(popText.contains("Seen 3 times"), popText)
-        XCTAssertTrue(popText.contains("Got it"), popText)
-        _ = try await web.evaluateJavaScript("document.querySelector('#pop button').click(); true")
         try await Task.sleep(nanoseconds: 300_000_000)
         XCTAssertEqual(sink.messages["tap"], "bolster")
-        XCTAssertEqual(sink.messages["retain"], "bolster")
+        let popShown = try await web.evaluateJavaScript("getComputedStyle(document.getElementById('pop')).display") as? String
+        XCTAssertEqual(popShown, "none")
+        let pad = try await web.evaluateJavaScript("document.body.style.paddingBottom") as? String
+        XCTAssertEqual(pad, "55vh", "the last lines can scroll above the sheet")
     }
 
-    /// D40: tapping the sentence reveals the original; tapping the word inside it still
-    /// shows the definition, not the original.
+    /// D40: tapping the sentence reveals the original; tapping the word inside it closes that
+    /// popup (the card opens natively instead, D48).
     func testSentenceTapRevealsOriginalWordTapShowsMeaning() async throws {
         let body = "<p><span class=\"edited rephrase\" data-tier=\"rephrase\" data-orig=\"They &quot;confirm&quot; it.\">"
             + "They <mark data-def=\"to support\">bolster</mark> it.</span> Rest.</p>"
@@ -62,12 +59,11 @@ final class ReaderPopupTests: XCTestCase {
         XCTAssertTrue(sentencePop.contains("Sentence rephrased"), sentencePop)
         XCTAssertTrue(sentencePop.contains("They \"confirm\" it."), sentencePop)
         _ = try await web.evaluateJavaScript("document.querySelector('mark').click(); true")
-        let wordPop = try await web.evaluateJavaScript("document.getElementById('pop').innerText") as? String ?? ""
-        XCTAssertTrue(wordPop.contains("to support"), wordPop)
-        XCTAssertFalse(wordPop.contains("original"), wordPop)
+        let wordPop = try await web.evaluateJavaScript("getComputedStyle(document.getElementById('pop')).display") as? String
+        XCTAssertEqual(wordPop, "none")
     }
 
-    /// D40: tapping a note says it was added by RetAIn; tapping its word shows the meaning.
+    /// D40: tapping a note says it was added by RetAIn; tapping its word closes that popup (D48).
     func testNoteTapExplainsOriginWordTapShowsMeaning() async throws {
         let body = "<p>Source sentence. <span class=\"note supplement\" data-tier=\"supplement\">"
             + "Robot arms are <mark data-def=\"found everywhere\">ubiquitous</mark> in factories.</span></p>"
@@ -81,9 +77,8 @@ final class ReaderPopupTests: XCTestCase {
         let notePop = try await web.evaluateJavaScript("document.getElementById('pop').innerText") as? String ?? ""
         XCTAssertTrue(notePop.contains("Added by RetAIn"), notePop)
         _ = try await web.evaluateJavaScript("document.querySelector('mark').click(); true")
-        let wordPop = try await web.evaluateJavaScript("document.getElementById('pop').innerText") as? String ?? ""
-        XCTAssertTrue(wordPop.contains("found everywhere"), wordPop)
-        XCTAssertFalse(wordPop.contains("Added by RetAIn"), wordPop)
+        let wordPop = try await web.evaluateJavaScript("getComputedStyle(document.getElementById('pop')).display") as? String
+        XCTAssertEqual(wordPop, "none")
     }
 
     /// D40: every tier gets a margin bar spanning its lines (distinct class per tier) and its own

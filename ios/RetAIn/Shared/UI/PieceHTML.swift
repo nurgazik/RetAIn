@@ -1,14 +1,13 @@
 import Foundation
 
-/// Reader page for a piece: same CSS as src/generate.py, tap-to-reveal popup, and a
-/// message to Swift on every highlight tap (so the tap reaches the served ledger).
+/// Reader page for a piece: same CSS as src/generate.py. A highlight tap scrolls the word into
+/// the top half and messages Swift, which records the tap and opens the word's card in a
+/// bottom sheet (D48); sentence and note taps keep their small in-page popups (D40).
 enum PieceHTML {
-    /// stats: word (lowercased) → [id, servings]; drives "Seen N times" and "Got it".
     /// dek: the page's summary / sub-headline lines; byline, siteName, published: the source
     /// line under them. All optional (only Safari shares carry them); shown, never rewritten.
-    static func page(title: String, label: String, body: String, attrib: String, stats: [String: [Int]] = [:],
+    static func page(title: String, label: String, body: String, attrib: String,
                      dek: String? = nil, byline: String? = nil, siteName: String? = nil, published: String? = nil) -> String {
-        let statsJSON = (try? String(data: JSONSerialization.data(withJSONObject: stats), encoding: .utf8)) ?? "{}"
         let dekHTML = (dek ?? "").components(separatedBy: "\n\n").map { $0.trimmingCharacters(in: .whitespaces) }
             .filter { !$0.isEmpty }.map { "<p class=\"dek\">\(escape($0))</p>" }.joined()
         let source = [byline, siteName, displayDate(published)].compactMap { $0?.trimmingCharacters(in: .whitespaces) }
@@ -63,10 +62,6 @@ enum PieceHTML {
                  background: #26221c; color: #faf8f4; border-radius: 8px; font-family: -apple-system, sans-serif;
                  font-size: .85rem; line-height: 1.45; }
           #pop b { color: #ffd76e; }
-          #pop .meta { display: block; margin-top: .4rem; font-size: .75rem; opacity: .8; }
-          #pop button { margin-top: .5rem; font: inherit; font-size: .8rem; padding: .3rem .7rem; border: 0;
-                        border-radius: 6px; background: #ffd76e; color: #26221c; }
-          #pop button:disabled { opacity: .6; }
           .attrib { margin-top: 2rem; padding-top: 1rem; border-top: 1px solid #ddd5c8;
                     font-family: -apple-system, sans-serif; font-size: .8rem; color: #6d675e; }
           .attrib a { color: #8a6d3b; }
@@ -92,24 +87,16 @@ enum PieceHTML {
         <div id="hint"></div>
         <script>
           const pop = document.getElementById('pop');
-          const stats = \(statsJSON);
-          function stem(w) { return w.trim().toLowerCase(); }
-          function statFor(w) { const k = Object.keys(stats).find(x => stem(w).startsWith(x.slice(0, 6))); return k ? {word: k, id: stats[k][0], n: stats[k][1]} : null; }
           document.querySelectorAll('mark').forEach(m => {
             m.addEventListener('click', e => {
               e.stopPropagation();
-              const s = statFor(m.textContent);
-              let html = '<b>' + m.textContent.trim() + '</b> — ' + (m.dataset.def || '');
-              if (s) {
-                html += '<span class="meta">Seen ' + (s.n + 1) + ' time' + (s.n === 0 ? '' : 's') + '</span>';
-                html += '<button onclick="event.stopPropagation(); this.disabled = true; this.textContent = \\'Marked retained\\'; try { window.webkit.messageHandlers.retain.postMessage(\\'' + s.word + '\\'); } catch (err) {}">Got it — mark retained</button>';
-              }
+              pop.style.display = 'none';
               document.getElementById('hint').style.display = 'none';
-              pop.innerHTML = html;
-              pop.style.display = 'block';
+              // the card sheet covers the bottom half: lift the word into the top quarter
+              // (the padding lets the last lines scroll that high)
+              document.body.style.paddingBottom = '55vh';
               const r = m.getBoundingClientRect();
-              pop.style.left = Math.min(r.left + window.scrollX, window.innerWidth - 300) + 'px';
-              pop.style.top = (r.bottom + window.scrollY + 8) + 'px';
+              window.scrollTo({top: r.top + window.scrollY - window.innerHeight * 0.25, behavior: 'smooth'});
               try { window.webkit.messageHandlers.tap.postMessage(m.textContent.trim()); } catch (err) {}
             });
           });

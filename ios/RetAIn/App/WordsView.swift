@@ -2,14 +2,17 @@ import SwiftUI
 import WidgetKit
 
 struct WordsView: View {
+    /// Set by a widget tap (retain://word/<id>): open that word's card once the list is loaded.
+    @Binding var openWordId: Int?
     @State private var words: [Word] = []
+    @State private var path: [Word] = []
     @State private var newWord = ""
     @State private var error: String?
     @State private var busy = false
     @Environment(\.scenePhase) private var scenePhase
 
     var body: some View {
-        NavigationStack {
+        NavigationStack(path: $path) {
             List {
                 Section {
                     HStack {
@@ -21,10 +24,14 @@ struct WordsView: View {
                 ForEach(groups, id: \.0) { status, list in
                     Section("\(status) · \(list.count)") {
                         ForEach(list) { w in
-                            NavigationLink { WordCardView(word: w) } label: {
+                            NavigationLink(value: w) {
                                 VStack(alignment: .leading) {
-                                    HStack { Text(w.word).font(.body.weight(.medium)); if let n = w.servings, n > 0 { Text("· \(n)").foregroundStyle(.secondary).font(.caption) } }
-                                    Text(w.definition).font(.caption).foregroundStyle(.secondary).lineLimit(1)
+                                    HStack {
+                                        Text(w.word).font(.body.weight(.medium))
+                                        if let n = w.servings, n > 0 { Text("· \(n)").foregroundStyle(.secondary).font(.caption) }
+                                        if w.isUnverified { Text("Unverified").font(.caption2).foregroundStyle(.orange) }
+                                    }
+                                    Text(w.firstDefinition).font(.caption).foregroundStyle(.secondary).lineLimit(1)
                                 }
                             }
                             .swipeActions(edge: .trailing) {
@@ -38,6 +45,11 @@ struct WordsView: View {
                 if let error { Text(error).foregroundStyle(.red).font(.caption) }
             }
             .navigationTitle("Words")
+            .navigationDestination(for: Word.self) { w in
+                WordCardView(word: w) { status in Task { await set(w, status); path.removeAll() } }
+            }
+            .onChange(of: openWordId, initial: true) { _, _ in openPending() }
+            .onChange(of: words) { _, _ in openPending() }
             .refreshable { await load() }
             .task { await load() }
             .onChange(of: scenePhase) { _, phase in if phase == .active { Task { await load() } } }
@@ -48,6 +60,10 @@ struct WordsView: View {
         ["learning", "retained", "archived"].compactMap { s in
             let l = words.filter { $0.status == s }; return l.isEmpty ? nil : (s, l)
         }
+    }
+    private func openPending() {
+        guard let id = openWordId, let w = words.first(where: { $0.id == id }) else { return }
+        path = [w]; openWordId = nil
     }
     private func load() async {
         do {

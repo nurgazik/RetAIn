@@ -57,6 +57,7 @@
 		86C449B356325FEB79D09E8D /* PieceHTML.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD249C58E4F455185FAFB480 /* PieceHTML.swift */; };
 		8A3E677E12E6DA721D319BC8 /* SheetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCC378FFCDCE34EEC4FDC93C /* SheetView.swift */; };
 		8B02FB1C710B62AA3F12B644 /* SSEReader.swift in Sources */ = {isa = PBXBuildFile; fileRef = F466E598D86A53E8A56E882B /* SSEReader.swift */; };
+		92AAE41C5DC27F5A872013F7 /* WordCardTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 03A4D5946ACD43F89AC5B4DC /* WordCardTests.swift */; };
 		92DCDE64643B9828381448EF /* ReadsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A57D8FD6FE288C5B4C5DC0EF /* ReadsView.swift */; };
 		93464BF72D0E33AEB275D7F9 /* SourceReader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3990B0E5EE1BEBC61D4BBCEF /* SourceReader.swift */; };
 		96CA112C33821E0F979A0FF6 /* SessionStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC3A20A78E389B481F0B403E /* SessionStore.swift */; };
@@ -156,6 +157,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		03A4D5946ACD43F89AC5B4DC /* WordCardTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WordCardTests.swift; sourceTree = "<group>"; };
 		03CDB054F8240845A6CD296E /* TodaysWordsWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TodaysWordsWidget.swift; sourceTree = "<group>"; };
 		0481AC92CBA02B1813E439FC /* WebPageReader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebPageReader.swift; sourceTree = "<group>"; };
 		075C0D559D6C67C564CE18E8 /* RetAInClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RetAInClient.swift; sourceTree = "<group>"; };
@@ -268,6 +270,7 @@
 				B8B9A94628B0384203AE3601 /* ReaderPopupTests.swift */,
 				8890CC0A9D4FE57E778ECA7A /* RetAInClientTests.swift */,
 				3937445F467B7669CD60B2ED /* SharingTests.swift */,
+				03A4D5946ACD43F89AC5B4DC /* WordCardTests.swift */,
 				BA2840B78F0910547681061B /* WordsStoreTests.swift */,
 			);
 			path = Tests;
@@ -562,6 +565,7 @@
 				D69A4F6818AD70AF2E4B910A /* ReaderPopupTests.swift in Sources */,
 				9937DD134003DC360C00EC77 /* RetAInClientTests.swift in Sources */,
 				7DF62037302C0DAEF1B9ABB2 /* SharingTests.swift in Sources */,
+				92AAE41C5DC27F5A872013F7 /* WordCardTests.swift in Sources */,
 				6B63945322A0948C73F7756C /* WordsStoreTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
