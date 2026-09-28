@@ -4,6 +4,11 @@
 day (list at the end). Terms and technical assessment, not legal advice. Backlog item G3 in
 docs/poc2-transform.md §8; founder ruling → PRD D37.*
 
+> **Update 2026-09-28:** the founder has since chosen to read shared links **on the phone**,
+> accepting the terms risk below while he is the only user: Reddit (PRD D45), Facebook public
+> posts (D46), X via oEmbed (D47). Revisit before anyone else uses the app (backlog AD-10).
+> The findings below still stand as the risk record.
+
 ## Headline
 
 Neither Reddit nor X offers a free, terms-compliant way for a consumer iOS app to fetch a

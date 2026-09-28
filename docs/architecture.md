@@ -145,3 +145,34 @@ multi-region, admin UI. Rate limits beyond the daily cap.
 `curl` can sign in with a test token, add words, post a transform, watch the events stream
 end with a piece, list pieces, and record a tap — all on HTTPS from the phone via the
 Funnel URL — and every model call has a row in `calls` with a dollar figure.
+
+# Sharing on the phone (D45–D47, 2026-09-27/28)
+
+Everything a user shares reaches the transform through one pipeline in
+`ios/RetAIn/Shared/Sharing/`, used by both the share extension and the Safari action:
+
+```
+host app ─► ShareInput (what arrived: text / link / Safari page-script results)
+              │  a link sent as text is promoted to a link (Facebook does this)
+              ▼
+           ShareRouter ─► asks SourceReaders in order; the first to claim the share reads it
+              │   Selection → SafariPage → PlainText → Reddit → Facebook → X → WebPage
+              ▼
+           ShareRead (text, title, url, header fields, extractor, notice)  or  a message
+              ▼
+           SheetView → POST /v1/transform (meta carries reader + extractor for diagnostics)
+```
+
+- **Strategy pattern:** one `SourceReader` per source (`Readers/`), so a source's quirks stay
+  in one file; a new source is one file plus one line in `ShareRouter.readers`.
+- **PageLoader:** a hidden WKWebView with no cookies. It polls the reader's own "ready" test
+  rather than trusting the first load (Reddit serves a script check page first). No login is
+  available, so paywalls, private groups and friends-only posts can't be read, and each reader
+  explains that in its own terms.
+- **X** blocks embedded web views (redirect to `x-safari-https://`), so `XReader` uses X's
+  oEmbed endpoint and no web view; long posts arrive cut and the sheet points to Safari.
+- **Links are never fetched by the server.** The phone reads the page; the server only ever
+  receives text.
+- Tests: `ios/RetAIn/Tests/SharingTests.swift` (saved pages per source; opt-in live links with
+  `TEST_RUNNER_RETAIN_NET_PROBE=1`).
+

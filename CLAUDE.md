@@ -66,7 +66,10 @@ in `spikes/`.
   ~$0.001/piece, self-checking; fallback gemini-3.1-flash-lite (PRD D42, docs/model-bakeoff.md).
   Model changes go through `src/evals` first. QC gate is ON (D19);
   check its revisit triggers before MVP work or model changes.
-- Scope guards: link intake is out (D37); engine mode is rewrite with relaxed fidelity
+- Scope guards: shared links are read **on the phone** by one reader per source
+  (`ios/RetAIn/Shared/Sharing/`): Reddit (D45), Facebook public posts (D46), X via oEmbed
+  (D47), any web page; the server never fetches links. D45–D47 hold only while the founder is
+  the only user — revisit the terms before anyone else installs the app. Engine mode is rewrite with relaxed fidelity
   and the fact judge (D36); monetization undecided (P2) — decide before anyone but the
   founder uses the product; no Anthropic model runs unless the founder asks (cost).
 - Service secrets live in `.env.local` (`RETAIN_SESSION_SECRET`, `RETAIN_DEV_TOKEN`,

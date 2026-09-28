@@ -6,7 +6,7 @@ first. Decisions live in PRD.md's log (D1–D34); this file is the narrative tim
 
 ---
 
-## NOW (as of 2026-09-27)
+## NOW (as of 2026-09-28)
 
 **Phase: MVP build (Phase 2) — M1–M6 built and verified on the founder's phone; Sign in
 with Apple live; membership active; M8 (monetization) and M9 (TestFlight) remain.**
@@ -30,7 +30,9 @@ Safari page, plain text, Reddit (post or the linked comment), any web link (Chro
 verified on device. Facebook (D46) built: public posts read; private groups / friends-only
 posts get specific messages; verified on device. X (D47) via oEmbed, verified on device —
 long posts arrive cut; the sheet points to Safari, which gets the full post.
-Reddit terms risk accepted while the founder is the only user — revisit before others (D45).
+Reddit, Meta and X terms risks accepted while the founder is the only user — **revisit before
+anyone else installs the app, TestFlight included** (backlog AD-10). Open bug: date-only
+publish dates show a day early (TD-15).
 **2026-09-27 (D44):** Safari shares keep page metadata (byline, site, date, sub-headline)
 out of the body and show it as a reader header; never sent to the model. Verified on device.
 **2026-09-27 (D43):** notes may now sit in a stretch that already has a word (max one
