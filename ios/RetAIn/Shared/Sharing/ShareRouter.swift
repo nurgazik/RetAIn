@@ -17,6 +17,7 @@ struct ShareRouter {
         PlainTextReader(),    // text shared from any app
         RedditReader(),       // reddit links: the post, or the comment the link points to
         FacebookReader(),     // facebook links: public posts; private groups and logins explained
+        XReader(),            // x links: X's oEmbed (X blocks web views); long posts arrive cut
         WebPageReader(),      // any other web link (Chrome, other apps' Share buttons)
     ]
 

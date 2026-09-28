@@ -28,7 +28,8 @@ the checker rejects about half of its in-text words (backlog UX-1; test models v
 Sharing is now one reader per source behind a router (`ios/RetAIn/Shared/Sharing/`): selection,
 Safari page, plain text, Reddit (post or the linked comment), any web link (Chrome) — all
 verified on device. Facebook (D46) built: public posts read; private groups / friends-only
-posts get specific messages; verified on device. Next: X (needs research + a decision).
+posts get specific messages; verified on device. X (D47) via oEmbed built — long posts
+arrive cut at ~280 chars; device test pending.
 Reddit terms risk accepted while the founder is the only user — revisit before others (D45).
 **2026-09-27 (D44):** Safari shares keep page metadata (byline, site, date, sub-headline)
 out of the body and show it as a reader header; never sent to the model. Verified on device.
@@ -189,6 +190,22 @@ all needed for TestFlight and none waits on a decision.**
 vacation coding ends). Home Mac: clone normally with personal credentials; recreate
 `.env.local` (4 API keys — gitignored, never on GitHub) and `data/retain.db` refills
 itself via the fetchers.
+
+### 2026-09-28 — X reader via oEmbed (D47)
+
+- Founder's X share said "may need a login or a subscription" — our generic message. One probe:
+  X redirects embedded web views to `x-safari-https://redirect.x.com/…` ("open in Safari"), so
+  the hidden view fails at once. Disguising it as Safari was offered as possible and advised
+  against (getting around a deliberate block); founder chose X's oEmbed instead, as it's free.
+- Checked docs.x.com: oEmbed needs no login, no payment, no rate limit. One request for his
+  post: 200, author + text, cut at ~280 chars ("executing similar… https://t.co/…").
+- Built `XReader` (no web view): oEmbed JSON → the embed's <p> as text (line breaks kept;
+  Apple's HTML import turns <br> into U+2028, normalized), trailing t.co link dropped,
+  `x-oembed-cut` when it ends "…". Messages: not public (404), not a single post, short post.
+- Tests: 2 new (cut post from X's real response; 404 / profile link / short post); 15 sharing
+  tests pass. Live, 7 links: X 45 words 0.2 s; Reddit, Chrome, Facebook unchanged.
+- Probes now live in a throwaway `Tests/ZZProbeTests.swift`, moved out after use.
+- **Pending:** founder device test from the X app.
 
 ### 2026-09-27 — Facebook reader (D46)
 

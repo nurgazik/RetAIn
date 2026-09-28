@@ -196,14 +196,45 @@ final class SharingTests: XCTestCase {
         XCTAssertNil(words.url)
     }
 
+    // MARK: X
+
+    /// X's oEmbed response for a cut post (2026-09-27), as served.
+    private static let xEmbed = #"{"url":"https:\/\/x.com\/JesseTinsley\/status\/2104032613124178423","author_name":"Jesse Tinsley","author_url":"https:\/\/x.com\/JesseTinsley","html":"\u003Cblockquote class=\"twitter-tweet\" data-dnt=\"true\"\u003E\u003Cp lang=\"en\" dir=\"ltr\"\u003EWhile I hate that Greg is exposing this alpha publicly...\u003Cbr\u003E\u003Cbr\u003EHe&#39;s right. \u003Cbr\u003E\u003Cbr\u003EThe tough part is not seeing this trend anymore now that Mainstreet has scaled to 9 figures in ARR through this strategy, Bending Spoons IPO this year, Thrive and General Catalyst executing similar\u2026 \u003Ca href=\"https:\/\/t.co\/hLXvDPu15U\"\u003Ehttps:\/\/t.co\/hLXvDPu15U\u003C\/a\u003E\u003C\/p\u003E&mdash; Jesse Tinsley (@JesseTinsley) \u003Ca href=\"https:\/\/x.com\/JesseTinsley\/status\/2104032613124178423?ref_src=twsrc%5Etfw\"\u003ESeptember 27, 2026\u003C\/a\u003E\u003C\/blockquote\u003E\n\n","type":"rich","provider_name":"X","version":"1.0"}"#
+    private func x(_ url: String, body: String = xEmbed, status: Int = 200) async -> ReaderResult {
+        var reader = XReader()
+        reader.fetch = { u in
+            XCTAssertTrue(u.absoluteString.hasPrefix("https://publish.x.com/oembed?url="), u.absoluteString)
+            return (Data(body.utf8), status)
+        }
+        return await reader.read(input(url: url))
+    }
+
+    func testXPostFromOEmbed() async {
+        guard case .text(let r) = await x("https://x.com/jessetinsley/status/2104032613124178423?s=46") else { return XCTFail() }
+        XCTAssertEqual(r.extractor, "x-oembed-cut")
+        XCTAssertTrue(r.text.hasPrefix("While I hate that Greg is exposing this alpha publicly...\n\nHe's right."), r.text)
+        XCTAssertTrue(r.text.hasSuffix("executing similar…"), r.text)       // t.co link dropped, cut marker kept
+        XCTAssertEqual(r.sourceFields, ["byline": "Jesse Tinsley (@JesseTinsley)", "site_name": "X"])
+        XCTAssertEqual(r.title, "Jesse Tinsley on X")
+    }
+
+    func testXFailuresExplainThemselves() async {
+        guard case .unusable("This post isn't public", _) = await x("https://x.com/a/status/1", body: "", status: 404) else { return XCTFail("404") }
+        guard case .unusable("Share a single post", _) = await x("https://x.com/jessetinsley") else { return XCTFail("profile") }
+        let short = Self.xEmbed.replacingOccurrences(of: #"While I hate"#, with: "Short.\\u003C\\/p\\u003E\\u003Cp\\u003E")
+        guard case .unusable("A short post", _) = await x("https://x.com/a/status/1", body: short) else { return XCTFail("short") }
+        XCTAssertEqual(claimant(input(url: "https://twitter.com/a/status/1")), "x")
+    }
+
     /// Real sites over the network; opt-in (RETAIN_NET_PROBE=1) since it depends on them.
     func testLiveLinks() async throws {
         guard ProcessInfo.processInfo.environment["RETAIN_NET_PROBE"] == "1" else { throw XCTSkip("RETAIN_NET_PROBE not set") }
         let web = WebPageReader(script: Self.pageScript)
-        let router = ShareRouter(readers: [RedditReader(), FacebookReader(), web])
+        let router = ShareRouter(readers: [RedditReader(), FacebookReader(), XReader(), web])
         for s in ["https://www.reddit.com/r/ClaudeAI/s/nlvL3JzYxD", "https://www.reddit.com/r/economy/s/RP0roaa0QK",
                   "https://en.wikipedia.org/wiki/Readability", "https://www.facebook.com/share/1DZxoEEMzn/?mibextid=wwXIfr",
-                  "https://www.facebook.com/share/p/189EK24aX6/?mibextid=wwXIfr", "https://www.facebook.com/share/p/189qwrP5XX/?mibextid=wwXIfr"] {
+                  "https://www.facebook.com/share/p/189EK24aX6/?mibextid=wwXIfr", "https://www.facebook.com/share/p/189qwrP5XX/?mibextid=wwXIfr",
+                  "https://x.com/jessetinsley/status/2104032613124178423?s=46"] {
             let t0 = Date()
             let out: String
             switch await router.route(input(url: s)) {
