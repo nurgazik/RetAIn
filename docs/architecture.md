@@ -176,3 +176,57 @@ host app ─► ShareInput (what arrived: text / link / Safari page-script resul
 - Tests: `ios/RetAIn/Tests/SharingTests.swift` (saved pages per source; opt-in live links with
   `TEST_RUNNER_RETAIN_NET_PROBE=1`).
 
+
+# Word cards from Wiktionary (D48, UX-4) — proposed 2026-09-27, awaiting founder yes
+
+Flow diagram: `diagrams/word-capture-flow.md`. Source research: `docs/content-sources.md`.
+
+## What it is
+
+When a word is added, the service builds its card once and shares it with every later user
+who adds the same word. The dictionary provides facts (meanings, part of speech, labels,
+pronunciation); the model writes 2–3 modern examples per meaning. Words the dictionary lacks
+are checked by the model; words nobody recognises are saved privately as unverified.
+
+## Decisions proposed (what / why / standard practice?)
+
+| Area | Proposal | Why | Standard? |
+|---|---|---|---|
+| Dictionary storage | **Separate read-only SQLite file `data/dictionary/wiktionary.db`**: one row per lowercase headword → trimmed JSON (senses, tags, examples, form_of/alt_of, IPA, audio URLs). Built once by `python -m service.dictionary build <dump.jsonl>`; gitignored; rebuilt when we refresh the dump. | Reference data is not app state: rebuilt wholesale, never written by the service, keeps `service.db` small and its backups cheap. Lookup is one indexed read (ms). Scanning the 3.3 GB file per capture takes 33 s. | Yes — a read-only reference DB beside the app DB. My design for the exact layout. |
+| Shared card tables | **`lexicon`** (id, headword UNIQUE, source `wiktionary`/`model`, ipa JSON, wiktionary_url, dump_date, created_at) and **`senses`** (id, lexicon_id, ord, pos, gloss, tags JSON, examples JSON, examples_by `model`). No user ids in either. | Senses as rows so a user's word can later point at the meaning they chose (deferred); examples as a JSON list inside the sense because they are always read together. | Yes (shared reference + per-user rows). Layout my design. |
+| Per-user words | `words` gains **`lexicon_id`** (nullable). **Unverified** = no lexicon entry and empty definition; `learning_words` skips them, so they never reach rewrites. | Keeps personal state (status, added, servings) where it is; one pointer to the shared card. | Yes. |
+| What the engine and pop-ups read | `words.definition` stays the engine's one definition per word (rewrite prompt, QC judge, `data-def` pop-ups — `generate.py:658`). **Existing 235 words keep their current definitions.** New Wiktionary words get the first up-to-3 kept meanings joined ("1. …; 2. …"). | Wiktionary's first meaning is often the literal one (linchpin → axle pin); one meaning alone would steer rewrites to the wrong sense. Joining gives the engine the real range without changing its code. | My design. **Founder decision (see below).** |
+| Model call | One call per new word (`purpose="card"`, production model chain). Found in Wiktionary: numbered meanings in, `{"examples": {"1": [...], ...}}` out, capped at the first 5 kept meanings. Not found: `{"real": bool, "pos", "definition", "examples"}`. | Bounded cost (~$0.0001/word); one round trip. | Yes. |
+| Failure handling | Capture never fails because of the model. Wiktionary word + model error → saved without examples (filled by the next backfill run). Not found + model error → saved unverified. | Today a failed call means no word saved. | Yes. |
+| Pronunciation | IPA text from Wiktionary (CMUdict for gaps). **Sound: Apple's on-device speech (`AVSpeechSynthesizer`) for v1**, Wikimedia recordings later. | Recordings need per-file credits (speaker + licence) and a network fetch; `.ogg` doesn't play on iOS, only the `.mp3` copies. Speech is free, offline, no credits. | My call; easy to swap. |
+| API | `GET /v1/words` and `POST /v1/words` rows gain `card` (headword, source, ipa, senses[{pos, gloss, tags, examples}], wiktionary_url) and `unverified`. Old fields unchanged. | The app, widget cache and share extension already consume this row; additive fields keep old app builds working. | Yes (additive API change). |
+| Backfill | `python -m service.dictionary backfill`: link the 235 existing words to cards, write examples. Idempotent; re-run fills gaps. | ~235 model calls, a few cents. | Yes. |
+| Attribution | Card footer "Source: Wiktionary" linking the entry; "Examples written by AI"; "Written by AI" badge for model-sourced cards; "Unverified" badge. | CC BY-SA requires the link; honesty about what the model wrote. | Yes. |
+
+## What changes in the repo
+
+- `src/service/dictionary.py` (new): build the reference DB, `lookup(word)` (follows form_of /
+  alt_of, drops archaic/obsolete/rare/dated), `build_card(con, word)` (the flow in the diagram),
+  `backfill`.
+- `src/service/db.py`: `lexicon`, `senses` tables; `ALTER TABLE words ADD COLUMN lexicon_id`;
+  `learning_words` skips unverified.
+- `src/service/app.py`: `add_word` calls `dictionary.build_card` instead of the inline model
+  call; list/add return `card` + `unverified`.
+- `ios/RetAIn/Shared/API/Models.swift`: optional `card` + `unverified` on `Word` (optional so
+  the widget's cached `words.json` still decodes). `WordCardView`: meanings in order with
+  examples, IPA + speak button, credits, badges. `WordsView`: unverified badge in the list.
+- Tests: `tests/test_dictionary.py` with a 5-entry fixture dump (found, via lemma, via
+  spelling, not-found-real, not-found-fake) and a stubbed `G.call_model`; iOS
+  `WordsStoreTests` decode an old cached list without `card`.
+
+## Not in this build
+
+Choosing the meaning the user intended (sentence context), feeding all meanings to the
+engine (needs `src/evals` first), Wikimedia audio, CEFR levels, typo suggestions at capture.
+
+## Done when
+
+Adding a word already in the shared list makes no model call (verified in `calls`); a
+Wiktionary word shows its meanings in Wiktionary order with IPA and examples; a made-up word
+is saved unverified and never appears in a rewrite; the 235 existing words have cards; all
+service and iOS tests pass; the card renders on the founder's phone.
