@@ -26,6 +26,13 @@ the checker rejects about half of its in-text words (backlog UX-1; test models v
 **2026-09-28 (UX-14):** home-screen widget "Today's words" built — 5 learning words a day,
 one at a time with meaning, › to advance; verified on the founder's phone. Bottom row reads "Today's words · n / 5".
 **Next up:** founder's call on stretch length; model evals on surviving words per article.
+**2026-09-27 (D48, UX-4):** word cards built — Wiktionary stored on the Mac mini
+(`data/dictionary/wiktionary.db`), meanings in Wiktionary order, model-written examples, one
+shared card per word; unknown words checked by the model, nonsense saved "unverified" and kept
+out of rewrites. Reader word tap → card in a bottom-half sheet; widget shows the first meaning
++ "+N more" and opens the word. **Word-only prompts** (no definitions to the writer/judge)
+passed the golden-set eval on quality but ran ~2.5× slower because OpenRouter routed them to a
+slower host — `RETAIN_ENGINE_DEFS` still **on** in production pending the founder's call (TD-16).
 **2026-09-27 (sharing, D45):** every app's Share button should work — one source at a time.
 Sharing is now one reader per source behind a router (`ios/RetAIn/Shared/Sharing/`): selection,
 Safari page, plain text, Reddit (post or the linked comment), any web link (Chrome) — all
@@ -194,6 +201,30 @@ all needed for TestFlight and none waits on a decision.**
 vacation coding ends). Home Mac: clone normally with personal credentials; recreate
 `.env.local` (4 API keys — gitignored, never on GitHub) and `data/retain.db` refills
 itself via the fetchers.
+
+### 2026-09-27 — Word cards from Wiktionary (D48, UX-4) + word-only prompt eval
+
+- **Source research (n = 235 words):** commercial dictionary APIs ruled out (no permanent shared
+  cache on public plans; Oxford enterprise only); iOS exposes no dictionary text. Wiktionary via
+  kaikki.org's Wiktextract dump (CC BY-SA 4.0, 3.3 GB, download marked deprecated — our copy kept
+  in `data/dictionary/`): 235/235 found, IPA 99%, modern usage example 62%. Spike:
+  `spikes/wiktionary_coverage.py`. Decision **D48**. Diagram: `diagrams/word-capture-flow.md`
+  (new `diagrams/` folder for major architecture/UX moments).
+- **Built:** `src/service/dictionary.py` (reference DB build in 23 s, lookups < 1 ms; redirect
+  rules ran → run, ubiquitious → ubiquitous, adjectives stay: protracted, scathing; proper names
+  dropped; fraught keeps its all-"obsolete" senses), `lexicon` + `senses` tables, `words.lexicon_id`,
+  capture never fails on a model error, backfill of the 235 test words. iOS: `WordCardView`
+  (meanings, examples, IPA + on-device speech, badges, Wiktionary credit), reader bottom sheet
+  replacing the web popup, widget "+N more" and `retain://word/<id>`.
+- **Tests:** service 36 pass (6 new card tests); the 2 failures (transform lifecycle, daily cap)
+  predate this work. iOS 33/34 pass; the one failure is TD-15 (known date bug).
+- **Eval (founder: "the LLM should only get the word"):** golden set, 30 pieces, Gemma 26B,
+  runs 37 (with definitions) vs 38 (word only), blind-graded in session (grader not yet checked
+  against founder labels). Wrong usages 17/99 (17%) → 10/91 (11%); idiomatic 34% → 43%; marks/piece
+  3.3 → 3.0; cost −21%. **Latency 6.0 s → 13.0 s p50**, reproduced on 10 pieces (runs 39/40:
+  16.0 s vs 5.9 s). Cause: host routing, not model work — same output tokens, no reasoning; a
+  probe (9 calls per mode) showed word-only prompts landing on NextBit (5.4 s/call avg, up to
+  13 s) vs Makora (1.9 s) with definitions. Production switch `RETAIN_ENGINE_DEFS` left **on**.
 
 ### 2026-09-28 — Home-screen widget: today's words (UX-14)
 
