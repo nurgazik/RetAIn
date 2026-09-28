@@ -218,7 +218,8 @@ itself via the fetchers.
   Word-only made the default (`RETAIN_ENGINE_DEFS=on` reverts). Live transform after restart:
   3.1 s, all calls on Makora, host recorded.
 - **Found:** TD-17 — daily cap and "spent today" compare a local date with UTC timestamps, so
-  after 5 pm Pacific the cap never triggers; this is also why two service tests failed last night.
+  the day effectively runs 5 pm–5 pm Pacific (evening use counts toward tomorrow); this is also
+  why two service tests failed last night. Low stakes while the founder is the only user.
 - Word capture: card calls p50 3.7 s, p90 11.9 s (backfill) — the 5 s hedge now caps the tail.
 
 ### 2026-09-27 — Word cards from Wiktionary (D48, UX-4) + word-only prompt eval
