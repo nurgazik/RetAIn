@@ -4,7 +4,8 @@ every role, fallback off, so $/piece and seconds/piece are exactly "what if we s
 Roles can be separated (no engine code changes; done by routing calls here):
   checks=False   writer only: the pipeline's idiom + fact checks are skipped, so the writer's
                  raw output is graded (apples-to-apples writer comparison)
-  checker=NAME   the writer is `name`, every check/repair call goes to registry model NAME"""
+  checker=NAME   the writer is `name`, every check/repair call goes to registry model NAME
+  defs=False     word-only prompts: writer and QC judge see the bare words, no definitions"""
 import json
 import time
 from datetime import datetime, timezone
@@ -17,8 +18,9 @@ from service.config import ENGINE_MODE
 from . import dataset, results
 
 
-def run_label(name: str, checks: bool = True, checker: str = None) -> str:
-    return name + (" [writer only]" if not checks else f" + checker {checker}" if checker else "")
+def run_label(name: str, checks: bool = True, checker: str = None, defs: bool = True) -> str:
+    return (name + (" [writer only]" if not checks else f" + checker {checker}" if checker else "")
+            + ("" if defs else " [word only]"))
 
 
 def route_roles(spec: dict, checks: bool, checker: str) -> dict:
@@ -44,7 +46,8 @@ def route_roles(spec: dict, checks: bool, checker: str) -> dict:
     return specs
 
 
-def run(name: str, only: list = None, resume: int = None, checks: bool = True, checker: str = None) -> int:
+def run(name: str, only: list = None, resume: int = None, checks: bool = True, checker: str = None,
+        defs: bool = True) -> int:
     spec = results.spec(name)
     pieces = dataset.load()
     if only:
@@ -55,7 +58,7 @@ def run(name: str, only: list = None, resume: int = None, checks: bool = True, c
     env = load_env()
     con = results.connect()
 
-    label = run_label(name, checks, checker)
+    label = run_label(name, checks, checker, defs)
     if resume:
         run_id = resume
         done = {r[0] for r in con.execute("SELECT piece_id FROM results WHERE run_id=? AND ok=1", (run_id,))}
@@ -66,13 +69,14 @@ def run(name: str, only: list = None, resume: int = None, checks: bool = True, c
         run_id = con.execute(
             "INSERT INTO runs (model_name, spec, dataset, engine_mode, engine, commit_id, started_at) "
             "VALUES (?,?,?,?,?,?,?)",
-            (label, json.dumps({**spec, "checks": checks, "checker": checker}), dataset.version(), ENGINE_MODE,
+            (label, json.dumps({**spec, "checks": checks, "checker": checker, "defs": defs}), dataset.version(), ENGINE_MODE,
              results.engine_fingerprint(ENGINE_MODE),
              results.git_commit(), datetime.now(timezone.utc).isoformat())).lastrowid
         con.commit()
         done = set()
 
     G.PRIMARY, G.FALLBACK = results.primary_for(spec), None
+    G.DEFS_IN_PROMPT = defs
     specs = route_roles(spec, checks, checker)
     print(f"[evals] run {run_id}: {label} on {len(pieces)} pieces ({ENGINE_MODE} mode)")
     for i, p in enumerate(pieces, 1):

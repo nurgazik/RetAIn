@@ -10,7 +10,9 @@ import generate as G  # src/generate.py (sys.path set in config)
 from bakeoff import MODELS
 
 from . import db
-from .config import ENGINE_MODE
+from .config import ENGINE_DEFS, ENGINE_MODE
+
+G.DEFS_IN_PROMPT = ENGINE_DEFS
 
 PRICES = {m["model"]: {"in": m["in"], "out": m["out"]} for m in MODELS}
 _gen_lock = threading.Semaphore(2)  # at most two generations in flight (Gemini rate limits)

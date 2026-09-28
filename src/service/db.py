@@ -24,6 +24,27 @@ CREATE TABLE IF NOT EXISTS words (
     added       TEXT NOT NULL,
     UNIQUE (user_id, word)
 );
+-- Word cards (D48): shared by every user, no user data. One row per headword (the dictionary
+-- form: "ran" is stored under "run"); its meanings in Wiktionary order in `senses`.
+CREATE TABLE IF NOT EXISTS lexicon (
+    id          INTEGER PRIMARY KEY AUTOINCREMENT,
+    headword    TEXT NOT NULL UNIQUE,
+    source      TEXT NOT NULL,       -- wiktionary | model
+    ipa         TEXT,                -- JSON [{"ipa", "tags"}], at most two
+    source_url  TEXT,                -- the wiktionary.org entry (CC BY-SA attribution)
+    dump        TEXT,                -- which Wiktionary download it came from
+    created_at  TEXT NOT NULL
+);
+CREATE TABLE IF NOT EXISTS senses (
+    id          INTEGER PRIMARY KEY AUTOINCREMENT,
+    lexicon_id  INTEGER NOT NULL REFERENCES lexicon(id),
+    ord         INTEGER NOT NULL,    -- Wiktionary's order
+    pos         TEXT,
+    gloss       TEXT NOT NULL,
+    tags        TEXT,                -- JSON ["formal", "figuratively", ...]
+    examples    TEXT,                -- JSON ["...", ...] written by the model; NULL = not written yet
+    UNIQUE (lexicon_id, ord)
+);
 CREATE TABLE IF NOT EXISTS pieces (
     id            TEXT PRIMARY KEY,
     user_id       TEXT NOT NULL REFERENCES users(id),
@@ -101,7 +122,8 @@ def init() -> None:
     for stmt in ("ALTER TABLE pieces ADD COLUMN meta TEXT", "ALTER TABLE calls ADD COLUMN ms INTEGER",
                  "ALTER TABLE calls ADD COLUMN response TEXT", "ALTER TABLE calls ADD COLUMN prompt_sha TEXT",
                  "ALTER TABLE pieces ADD COLUMN byline TEXT", "ALTER TABLE pieces ADD COLUMN site_name TEXT",
-                 "ALTER TABLE pieces ADD COLUMN published TEXT", "ALTER TABLE pieces ADD COLUMN dek TEXT"):
+                 "ALTER TABLE pieces ADD COLUMN published TEXT", "ALTER TABLE pieces ADD COLUMN dek TEXT",
+                 "ALTER TABLE words ADD COLUMN lexicon_id INTEGER REFERENCES lexicon(id)"):
         try:  # migrations for DBs created before these columns
             con.execute(stmt)
         except sqlite3.OperationalError:
@@ -136,10 +158,11 @@ def serving_counts(con, user_id: str) -> dict:
 
 
 def learning_words(con, user_id: str) -> list:
-    """Every learning word, fewest servings first (D32's sort, D34: no scheduler)."""
+    """Every learning word, fewest servings first (D32's sort, D34: no scheduler).
+    Unverified words (no card, no definition — D48) never reach a rewrite."""
     counts = serving_counts(con, user_id)
     rows = [dict(r) for r in con.execute(
-        "SELECT * FROM words WHERE user_id=? AND status='learning' ORDER BY id", (user_id,))]
+        "SELECT * FROM words WHERE user_id=? AND status='learning' AND definition != '' ORDER BY id", (user_id,))]
     return sorted(rows, key=lambda w: counts.get(w["word"], 0))
 
 

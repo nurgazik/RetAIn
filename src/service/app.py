@@ -9,7 +9,7 @@ from fastapi import Depends, FastAPI, HTTPException
 from fastapi.sse import EventSourceResponse, ServerSentEvent
 from pydantic import BaseModel, Field
 
-from . import auth, db, engine
+from . import auth, db, dictionary, engine
 from .config import DAILY_CAP, MAX_CHARS, MIN_WORDS
 
 
@@ -83,15 +83,19 @@ class WordPatch(BaseModel):
     status: str = Field(pattern="^(learning|retained|archived)$")
 
 
+def with_cards(con, rows: list, counts: dict = None) -> list:
+    """Word rows as the app sees them: + the shared card (D48), + unverified, + servings."""
+    cards = dictionary.cards(con, {r["lexicon_id"] for r in rows})
+    return [r | {"card": cards.get(r["lexicon_id"]), "unverified": not r["lexicon_id"] and not r["definition"]}
+            | ({"servings": counts.get(r["word"], 0)} if counts is not None else {}) for r in rows]
+
+
 @app.get("/v1/words")
 def list_words(user=Depends(auth.current_user)):
     con = db.connect()
     try:
-        counts = db.serving_counts(con, user["id"])
         rows = [dict(r) for r in con.execute("SELECT * FROM words WHERE user_id=? ORDER BY id", (user["id"],))]
-        for r in rows:
-            r["servings"] = counts.get(r["word"], 0)
-        return {"words": rows}
+        return {"words": with_cards(con, rows, db.serving_counts(con, user["id"]))}
     finally:
         con.close()
 
@@ -99,28 +103,24 @@ def list_words(user=Depends(auth.current_user)):
 @app.post("/v1/words", status_code=201)
 def add_word(body: WordIn, user=Depends(auth.current_user)):
     word = body.word.strip().lower()
-    definition = (body.definition or "").strip()
+    definition, pos, lexicon_id = (body.definition or "").strip(), body.pos, None
     con = db.connect()
     try:
         existing = con.execute("SELECT * FROM words WHERE user_id=? AND word=?", (user["id"], word)).fetchone()
-        if existing and not definition:
-            definition, body.pos = existing["definition"], body.pos or existing["pos"]
-        if not definition:  # word card, minimal for M1: one cheap call for a definition (M5 enriches)
-            import generate as G
-            G.CALL_LOG.clear()
-            raw, _ = G.call_model(
-                "You write one-line dictionary definitions for an advanced ESL learner. Output STRICT "
-                "JSON only: {\"pos\": \"<verb|noun|adjective|adverb>\", \"definition\": \"<one plain sentence>\"}",
-                f"WORD: {word}", engine.model_env(), purpose="card")
-            raw = raw.strip().strip("`").removeprefix("json").strip()
-            card = json.loads(raw)
-            definition, body.pos = card["definition"], body.pos or card.get("pos")
-            db.record_calls(con, user["id"], None, list(G.CALL_LOG), engine.PRICES)
-        con.execute("INSERT INTO words (user_id, word, pos, definition, status, added) VALUES (?,?,?,?,?,?) "
-                    "ON CONFLICT(user_id, word) DO UPDATE SET status='learning'",
-                    (user["id"], word, body.pos, definition, "learning", db.now()))
+        if existing and not definition and existing["lexicon_id"]:
+            definition, pos, lexicon_id = existing["definition"], pos or existing["pos"], existing["lexicon_id"]
+        elif not definition:  # the capture flow: diagrams/word-capture-flow.md
+            lexicon_id, definition, calls = dictionary.build_card(con, word, engine.model_env())
+            db.record_calls(con, user["id"], None, calls, engine.PRICES)
+            if lexicon_id and not pos:
+                pos = dictionary.cards(con, {lexicon_id})[lexicon_id]["senses"][0]["pos"]
+        con.execute("INSERT INTO words (user_id, word, pos, definition, status, added, lexicon_id) "
+                    "VALUES (?,?,?,?,?,?,?) ON CONFLICT(user_id, word) DO UPDATE SET status='learning', "
+                    "pos=excluded.pos, definition=excluded.definition, lexicon_id=excluded.lexicon_id",
+                    (user["id"], word, pos, definition, "learning", db.now(), lexicon_id))
         con.commit()
-        return dict(con.execute("SELECT * FROM words WHERE user_id=? AND word=?", (user["id"], word)).fetchone())
+        row = dict(con.execute("SELECT * FROM words WHERE user_id=? AND word=?", (user["id"], word)).fetchone())
+        return with_cards(con, [row])[0]
     finally:
         con.close()
 
@@ -133,7 +133,7 @@ def patch_word(word_id: int, body: WordPatch, user=Depends(auth.current_user)):
         con.commit()
         if cur.rowcount == 0:
             raise HTTPException(404, "no such word")
-        return dict(con.execute("SELECT * FROM words WHERE id=?", (word_id,)).fetchone())
+        return with_cards(con, [dict(con.execute("SELECT * FROM words WHERE id=?", (word_id,)).fetchone())])[0]
     finally:
         con.close()
 

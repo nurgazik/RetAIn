@@ -113,7 +113,7 @@ def missing_years(item, parsed: dict) -> list:
 
 QC_SYSTEM = """You are a native-English-speaker usage checker for an advanced ESL reading app.
 You receive reader-facing text in which target vocabulary words are wrapped in <mark> tags,
-plus the word list with definitions.
+plus the target word list.
 
 Judge each MARKED word's usage on one test — idiomatic fit: is this exactly how an
 educated native writer would use the word in this sentence — natural collocation,
@@ -129,7 +129,7 @@ silently un-highlights failed words; a false demotion costs little, a bad usage 
 
 RELAXED_QC_SYSTEM = """You are a native-English-speaker usage checker for an advanced ESL reading app.
 You receive reader-facing text in which target vocabulary words are wrapped in <mark> tags,
-plus the word list with definitions.
+plus the target word list.
 
 Judge each MARKED word on one test — is it close enough? PASS a usage when the meaning is
 right and the sentence is grammatical, even if a native writer would more often choose
@@ -143,10 +143,21 @@ Output STRICT JSON only — no prose, no code fences:
               {"word": "...", "ok": false, "reason": "<short reason>"}]}
 Every marked word gets exactly one verdict."""
 
+# Word-only prompts (2026-09-27, founder): the writer and the QC judge get the bare word and
+# rely on their own knowledge of it; definitions stay for the reader's pop-ups. Under eval
+# (src/evals run --no-defs) before production flips it (RETAIN_ENGINE_DEFS).
+DEFS_IN_PROMPT = True
+
+
+def word_lines(defs: dict) -> str:
+    """The target word list as the models see it: '- word: definition', or '- word'."""
+    return "\n".join(f"- {w}: {d}" if DEFS_IN_PROMPT and d else f"- {w}" for w, d in defs.items())
+
+
 def qc_gate(body: str, defs: dict, env: dict, system: str = QC_SYSTEM) -> list:
     """D19 gate: per-word native-writer check (~$0.0005/piece). Returns marked
     words to demote. Fails open — a judge error demotes nothing."""
-    word_list = "\n".join(f"- {w}: {d}" for w, d in defs.items())
+    word_list = word_lines(defs)
     try:
         raw, _ = call_model(system, f"WORD LIST:\n{word_list}\n\nTEXT:\n{body}", env, purpose="qc")
         raw = re.sub(r"^```(json)?\s*|\s*```$", "", raw.strip(), flags=re.M).strip()
@@ -665,7 +676,7 @@ def generate_piece(con, item, wrapper_file: str, chosen: list, env: dict,
     def build_user(menu: dict, avoid: list = ()) -> str:
         # D28: density instruction lives HERE, not in the wrapper — A/B showed
         # the user message is what the model actually obeys (3-trial study 08-01)
-        word_list = "\n".join(f"- {w}: {d}" for w, d in menu.items())
+        word_list = word_lines(menu)
         ban = (f"FORBIDDEN WORDS — do not use these anywhere in the piece, in any "
                f"form, marked or unmarked: {', '.join(avoid)}.\n\n") if avoid else ""
         return (f"{ban}CANDIDATE TARGET WORDS — {request or DENSITY_REQUEST}. The "

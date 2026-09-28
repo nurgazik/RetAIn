@@ -3,10 +3,11 @@
   .venv/bin/python src/evals build                 add golden pieces (existing ones stay frozen)
   .venv/bin/python src/evals add <openrouter-slug> [name] ['{"params": ...}']
                                                    register a new OpenRouter model at its list price
-  .venv/bin/python src/evals run <name> [--only id,id] [--resume RUN] [--no-checks | --checker NAME]
+  .venv/bin/python src/evals run <name> [--only id,id] [--resume RUN] [--no-checks | --checker NAME] [--no-defs]
                                                    full pipeline on every golden piece;
                                                    --resume re-runs a run's failed/missing pieces;
-                                                   --no-checks: writer only; --checker: checks by NAME
+                                                   --no-checks: writer only; --checker: checks by NAME;
+                                                   --no-defs: word-only prompts (no definitions)
   .venv/bin/python src/evals judge <name> [--gold grader|human]
                                                    score a model as the word checker against gold labels
   .venv/bin/python src/evals grade <run_id>        fixed API grader scores words + inventions
@@ -42,14 +43,14 @@ def main(argv: list) -> None:
         only = args[args.index("--only") + 1].split(",") if "--only" in args else None
         resume = int(args[args.index("--resume") + 1]) if "--resume" in args else None
         checker = args[args.index("--checker") + 1] if "--checker" in args else None
-        checks = "--no-checks" not in args
+        checks, defs = "--no-checks" not in args, "--no-defs" not in args
         if resume:  # resume with the run's own settings
             row = results.connect().execute("SELECT spec FROM runs WHERE id=?", (resume,)).fetchone()
             rs = json.loads(row[0])
-            name, checks, checker = rs["name"], rs.get("checks", True), rs.get("checker")
+            name, checks, checker, defs = rs["name"], rs.get("checks", True), rs.get("checker"), rs.get("defs", True)
         else:
             name = args[0]
-        print(f"run id {run.run(name, only, resume, checks, checker)}")
+        print(f"run id {run.run(name, only, resume, checks, checker, defs)}")
     elif cmd == "judge":
         judge.judge(args[0], args[args.index("--gold") + 1] if "--gold" in args else "grader")
     elif cmd == "grade" and args[:1] == ["--export"]:
