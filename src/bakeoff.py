@@ -191,6 +191,8 @@ def openai_result(d: dict) -> dict:
          "tokens_reasoning": (u.get("completion_tokens_details") or {}).get("reasoning_tokens") or 0}
     if u.get("cost") is not None:
         r["cost"] = u["cost"]
+    if d.get("provider"):  # OpenRouter names the host that served the call
+        r["host"] = d["provider"]
     return r
 
 

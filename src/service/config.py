@@ -21,7 +21,7 @@ SESSION_DAYS = int(os.environ.get("RETAIN_SESSION_DAYS", "180"))
 DEV_TOKEN = os.environ.get("RETAIN_DEV_TOKEN")  # if set: Bearer <DEV_TOKEN> == the dev user
 DAILY_CAP = int(os.environ.get("RETAIN_DAILY_CAP", "30"))
 ENGINE_MODE = os.environ.get("RETAIN_ENGINE_MODE", "sentence")  # sentence (founder 2026-09-25) | rewrite (D36)
-ENGINE_DEFS = os.environ.get("RETAIN_ENGINE_DEFS", "on") == "on"  # off = word-only prompts (eval first)
+ENGINE_DEFS = os.environ.get("RETAIN_ENGINE_DEFS", "off") == "on"  # founder 2026-09-28: word-only prompts
 MIN_WORDS = int(os.environ.get("RETAIN_MIN_WORDS", "25"))  # a short Reddit comment is still a read
 MAX_CHARS = 24000
 if not os.environ.get("RETAIN_SESSION_SECRET"):

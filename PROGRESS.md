@@ -32,7 +32,8 @@ shared card per word; unknown words checked by the model, nonsense saved "unveri
 out of rewrites. Reader word tap → card in a bottom-half sheet; widget shows the first meaning
 + "+N more" and opens the word. **Word-only prompts** (no definitions to the writer/judge)
 passed the golden-set eval on quality but ran ~2.5× slower because OpenRouter routed them to a
-slower host — `RETAIN_ENGINE_DEFS` still **on** in production pending the founder's call (TD-16).
+slower host. **2026-09-28 (D49):** fixed — OpenRouter host order + a Flash-Lite race;
+word-only prompts are now live. Watch speed with `python -m service.speed` (from `src/`).
 **2026-09-27 (sharing, D45):** every app's Share button should work — one source at a time.
 Sharing is now one reader per source behind a router (`ios/RetAIn/Shared/Sharing/`): selection,
 Safari page, plain text, Reddit (post or the linked comment), any web link (Chrome) — all
@@ -201,6 +202,24 @@ all needed for TestFlight and none waits on a decision.**
 vacation coding ends). Home Mac: clone normally with personal credentials; recreate
 `.env.local` (4 API keys — gitignored, never on GitHub) and `data/retain.db` refills
 itself via the fetchers.
+
+### 2026-09-28 — Speed first: host order, Flash-Lite race, word-only live (D49)
+
+- **Why the word-only arm was slow:** host choice, not the prompt. OpenRouter's default pick is
+  weighted towards the cheapest host; a probe sent the same rewrite to each host: 10–118 s
+  (Venice 146–191 tok/s, NextBit ~68, Reka/Novita 16–25; Makora, DeepInfra and Google Vertex
+  refused with 429). Throughput sorting made things worse (runs 41/42: 11.9 s / 12.7 s).
+  Google serves Gemma 4 only on its free tier (data used to improve products) — ruled out.
+- **Built:** `PRIMARY` provider order Makora → Venice → DeepInfra (fallbacks allowed, ZDR only);
+  `call_model` races Flash-Lite after 10 s (rewrite/repair) or 5 s (checks, cards); host logged
+  per call (`calls.host`); `src/service/speed.py` report. 6 hedge tests; 44/44 service tests pass.
+- **Measured (production path, same 10 pieces, minutes apart):** word only 9.1 s avg, 8.9 s p50,
+  16.7 s max, all on Makora; with definitions 14.4 s avg, 42.4 s max, 3 Flash-Lite takeovers.
+  Word-only made the default (`RETAIN_ENGINE_DEFS=on` reverts). Live transform after restart:
+  3.1 s, all calls on Makora, host recorded.
+- **Found:** TD-17 — daily cap and "spent today" compare a local date with UTC timestamps, so
+  after 5 pm Pacific the cap never triggers; this is also why two service tests failed last night.
+- Word capture: card calls p50 3.7 s, p90 11.9 s (backfill) — the 5 s hedge now caps the tail.
 
 ### 2026-09-27 — Word cards from Wiktionary (D48, UX-4) + word-only prompt eval
 

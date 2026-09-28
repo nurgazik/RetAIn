@@ -96,7 +96,8 @@ CREATE TABLE IF NOT EXISTS calls (
     ms         INTEGER,
     at         TEXT NOT NULL,
     response   TEXT,                -- the model's raw output, before any parsing or guard
-    prompt_sha TEXT                 -- first 12 hex of sha1(system prompt): which prompt version
+    prompt_sha TEXT,                -- first 12 hex of sha1(system prompt): which prompt version
+    host       TEXT                 -- who served it: an OpenRouter host (makora, venice…) or google
 );
 """
 
@@ -123,7 +124,8 @@ def init() -> None:
                  "ALTER TABLE calls ADD COLUMN response TEXT", "ALTER TABLE calls ADD COLUMN prompt_sha TEXT",
                  "ALTER TABLE pieces ADD COLUMN byline TEXT", "ALTER TABLE pieces ADD COLUMN site_name TEXT",
                  "ALTER TABLE pieces ADD COLUMN published TEXT", "ALTER TABLE pieces ADD COLUMN dek TEXT",
-                 "ALTER TABLE words ADD COLUMN lexicon_id INTEGER REFERENCES lexicon(id)"):
+                 "ALTER TABLE words ADD COLUMN lexicon_id INTEGER REFERENCES lexicon(id)",
+                 "ALTER TABLE calls ADD COLUMN host TEXT"):
         try:  # migrations for DBs created before these columns
             con.execute(stmt)
         except sqlite3.OperationalError:
@@ -167,7 +169,7 @@ def learning_words(con, user_id: str) -> list:
 
 
 def record_calls(con, user_id: str, piece_id: str | None, calls: list, prices: dict) -> float:
-    """calls: [(purpose, model, tokens_in, tokens_out[, ms[, billed_usd[, reasoning, response, prompt_sha]]])]
+    """calls: [(purpose, model, tokens_in, tokens_out[, ms[, billed_usd[, reasoning, response, prompt_sha[, host]]]])]
     → rows in `calls`; returns USD total."""
     total = 0.0
     with _lock:
@@ -179,8 +181,9 @@ def record_calls(con, user_id: str, piece_id: str | None, calls: list, prices: d
             usd = billed if billed is not None else tin / 1e6 * p["in"] + tout / 1e6 * p["out"]
             total += usd
             response, prompt_sha = (c[7], c[8]) if len(c) > 8 else (None, None)
+            host = c[9] if len(c) > 9 else None
             con.execute("INSERT INTO calls (user_id, piece_id, purpose, model, tokens_in, tokens_out, usd, ms, at, "
-                        "response, prompt_sha) VALUES (?,?,?,?,?,?,?,?,?,?,?)",
-                        (user_id, piece_id, purpose, model, tin, tout, usd, ms, now(), response, prompt_sha))
+                        "response, prompt_sha, host) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)",
+                        (user_id, piece_id, purpose, model, tin, tout, usd, ms, now(), response, prompt_sha, host))
         con.commit()
     return total

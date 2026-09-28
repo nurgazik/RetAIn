@@ -24,10 +24,18 @@ ROOT = pathlib.Path(__file__).resolve().parent.parent
 
 # D42 (2026-09-26): Gemma 4 26B via OpenRouter writes and self-checks (was D5: Flash-Lite);
 # zero-data-retention hosts only, thinking off. Flash-Lite (Google, direct) is the fallback.
+# Speed (2026-09-28, founder: speed first, revisit often): OpenRouter's default pick is
+# price-weighted, and the same request took 10–118 s across hosts — so the fastest measured
+# hosts go first (then any other ZDR host), and a slow call is hedged with Flash-Lite.
 PRIMARY = {"model": "google/gemma-4-26b-a4b-it", "call": make_openai_compat("https://openrouter.ai/api/v1"),
            "key": "OPENROUTER_API_KEY",
-           "params": {"provider": {"zdr": True}, "reasoning": {"enabled": False}}}
+           "params": {"provider": {"zdr": True, "order": ["makora", "venice", "deepinfra"], "allow_fallbacks": True},
+                      "reasoning": {"enabled": False}}}
 FALLBACK = {"model": "gemini-3.1-flash-lite", "call": call_gemini, "key": "GEMINI_API_KEY"}
+# Hedge: if the primary hasn't answered after this many seconds, start the fallback too and
+# take whichever answers first (the abandoned call still bills, ~$0.0005). Long outputs get longer.
+HEDGE_AFTER = {"generate": 10.0, "repair": 10.0}
+HEDGE_AFTER_DEFAULT = 5.0
 
 CSS = """
   body { font-family: Georgia, 'Times New Roman', serif; background: #faf8f4;
@@ -144,8 +152,8 @@ Output STRICT JSON only — no prose, no code fences:
 Every marked word gets exactly one verdict."""
 
 # Word-only prompts (2026-09-27, founder): the writer and the QC judge get the bare word and
-# rely on their own knowledge of it; definitions stay for the reader's pop-ups. Under eval
-# (src/evals run --no-defs) before production flips it (RETAIN_ENGINE_DEFS).
+# rely on their own knowledge of it. Live 2026-09-28 (service: RETAIN_ENGINE_DEFS=on reverts);
+# the PoC scripts and evals default to definitions unless told otherwise (evals: --no-defs).
 DEFS_IN_PROMPT = True
 
 
@@ -563,27 +571,47 @@ def unmark_sentences(body: str, words: list) -> str:
 
 
 CALL_LOG = []  # (purpose, model, tokens_in, tokens_out, ms, billed_usd|None, reasoning_tokens,
-#               response text, prompt_sha) per call; the service drains it
+#               response text, prompt_sha, host) per call; the service drains it
+_POOL = None
+
+
+def _run(spec: dict, system: str, user: str, env: dict) -> dict:
+    return spec["call"](spec["model"], system, user, env[spec["key"]], spec.get("params"))
 
 
 def call_model(system: str, user: str, env: dict, purpose: str = "generate") -> tuple:
-    """Primary model with automatic fallback (D5). Returns (text, model_name).
-    FALLBACK = None (evals) makes a primary failure raise instead."""
+    """Primary model, hedged with the fallback (D5, 2026-09-28): an error switches at once; a
+    primary still running after HEDGE_AFTER seconds races the fallback, first answer wins.
+    Returns (text, model_name). FALLBACK = None (evals) makes a primary failure raise instead."""
     import time as _t
+    from concurrent.futures import FIRST_COMPLETED, ThreadPoolExecutor, wait
+    global _POOL
     _t0 = _t.time()
-    try:
-        r = PRIMARY["call"](PRIMARY["model"], system, user, env[PRIMARY["key"]], PRIMARY.get("params"))
-        model = PRIMARY["model"]
-    except Exception as exc:
-        if not FALLBACK:
-            raise
-        print(f"[warn] {PRIMARY['model']} failed ({exc}); falling back to {FALLBACK['model']}")
-        r = FALLBACK["call"](FALLBACK["model"], system, user, env[FALLBACK["key"]], FALLBACK.get("params"))
-        model = FALLBACK["model"]
-    CALL_LOG.append((purpose, model, r.get("tokens_in", 0), r.get("tokens_out", 0), int((_t.time() - _t0) * 1000),
-                     r.get("cost"), r.get("tokens_reasoning", 0), r["text"],
-                     hashlib.sha1(system.encode()).hexdigest()[:12]))  # which system prompt produced it
-    return r["text"], model
+    if not FALLBACK:
+        r, spec = _run(PRIMARY, system, user, env), PRIMARY
+    else:
+        _POOL = _POOL or ThreadPoolExecutor(max_workers=8)
+        first = _POOL.submit(_run, PRIMARY, system, user, env)
+        done, _ = wait([first], timeout=HEDGE_AFTER.get(purpose, HEDGE_AFTER_DEFAULT))
+        if done and not first.exception():
+            r, spec = first.result(), PRIMARY
+        else:
+            why = f"failed ({first.exception()})" if done else "slow"
+            print(f"[warn] {PRIMARY['model']} {why}; {'falling back to' if done else 'racing'} {FALLBACK['model']}")
+            second = _POOL.submit(_run, FALLBACK, system, user, env)
+            pending, r, spec = {second} if done else {first, second}, None, None
+            while pending and r is None:
+                finished, pending = wait(pending, return_when=FIRST_COMPLETED)
+                for f in finished:
+                    if not f.exception() and r is None:
+                        r, spec = f.result(), PRIMARY if f is first else FALLBACK
+            if r is None:
+                second.result()  # both failed: raise the fallback's error
+    CALL_LOG.append((purpose, spec["model"], r.get("tokens_in", 0), r.get("tokens_out", 0),
+                     int((_t.time() - _t0) * 1000), r.get("cost"), r.get("tokens_reasoning", 0), r["text"],
+                     hashlib.sha1(system.encode()).hexdigest()[:12],  # which system prompt produced it
+                     r.get("host") or ("google" if spec["call"] is call_gemini else None)))
+    return r["text"], spec["model"]
 
 
 def annotate_marks(body: str, defs: dict) -> str:
