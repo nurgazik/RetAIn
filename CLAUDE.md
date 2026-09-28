@@ -46,6 +46,8 @@ in `spikes/`.
 - `docs/model-bakeoff.md` — rewrite-model evaluation record (6 models, 7 configs, the
   deliberation/word-discipline dose-response finding). Extend it when testing new models;
   harness is `src/bakeoff.py` (`python3 src/bakeoff.py <model-filter>`).
+- `diagrams/` — Mermaid diagrams of major architecture and product/UX moments, one file
+  each, indexed in `diagrams/README.md`. Add one when a decision changes a flow; keep them current.
 - `src/evals/` — **standing model evals** (cheap × fast × quality) on the frozen golden set in
   `data/evals/golden/` (private reads gitignored); registry `data/evals/models.json`; results
   `data/evals.db`. `.venv/bin/python src/evals report`. Use this, not new one-off scripts.
