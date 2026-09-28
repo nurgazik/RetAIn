@@ -26,6 +26,8 @@ struct ShareRead {
     /// published, dek), empty values left out.
     var sourceFields: [String: String] = [:]
     var extractor: String
+    /// Shown above the piece in the share sheet: what the reader couldn't get and how to get it.
+    var notice: String? = nil
 
     /// From RetAInPage.js's result dict (Safari's pre-step, or a page loaded on the phone).
     init(pageScript res: [String: Any], text: String, url: String?, extractor: String) {
@@ -38,8 +40,10 @@ struct ShareRead {
             if let v = res[key] as? String, !v.isEmpty { sourceFields[field] = v }
         }
     }
-    init(text: String, title: String? = nil, url: String? = nil, sourceFields: [String: String] = [:], extractor: String) {
+    init(text: String, title: String? = nil, url: String? = nil, sourceFields: [String: String] = [:], extractor: String,
+         notice: String? = nil) {
         self.text = text; self.title = title; self.url = url; self.sourceFields = sourceFields; self.extractor = extractor
+        self.notice = notice
     }
 }
 

@@ -43,7 +43,8 @@ struct XReader: SourceReader {
         var fields = ["site_name": "X"]
         if !author.isEmpty { fields["byline"] = handle.map { "\(author) (@\($0))" } ?? author }
         return .text(ShareRead(text: text, title: author.isEmpty ? nil : "\(author) on X", url: res["url"] as? String ?? url.absoluteString,
-                               sourceFields: fields, extractor: cut ? "x-oembed-cut" : "x-oembed"))
+                               sourceFields: fields, extractor: cut ? "x-oembed-cut" : "x-oembed",
+                               notice: cut ? Self.cutNotice : nil))
     }
 
     /// The post's text from the embed markup: the blockquote's <p>, line breaks kept, entities decoded.
@@ -59,6 +60,9 @@ struct XReader: SourceReader {
             .trimmingCharacters(in: .whitespacesAndNewlines)
     }
 
+    /// Safari gets the whole post (verified 2026-09-28: ~400 words vs 45 via oEmbed). A tapped
+    /// x.com link opens the X app, so the link has to be pasted into Safari's address bar.
+    static let cutNotice = "X shortened this post. For the full text, paste its link into Safari's address bar, then share from Safari."
     static let notShown = ReaderResult.unusable(title: "X didn't give us this post",
                                                 detail: "Copy the post's text and share that instead.")
 }

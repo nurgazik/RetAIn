@@ -10,6 +10,7 @@ struct SheetView: View {
     let source: String
     var meta: [String: Any]? = nil
     var sourceFields: [String: String] = [:]
+    var notice: String? = nil
     let onDone: () -> Void
 
     enum Phase { case sending, working(String), done(Piece), failed(String) }
@@ -35,6 +36,13 @@ struct SheetView: View {
                         Text("Couldn't transform this.").font(.headline)
                         Text(msg).font(.callout).foregroundStyle(.secondary).multilineTextAlignment(.center)
                     }.padding()
+                }
+            }
+            .safeAreaInset(edge: .top) {
+                if let notice {
+                    Label(notice, systemImage: "info.circle").font(.footnote).foregroundStyle(.secondary)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(.horizontal).padding(.vertical, 8).background(.bar)
                 }
             }
             .navigationTitle("RetAIn").navigationBarTitleDisplayMode(.inline)

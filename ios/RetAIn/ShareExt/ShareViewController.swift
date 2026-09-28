@@ -25,7 +25,7 @@ final class ShareViewController: UIViewController {
                                                "textChars": read.text.count,
                                                "build": Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? "?"]
                     root = AnyView(SheetView(text: read.text, title: read.title, url: read.url ?? input.url, source: source,
-                                             meta: meta, sourceFields: read.sourceFields, onDone: done))
+                                             meta: meta, sourceFields: read.sourceFields, notice: read.notice, onDone: done))
                 case .unusable(let title, let detail, let reader):
                     root = AnyView(MessageView(title: title, detail: detail, onDone: done))
                     var payload = input.diagnosticPayload

@@ -216,6 +216,7 @@ final class SharingTests: XCTestCase {
         XCTAssertTrue(r.text.hasSuffix("executing similar…"), r.text)       // t.co link dropped, cut marker kept
         XCTAssertEqual(r.sourceFields, ["byline": "Jesse Tinsley (@JesseTinsley)", "site_name": "X"])
         XCTAssertEqual(r.title, "Jesse Tinsley on X")
+        XCTAssertEqual(r.notice, XReader.cutNotice)
     }
 
     func testXFailuresExplainThemselves() async {

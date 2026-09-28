@@ -28,8 +28,8 @@ the checker rejects about half of its in-text words (backlog UX-1; test models v
 Sharing is now one reader per source behind a router (`ios/RetAIn/Shared/Sharing/`): selection,
 Safari page, plain text, Reddit (post or the linked comment), any web link (Chrome) — all
 verified on device. Facebook (D46) built: public posts read; private groups / friends-only
-posts get specific messages; verified on device. X (D47) via oEmbed built — long posts
-arrive cut at ~280 chars; device test pending.
+posts get specific messages; verified on device. X (D47) via oEmbed, verified on device —
+long posts arrive cut; the sheet points to Safari, which gets the full post.
 Reddit terms risk accepted while the founder is the only user — revisit before others (D45).
 **2026-09-27 (D44):** Safari shares keep page metadata (byline, site, date, sub-headline)
 out of the body and show it as a reader header; never sent to the model. Verified on device.
@@ -205,7 +205,14 @@ itself via the fetchers.
 - Tests: 2 new (cut post from X's real response; 404 / profile link / short post); 15 sharing
   tests pass. Live, 7 links: X 45 words 0.2 s; Reddit, Chrome, Facebook unchanged.
 - Probes now live in a throwaway `Tests/ZZProbeTests.swift`, moved out after use.
-- **Pending:** founder device test from the X app.
+- Device: X-app shares arrive as a link and go through oEmbed (2 posts, 270–272 chars, cut).
+  Full text test: a tapped x.com link opens the X app (iOS universal links), so the link must
+  be pasted into Safari's address bar. Then Safari's page script got the whole Ajzenstadt post
+  (2,479 chars, ~400 words vs 272 via oEmbed), clean, no replies — but @mentions dropped
+  ("Good article from\n\n, especially") and paragraph breaks lost (backlog UX-5).
+- Built the agreed hint: readers can return a `notice`; the share sheet shows it as a banner.
+  Cut X posts say "X shortened this post. For the full text, paste its link into Safari's
+  address bar, then share from Safari." 15 sharing tests pass.
 
 ### 2026-09-27 — Facebook reader (D46)
 
