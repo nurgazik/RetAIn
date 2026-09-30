@@ -62,16 +62,78 @@ def test_daily_cap(client):
     assert client.post("/v1/transform", json={"text": TEXT}).status_code == 429
 
 
-def test_local_day_is_pacific_midnight(client):
-    """TD-17: 8 pm Pacific on Sep 28 is 03:00 UTC Sep 29 — it still counts toward Sep 28's cap."""
+PT = "America/Los_Angeles"
+
+
+def utc(*a):
+    return datetime(*a, tzinfo=timezone.utc)
+
+
+def test_day_starts_at_4am_local(client):
+    """D51 (and TD-17): 8 pm and 1 am Pacific belong to the same day; 4 am starts the next."""
     import service.db as db
-    at = datetime(2026, 9, 29, 3, 0, tzinfo=timezone.utc)
-    assert db.local_period("day", at) == ("2026-09-28T07:00:00.000000+00:00", "2026-09-29T07:00:00.000000+00:00")
-    assert db.local_period("month", at) == ("2026-09-01T07:00:00.000000+00:00", "2026-10-01T07:00:00.000000+00:00")
-    # DST ends 2026-11-01: that local day is 25 hours long
-    assert db.local_period("day", datetime(2026, 11, 1, 20, tzinfo=timezone.utc)) == \
-        ("2026-11-01T07:00:00.000000+00:00", "2026-11-02T08:00:00.000000+00:00")
-    assert db.local_period("month", datetime(2026, 12, 15, tzinfo=timezone.utc))[1] == "2027-01-01T08:00:00.000000+00:00"
+    tz = db.zone(PT)
+    assert db.day_of(utc(2026, 9, 29, 3), tz) == "2026-09-28"   # 8 pm Sep 28 Pacific
+    assert db.day_of(utc(2026, 9, 29, 8), tz) == "2026-09-28"   # 1 am Sep 29
+    assert db.day_of(utc(2026, 9, 29, 11), tz) == "2026-09-29"  # 4 am Sep 29
+    assert db.day_of(utc(2026, 9, 29, 3), db.zone("America/Toronto")) == "2026-09-28"  # 11 pm Toronto
+    assert db.day_of(utc(2026, 9, 29, 8), db.zone("America/Toronto")) == "2026-09-29"  # 4 am Toronto
+    assert db.next_day_at("2026-09-28", tz) == "2026-09-29T11:00:00+00:00"
+    # DST ends 2026-11-01 at 2 am; the 4 am boundary is unaffected (UTC-8 from then on)
+    assert db.next_day_at("2026-11-01", tz) == "2026-11-02T12:00:00+00:00"
+    assert db.zone("Mars/Olympus") is None and db.zone("../etc/passwd") is None and db.zone("") is None
+
+
+def test_timezone_header_sets_and_saves_the_users_day(client):
+    me = client.get("/v1/me", headers={"X-Timezone": "Asia/Tokyo"}).json()
+    assert me["tz"] == "Asia/Tokyo" and me["day"] and me["next_day_at"]
+    assert client.get("/v1/me").json()["tz"] == "Asia/Tokyo"  # saved: no header, same zone
+    bad = client.get("/v1/me", headers={"X-Timezone": "Nowhere/Invalid"})
+    assert bad.status_code == 200 and bad.json()["tz"] == "Asia/Tokyo"  # an invalid name is ignored
+
+
+def test_day_never_moves_back(client):
+    """Flying Tokyo → Honolulu crosses back over the rollover: the day stays."""
+    import service.db as db
+    uid = client.get("/v1/me").json()["user_id"]
+    con = db.connect()
+    user = dict(con.execute("SELECT * FROM users WHERE id=?", (uid,)).fetchone())
+    at = utc(2026, 9, 30, 20)  # 5 am Oct 1 in Tokyo, 10 am Sep 30 in Honolulu
+    tokyo = db.resolve_day(con, user, "Asia/Tokyo", at=at)
+    assert tokyo["day"] == "2026-10-01"
+    user = dict(con.execute("SELECT * FROM users WHERE id=?", (user["id"],)).fetchone())
+    honolulu = db.resolve_day(con, user, "Pacific/Honolulu", at=at)
+    assert honolulu["day"] == "2026-10-01" and honolulu["tz"] == "Pacific/Honolulu"
+    con.close()
+
+
+def test_every_write_is_stamped_with_the_day(client):
+    pid = client.post("/v1/transform", json={"text": TEXT}).json()["piece_id"]
+    for _ in range(40):
+        if client.get(f"/v1/pieces/{pid}").json()["status"] == "done":
+            break
+        time.sleep(0.05)
+    client.post(f"/v1/pieces/{pid}/taps", json={"word": "bolster"})
+    client.post("/v1/words", json={"word": "galvanize", "definition": "x"})
+    import service.db as db
+    con = db.connect()
+    for t in ("pieces", "calls", "events", "words"):
+        assert con.execute(f"SELECT COUNT(*) FROM {t}").fetchone()[0] > 0, t
+        assert con.execute(f"SELECT COUNT(*) FROM {t} WHERE day=''").fetchone()[0] == 0, t
+    con.close()
+
+
+def test_older_rows_get_their_day_on_startup(client):
+    import service.db as db
+    uid = client.get("/v1/me").json()["user_id"]
+    con = db.connect()
+    con.execute("INSERT INTO events (user_id, piece_id, word, kind, at) VALUES (?,?,?,?,?)",
+                (uid, "p_x", "w", "tap", "2026-09-29T08:30:00+00:00"))  # 1:30 am Pacific
+    con.commit(); con.close()
+    db.init()
+    con = db.connect()
+    assert con.execute("SELECT day FROM events WHERE piece_id='p_x'").fetchone()[0] == "2026-09-28"
+    con.close()
 
 
 def test_diagnostics_stored(client):

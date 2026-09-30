@@ -17,6 +17,7 @@ final class RetAInClient {
         var req = URLRequest(url: url)
         req.httpMethod = method
         req.timeoutInterval = 60
+        req.setValue(TimeZone.current.identifier, forHTTPHeaderField: "X-Timezone")  // the user's day (D51)
         if auth {
             guard let token = SessionStore.token else { throw APIError.noSession }
             req.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")

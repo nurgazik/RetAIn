@@ -2,9 +2,10 @@
 "Verifying a user"): verify the signature against Apple's public keys, the nonce, iss ==
 https://appleid.apple.com, aud == the app's bundle id, and exp."""
 from datetime import datetime, timedelta, timezone
+from typing import Annotated
 
 import jwt
-from fastapi import Depends, HTTPException
+from fastapi import Depends, Header, HTTPException
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from jwt import PyJWKClient
 
@@ -38,20 +39,23 @@ def dev_user(con):
         from .config import ROOT
         words = json.loads((ROOT / "data" / "words.json").read_text())["words"]
         for w in words:
-            con.execute("INSERT OR IGNORE INTO words (user_id, word, pos, definition, status, added) "
-                        "VALUES (?,?,?,?,?,?)", (row["id"], w["word"], w.get("pos"), w["definition"],
-                                                 w.get("status", "learning"), w.get("added") or db.now()))
+            added = w.get("added") or db.now()
+            con.execute("INSERT OR IGNORE INTO words (user_id, word, pos, definition, status, added, day) "
+                        "VALUES (?,?,?,?,?,?,?)", (row["id"], w["word"], w.get("pos"), w["definition"],
+                                                   w.get("status", "learning"), added, added[:10]))
         con.commit()
     return row
 
 
-def current_user(creds: HTTPAuthorizationCredentials | None = Depends(_bearer)):
+def current_user(creds: HTTPAuthorizationCredentials | None = Depends(_bearer),
+                 x_timezone: Annotated[str | None, Header()] = None):
+    """The signed-in user's row + tz, day and next_day_at (D51: the app sends X-Timezone)."""
     if creds is None:
         raise HTTPException(401, "missing bearer token")
     con = db.connect()
     try:
         if DEV_TOKEN and creds.credentials == DEV_TOKEN:
-            return dict(dev_user(con))
+            return db.resolve_day(con, dict(dev_user(con)), x_timezone)
         try:
             claims = jwt.decode(creds.credentials, SESSION_SECRET, algorithms=["HS256"], issuer="retain")
         except jwt.PyJWTError as exc:
@@ -59,6 +63,6 @@ def current_user(creds: HTTPAuthorizationCredentials | None = Depends(_bearer)):
         row = con.execute("SELECT * FROM users WHERE id=?", (claims["sub"],)).fetchone()
         if row is None:
             raise HTTPException(401, "unknown user")
-        return dict(row)
+        return db.resolve_day(con, dict(row), x_timezone)
     finally:
         con.close()

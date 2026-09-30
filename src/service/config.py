@@ -24,8 +24,9 @@ DAILY_CAP = int(os.environ.get("RETAIN_DAILY_CAP", "30"))
 ENGINE_MODE = os.environ.get("RETAIN_ENGINE_MODE", "sentence")  # sentence (founder 2026-09-25) | rewrite (D36)
 ENGINE_DEFS = os.environ.get("RETAIN_ENGINE_DEFS", "off") == "on"  # founder 2026-09-28: word-only prompts
 MIN_WORDS = int(os.environ.get("RETAIN_MIN_WORDS", "25"))  # a short Reddit comment is still a read
-# The day the daily cap and "spent today" count in (TD-17): local midnight, not the server's clock.
+# The user's day (D51): their own timezone (X-Timezone); TZ is the fallback when none is known.
 TZ = ZoneInfo(os.environ.get("RETAIN_TZ", "America/Los_Angeles"))
+DAY_STARTS_HOUR = 4  # a session past midnight stays in one day (Anki's default)
 MAX_CHARS = 24000
 if not os.environ.get("RETAIN_SESSION_SECRET"):
     print("[warn] RETAIN_SESSION_SECRET not set — sessions won't survive a restart")

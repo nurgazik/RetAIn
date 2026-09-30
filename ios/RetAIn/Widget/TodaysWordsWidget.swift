@@ -30,11 +30,10 @@ struct TodaysWordsProvider: TimelineProvider {
         let e = current(); if context.isPreview, case .noCache = e.state { completion(.sample) } else { completion(e) }
     }
     func getTimeline(in context: Context, completion: @escaping (Timeline<TodaysWordsEntry>) -> Void) {
-        // Tomorrow's first word is scheduled for midnight, so the switch happens even if the
-        // system delays the reload it's asked for (reload times are only a request).
-        let cal = Calendar.current
-        let midnight = cal.date(byAdding: .day, value: 1, to: cal.startOfDay(for: .now))!
-        completion(Timeline(entries: [current(), entry(at: midnight)], policy: .after(midnight)))
+        // Tomorrow's first word is scheduled for 4 am (D51: days start then), so the switch
+        // happens even if the system delays the reload it's asked for (reload times are only a request).
+        let next = WordsStore.nextDayStart()
+        completion(Timeline(entries: [current(), entry(at: next)], policy: .after(next)))
     }
 
     private func current() -> TodaysWordsEntry { entry(at: .now) }

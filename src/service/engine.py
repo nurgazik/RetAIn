@@ -72,7 +72,7 @@ def _run(piece_id: str) -> None:
             result = G.generate_piece(con, item, wrapper, menu, env, digest_date=None,
                                       words=words, record=False, **kwargs,
                                       progress=lambda phase: _set(con, piece_id, status=phase))
-        cost = db.record_calls(con, piece["user_id"], piece_id, list(G.CALL_LOG), PRICES)
+        cost = db.record_calls(con, piece["user_id"], piece_id, list(G.CALL_LOG), PRICES, day=piece["day"])
         _set(con, piece_id, status="done", title=result["title"], body_html=result["body"],
              attrib=G.attribution_for(item, G.SENTENCE_DISCLAIMER if ENGINE_MODE == "sentence" else G.AI_DISCLAIMER),
              offered_words=json.dumps(menu),

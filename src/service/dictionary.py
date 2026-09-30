@@ -233,7 +233,7 @@ def backfill() -> None:
     print(f"[backfill] {len(words)} words without a card")
     for i, w in enumerate(words, 1):
         lid, definition, calls = build_card(con, w, env)
-        cost += db.record_calls(con, None, None, calls, engine.PRICES)
+        cost += db.record_calls(con, None, None, calls, engine.PRICES, day=db.server_day())
         if lid:
             con.execute("UPDATE words SET lexicon_id=?, definition=? WHERE word=? AND lexicon_id IS NULL",
                         (lid, definition, w))
@@ -241,7 +241,7 @@ def backfill() -> None:
         print(f"[backfill] {i}/{len(words)} {w}: {'card ' + str(lid) if lid else 'not found (kept as is)'}")
     for r in con.execute("SELECT DISTINCT l.id, l.headword FROM lexicon l JOIN senses s ON s.lexicon_id = l.id "
                          "WHERE s.examples IS NULL AND l.source='wiktionary'").fetchall():
-        cost += db.record_calls(con, None, None, write_examples(con, r["id"], r["headword"], env), engine.PRICES)
+        cost += db.record_calls(con, None, None, write_examples(con, r["id"], r["headword"], env), engine.PRICES, day=db.server_day())
     print(f"[backfill] done, ${cost:.4f}")
     con.close()
 

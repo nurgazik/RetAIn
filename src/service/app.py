@@ -61,11 +61,12 @@ def me(user=Depends(auth.current_user)):
     try:
         n_words = con.execute("SELECT COUNT(*) FROM words WHERE user_id=? AND status='learning'", (user["id"],)).fetchone()[0]
         n_pieces = con.execute("SELECT COUNT(*) FROM pieces WHERE user_id=? AND status='done'", (user["id"],)).fetchone()[0]
-        spend = "SELECT COALESCE(SUM(usd),0) FROM calls WHERE user_id=? AND at >= ? AND at < ?"
-        spend_today = con.execute(spend, (user["id"], *db.local_period("day"))).fetchone()[0]
-        spend_month = con.execute(spend, (user["id"], *db.local_period("month"))).fetchone()[0]
+        spend = "SELECT COALESCE(SUM(usd),0) FROM calls WHERE user_id=? AND day LIKE ?"
+        spend_today = con.execute(spend, (user["id"], user["day"])).fetchone()[0]
+        spend_month = con.execute(spend, (user["id"], user["day"][:7] + "%")).fetchone()[0]
         return {"user_id": user["id"], "email": user["email"], "learning_words": n_words, "pieces": n_pieces,
-                "spend_today_usd": round(spend_today, 4), "spend_month_usd": round(spend_month, 4)}
+                "spend_today_usd": round(spend_today, 4), "spend_month_usd": round(spend_month, 4),
+                "day": user["day"], "next_day_at": user["next_day_at"], "tz": user["tz"]}
     finally:
         con.close()
 
@@ -110,13 +111,13 @@ def add_word(body: WordIn, user=Depends(auth.current_user)):
             definition, pos, lexicon_id = existing["definition"], pos or existing["pos"], existing["lexicon_id"]
         elif not definition:  # the capture flow: diagrams/word-capture-flow.md
             lexicon_id, definition, calls = dictionary.build_card(con, word, engine.model_env())
-            db.record_calls(con, user["id"], None, calls, engine.PRICES)
+            db.record_calls(con, user["id"], None, calls, engine.PRICES, day=user["day"])
             if lexicon_id and not pos:
                 pos = dictionary.cards(con, {lexicon_id})[lexicon_id]["senses"][0]["pos"]
-        con.execute("INSERT INTO words (user_id, word, pos, definition, status, added, lexicon_id) "
-                    "VALUES (?,?,?,?,?,?,?) ON CONFLICT(user_id, word) DO UPDATE SET status='learning', "
+        con.execute("INSERT INTO words (user_id, word, pos, definition, status, added, lexicon_id, day) "
+                    "VALUES (?,?,?,?,?,?,?,?) ON CONFLICT(user_id, word) DO UPDATE SET status='learning', "
                     "pos=excluded.pos, definition=excluded.definition, lexicon_id=excluded.lexicon_id",
-                    (user["id"], word, pos, definition, "learning", db.now(), lexicon_id))
+                    (user["id"], word, pos, definition, "learning", db.now(), lexicon_id, user["day"]))
         con.commit()
         row = dict(con.execute("SELECT * FROM words WHERE user_id=? AND word=?", (user["id"], word)).fetchone())
         return with_cards(con, [row])[0]
@@ -168,14 +169,14 @@ def transform(body: TransformIn, user=Depends(auth.current_user)):
     text = text[:MAX_CHARS]
     con = db.connect()
     try:
-        n_today = con.execute("SELECT COUNT(*) FROM pieces WHERE user_id=? AND created_at >= ? AND created_at < ?",
-                              (user["id"], *db.local_period("day"))).fetchone()[0]
+        n_today = con.execute("SELECT COUNT(*) FROM pieces WHERE user_id=? AND day=?",
+                              (user["id"], user["day"])).fetchone()[0]
         if n_today >= DAILY_CAP:
             raise HTTPException(429, f"daily cap of {DAILY_CAP} transforms reached")
         pid = db.new_id("p")
-        con.execute("INSERT INTO pieces (id, user_id, created_at, source, title, url, source_text, status, meta, "
-                    "byline, site_name, published, dek) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)",
-                    (pid, user["id"], db.now(), body.source, (body.title or "").strip() or None,
+        con.execute("INSERT INTO pieces (id, user_id, created_at, day, source, title, url, source_text, status, meta, "
+                    "byline, site_name, published, dek) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+                    (pid, user["id"], db.now(), user["day"], body.source, (body.title or "").strip() or None,
                      (body.url or "").strip() or None, text, "queued",
                      json.dumps(body.meta) if body.meta else None,
                      *((v or "").strip()[:2000] or None for v in (body.byline, body.site_name, body.published, body.dek))))
@@ -253,8 +254,8 @@ def tap(piece_id: str, body: TapIn, user=Depends(auth.current_user)):
     try:
         if con.execute("SELECT 1 FROM pieces WHERE id=? AND user_id=?", (piece_id, user["id"])).fetchone() is None:
             raise HTTPException(404, "no such piece")
-        con.execute("INSERT INTO events (user_id, piece_id, word, kind, at) VALUES (?,?,?,?,?)",
-                    (user["id"], piece_id, body.word.strip().lower(), "tap", db.now()))
+        con.execute("INSERT INTO events (user_id, piece_id, word, kind, at, day) VALUES (?,?,?,?,?,?)",
+                    (user["id"], piece_id, body.word.strip().lower(), "tap", db.now(), user["day"]))
         con.commit()
         return {"ok": True}
     finally:

@@ -24,10 +24,22 @@ enum WordsStore {
         let learning = words.filter { $0.status == "learning" }.sorted { $0.id < $1.id }
         return Array(learning.shuffled(using: &rng).prefix(perDay))
     }
-    static func dayKey(_ date: Date = .now) -> String {
-        let f = DateFormatter(); f.calendar = Calendar(identifier: .gregorian)
-        f.locale = Locale(identifier: "en_US_POSIX"); f.timeZone = .current; f.dateFormat = "yyyy-MM-dd"
-        return f.string(from: date)
+
+    /// Days start at 4 am local time, the server's rule (D51, `db.day_of`): 1 am still counts
+    /// as the day before.
+    static let dayStartsHour = 4
+    static func dayKey(_ date: Date = .now, in tz: TimeZone = .current) -> String {
+        var cal = Calendar(identifier: .gregorian); cal.timeZone = tz
+        let d = cal.component(.hour, from: date) < dayStartsHour ? cal.date(byAdding: .day, value: -1, to: date)! : date
+        let f = DateFormatter(); f.calendar = cal
+        f.locale = Locale(identifier: "en_US_POSIX"); f.timeZone = tz; f.dateFormat = "yyyy-MM-dd"
+        return f.string(from: d)
+    }
+    /// When the next day starts (the next 4 am).
+    static func nextDayStart(after date: Date = .now, in tz: TimeZone = .current) -> Date {
+        var cal = Calendar(identifier: .gregorian); cal.timeZone = tz
+        return cal.nextDate(after: date, matching: DateComponents(hour: dayStartsHour, minute: 0, second: 0),
+                            matchingPolicy: .nextTime)!
     }
 
     // Widget position within today's words; resets when the day changes.

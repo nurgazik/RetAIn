@@ -1,7 +1,7 @@
 # The user's day: how every request knows what "today" is
 
 Decision: PRD D51 (2026-09-30). Design: `docs/architecture.md` "The user's day".
-Not built yet.
+Built 2026-09-30: `db.resolve_day` (server), `WordsStore.dayKey` (widget, same 4 am rule).
 
 ```mermaid
 flowchart TD
@@ -19,7 +19,7 @@ flowchart TD
     N --> D
     D --> W["Stamp new rows<br/>pieces · calls · events · words"]
     D --> Q["Answer 'today' questions<br/>cap · spent today · daily set"]
-    D --> R["/v1/me → day + next_day_at<br/>(widget refresh)"]
+    D --> R["/v1/me → day + next_day_at + tz"]
 ```
 
 ## Why

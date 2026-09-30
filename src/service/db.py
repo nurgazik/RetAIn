@@ -3,16 +3,19 @@ import json
 import sqlite3
 import threading
 import uuid
-from datetime import datetime, timedelta, timezone
+from datetime import date, datetime, time, timedelta, timezone
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
-from .config import DB_PATH, TZ
+from .config import DAY_STARTS_HOUR, DB_PATH, TZ
 
 SCHEMA = """
 CREATE TABLE IF NOT EXISTS users (
     id          TEXT PRIMARY KEY,
     apple_sub   TEXT UNIQUE,
     email       TEXT,
-    created_at  TEXT NOT NULL
+    created_at  TEXT NOT NULL,
+    tz          TEXT,            -- IANA name the app last sent (D51)
+    last_day    TEXT             -- the latest day key seen; the day never moves back
 );
 CREATE TABLE IF NOT EXISTS words (
     id          INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -22,6 +25,7 @@ CREATE TABLE IF NOT EXISTS words (
     definition  TEXT NOT NULL,
     status      TEXT NOT NULL DEFAULT 'learning',   -- learning | retained | archived (D26)
     added       TEXT NOT NULL,
+    day         TEXT NOT NULL DEFAULT '',   -- the user's day it was added (D51)
     UNIQUE (user_id, word)
 );
 -- Word cards (D48): shared by every user, no user data. One row per headword (the dictionary
@@ -66,7 +70,8 @@ CREATE TABLE IF NOT EXISTS pieces (
     byline        TEXT,             -- page metadata from the Safari extension, shown in the
     site_name     TEXT,             -- reader's header; never sent to the model
     published     TEXT,
-    dek           TEXT              -- summary / sub-headline lines, blank-line separated
+    dek           TEXT,             -- summary / sub-headline lines, blank-line separated
+    day           TEXT NOT NULL DEFAULT ''   -- the user's day (D51); the cap counts it
 );
 CREATE INDEX IF NOT EXISTS idx_pieces_user ON pieces (user_id, created_at);
 CREATE TABLE IF NOT EXISTS events (
@@ -75,7 +80,8 @@ CREATE TABLE IF NOT EXISTS events (
     piece_id  TEXT NOT NULL,
     word      TEXT,
     kind      TEXT NOT NULL,        -- tap | impression
-    at        TEXT NOT NULL
+    at        TEXT NOT NULL,
+    day       TEXT NOT NULL DEFAULT ''
 );
 CREATE TABLE IF NOT EXISTS diagnostics (
     id        INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -97,7 +103,8 @@ CREATE TABLE IF NOT EXISTS calls (
     at         TEXT NOT NULL,
     response   TEXT,                -- the model's raw output, before any parsing or guard
     prompt_sha TEXT,                -- first 12 hex of sha1(system prompt): which prompt version
-    host       TEXT                 -- who served it: an OpenRouter host (makora, venice…) or google
+    host       TEXT,                -- who served it: an OpenRouter host (makora, venice…) or google
+    day        TEXT NOT NULL DEFAULT ''   -- the user's day (the piece's, for engine calls)
 );
 """
 
@@ -108,16 +115,67 @@ def now() -> str:
     return datetime.now(timezone.utc).isoformat(timespec="microseconds")
 
 
-def local_period(kind: str = "day", at: datetime | None = None) -> tuple[str, str]:
-    """UTC bounds [start, end) of the current local day or month (config.TZ), comparable with now()."""
-    local = (at or datetime.now(timezone.utc)).astimezone(TZ)
-    start = local.replace(hour=0, minute=0, second=0, microsecond=0)
-    if kind == "month":
-        start = start.replace(day=1)
-        end = start.replace(year=start.year + start.month // 12, month=start.month % 12 + 1)
-    else:
-        end = start + timedelta(days=1)  # wall-clock arithmetic: DST days are 23 or 25 hours
-    return tuple(d.astimezone(timezone.utc).isoformat(timespec="microseconds") for d in (start, end))
+# ---------------------------------------------------------------- the user's day (D51)
+# Every row carries `day` — the user's local date, starting at 4 am — beside its UTC time.
+# See docs/architecture.md "The user's day" and diagrams/user-day.md.
+
+def zone(name: str | None) -> ZoneInfo | None:
+    """A timezone from its IANA name (America/Toronto); None for missing or unknown names."""
+    if not name or len(name) > 64:
+        return None
+    try:
+        return ZoneInfo(name)
+    except (ZoneInfoNotFoundError, ValueError):
+        return None
+
+
+def day_of(at: datetime, tz: ZoneInfo) -> str:
+    """The day key for a moment: local date, with days starting at DAY_STARTS_HOUR."""
+    return (at.astimezone(tz) - timedelta(hours=DAY_STARTS_HOUR)).date().isoformat()
+
+
+def next_day_at(day: str, tz: ZoneInfo) -> str:
+    """When the day after `day` starts, in UTC."""
+    start = datetime.combine(date.fromisoformat(day) + timedelta(days=1), time(DAY_STARTS_HOUR), tz)
+    return start.astimezone(timezone.utc).isoformat(timespec="seconds")
+
+
+def server_day() -> str:
+    """The day for writes with no user (dictionary backfill): the fallback timezone."""
+    return day_of(datetime.now(timezone.utc), TZ)
+
+
+def resolve_day(con, user: dict, tz_name: str | None, at: datetime | None = None) -> dict:
+    """The user row + tz, day and next_day_at. Saves a new valid timezone from the app, and
+    the day as users.last_day; the day never moves back (a flight west can't replay one)."""
+    sent = zone(tz_name)
+    tz = sent or zone(user.get("tz")) or TZ
+    day = day_of(at or datetime.now(timezone.utc), tz)
+    last = user.get("last_day")
+    if last and last > day:
+        day = last
+    changes = {k: v for k, v in (("tz", sent and sent.key), ("last_day", day)) if v and v != user.get(k)}
+    if changes:
+        with _lock:
+            con.execute(f"UPDATE users SET {', '.join(f'{k}=?' for k in changes)} WHERE id=?",
+                        (*changes.values(), user["id"]))
+            con.commit()
+    return user | changes | {"tz": tz.key, "day": day, "next_day_at": next_day_at(day, tz)}
+
+
+def _backfill_days(con) -> None:
+    """Rows written before D51 get their day from the UTC stamp in the fallback timezone."""
+    for table, col in (("pieces", "created_at"), ("calls", "at"), ("events", "at"), ("words", "added")):
+        rows = con.execute(f"SELECT rowid, {col} FROM {table} WHERE day = ''").fetchall()
+        for rowid, stamp in rows:
+            if len(stamp) == 10:  # a bare date (hand-written words.json): already a day
+                day = stamp
+            else:
+                at = datetime.fromisoformat(stamp)
+                day = day_of(at if at.tzinfo else at.replace(tzinfo=timezone.utc), TZ)
+            con.execute(f"UPDATE {table} SET day=? WHERE rowid=?", (day, rowid))
+        if rows:
+            print(f"[db] {table}: day set on {len(rows)} older rows")
 
 
 def connect() -> sqlite3.Connection:
@@ -137,11 +195,16 @@ def init() -> None:
                  "ALTER TABLE pieces ADD COLUMN byline TEXT", "ALTER TABLE pieces ADD COLUMN site_name TEXT",
                  "ALTER TABLE pieces ADD COLUMN published TEXT", "ALTER TABLE pieces ADD COLUMN dek TEXT",
                  "ALTER TABLE words ADD COLUMN lexicon_id INTEGER REFERENCES lexicon(id)",
-                 "ALTER TABLE calls ADD COLUMN host TEXT"):
+                 "ALTER TABLE calls ADD COLUMN host TEXT",
+                 "ALTER TABLE users ADD COLUMN tz TEXT", "ALTER TABLE users ADD COLUMN last_day TEXT",
+                 *(f"ALTER TABLE {t} ADD COLUMN day TEXT NOT NULL DEFAULT ''" for t in ("pieces", "calls", "events", "words"))):
         try:  # migrations for DBs created before these columns
             con.execute(stmt)
         except sqlite3.OperationalError:
             pass
+    for t in ("pieces", "calls", "events", "words"):  # after the migrations: old DBs lack `day` until then
+        con.execute(f"CREATE INDEX IF NOT EXISTS idx_{t}_day ON {t} (user_id, day)")
+    _backfill_days(con)
     con.commit()
     con.close()
 
@@ -180,7 +243,7 @@ def learning_words(con, user_id: str) -> list:
     return sorted(rows, key=lambda w: counts.get(w["word"], 0))
 
 
-def record_calls(con, user_id: str, piece_id: str | None, calls: list, prices: dict) -> float:
+def record_calls(con, user_id: str, piece_id: str | None, calls: list, prices: dict, *, day: str) -> float:
     """calls: [(purpose, model, tokens_in, tokens_out[, ms[, billed_usd[, reasoning, response, prompt_sha[, host]]]])]
     → rows in `calls`; returns USD total."""
     total = 0.0
@@ -195,7 +258,7 @@ def record_calls(con, user_id: str, piece_id: str | None, calls: list, prices: d
             response, prompt_sha = (c[7], c[8]) if len(c) > 8 else (None, None)
             host = c[9] if len(c) > 9 else None
             con.execute("INSERT INTO calls (user_id, piece_id, purpose, model, tokens_in, tokens_out, usd, ms, at, "
-                        "response, prompt_sha, host) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)",
-                        (user_id, piece_id, purpose, model, tin, tout, usd, ms, now(), response, prompt_sha, host))
+                        "response, prompt_sha, host, day) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)",
+                        (user_id, piece_id, purpose, model, tin, tout, usd, ms, now(), response, prompt_sha, host, day))
         con.commit()
     return total

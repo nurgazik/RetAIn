@@ -220,6 +220,12 @@ itself via the fetchers.
   4 am local, a day key stamped on every row beside UTC, the day never goes back. Written up in
   docs/architecture.md + diagrams/user-day.md; build is TD-19. Founder wants daily in-app content
   (quizzes/exercises) — that is a separate discussion, not yet decided.
+- **TD-19 built (D51):** every request carries the phone's timezone; the server saves it, works out the
+  day (4 am start, never back) and stamps it on pieces, calls, events and words (1,223 older rows
+  backfilled on restart, checked on a DB copy first). Cap and spend read the day; `/v1/me` returns
+  `day`, `next_day_at`, `tz`. Widget uses the same 4 am rule on the phone (not the server's day: it must
+  switch offline). Tests: service 49/49; iOS 35/36, the 1 failure is TD-15. Service restarted.
+  **Founder to do:** install from Xcode; the widget should keep the same set past midnight and change after 4 am.
 
 ### 2026-09-28 — Siri word capture (D50, UX-15)
 

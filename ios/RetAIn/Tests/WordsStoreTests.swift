@@ -40,4 +40,15 @@ final class WordsStoreTests: XCTestCase {
         WordsStore.advance(day: day, count: 2); XCTAssertEqual(WordsStore.position(day: day), 1)
         WordsStore.advance(day: day, count: 2); XCTAssertEqual(WordsStore.position(day: day), 0)
     }
+
+    /// D51: the same rule as the server's `db.day_of` — days start at 4 am local.
+    func testDayStartsAt4amLocal() {
+        let pt = TimeZone(identifier: "America/Los_Angeles")!
+        let utc = { (s: String) in ISO8601DateFormatter().date(from: s)! }
+        XCTAssertEqual(WordsStore.dayKey(utc("2026-09-29T03:00:00Z"), in: pt), "2026-09-28")  // 8 pm Pacific
+        XCTAssertEqual(WordsStore.dayKey(utc("2026-09-29T08:00:00Z"), in: pt), "2026-09-28")  // 1 am
+        XCTAssertEqual(WordsStore.dayKey(utc("2026-09-29T11:00:00Z"), in: pt), "2026-09-29")  // 4 am
+        XCTAssertEqual(WordsStore.nextDayStart(after: utc("2026-09-29T08:00:00Z"), in: pt), utc("2026-09-29T11:00:00Z"))
+        XCTAssertEqual(WordsStore.nextDayStart(after: utc("2026-11-01T20:00:00Z"), in: pt), utc("2026-11-02T12:00:00Z"))  // after DST ends
+    }
 }
