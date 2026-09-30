@@ -6,7 +6,7 @@ first. Decisions live in PRD.md's log (D1–D34); this file is the narrative tim
 
 ---
 
-## NOW (as of 2026-09-28)
+## NOW (as of 2026-09-30)
 
 **Phase: MVP build (Phase 2) — M1–M6 built and verified on the founder's phone; Sign in
 with Apple live; membership active; M8 (monetization) and M9 (TestFlight) remain.**
@@ -59,7 +59,7 @@ tracked in git by mistake — now untracked and ignored (history still contains 
 copies; founder decided 2026-09-26 not to purge).
 
 **Start here (new session, any model):** read this NOW block, then `docs/backlog.md`
-(pending decisions DEC-1..5 at the top; epics TD/MO/UX/AD), then PRD.md decisions D34–D39.
+(pending decisions DEC-1..4 at the top; epics TD/MO/UX/AD), then PRD.md decisions D34–D39.
 Working agreement: commit locally as work lands, push in batches at milestones and say
 so; no `rm`; no installs without asking; product decisions discussed before code;
 architecture choices proposed to the founder before code (he wants to learn them);
@@ -206,6 +206,14 @@ vacation coding ends). Home Mac: clone normally with personal credentials; recre
 `.env.local` (4 API keys — gitignored, never on GitHub) and `data/retain.db` refills
 itself via the fetchers.
 
+### 2026-09-30 — Siri verified on device; backlog housekeeping
+
+- Founder confirmed Siri capture (UX-15) works end to end on the phone.
+- Backlog cleaned up (docs only): TD-18 marked as a duplicate of TD-15 (same date bug), UX-12
+  folded into UX-3 (founder rule: no start without words, at least 20), and the decisions range
+  corrected to D1–D50. This file's start-here note now says DEC-1..4 (there was never a DEC-5).
+- Still open, not housekeeping: TD-17 (the daily cap resets at 5 pm Pacific). A fix proposal is next.
+
 ### 2026-09-28 — Siri word capture (D50, UX-15)
 
 - **Constraint found first:** "Hey Siri, add the word *X* to RetAIn" in one sentence can't be
@@ -222,7 +230,7 @@ itself via the fetchers.
 - **Verified:** simulator build succeeds; the built app's App Intents metadata lists
   `AddWordIntent` with all 4 phrases. Unit tests 34/35 pass, including the new rule test and the
   existing share-capture test. The 1 failure is unrelated and older: the reader header shows
-  "Sep 25" for 2026-09-26 in Pacific time → logged as TD-18.
+  "Sep 25" for 2026-09-26 in Pacific time → logged as TD-18 (later found to duplicate TD-15).
 - **2026-09-30: founder confirmed Siri capture works on the phone.** Still untested: locked-phone run, and latency — a new
   word waits for its card call (p50 3.7 s; the 5 s hedge caps the tail), and Siri's time limit
   isn't confirmed. If too slow: return right after saving and let backfill build the card
