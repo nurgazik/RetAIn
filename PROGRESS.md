@@ -24,8 +24,8 @@ original, tap a word for its meaning. Safari shares are cleaned by Mozilla Reada
 **Top open problem: density** — ~1.5–2 words per article; the model under-attempts and
 the checker rejects about half of its in-text words (backlog UX-1; test models via TD-13).
 **2026-09-28 (D50, UX-15):** Siri capture built — "Hey Siri, add a word to RetAIn" → "Which word?"
-(Apple allows no free word inside the trigger phrase). Builds and unit-tests on the simulator;
-**not yet tried on the phone** (Siri, locked phone, time to answer on a new word).
+(Apple allows no free word inside the trigger phrase). **Works on the founder's phone
+(2026-09-30).** Still untested: locked phone, time to answer on a new word.
 **2026-09-28 (UX-14):** home-screen widget "Today's words" built — 5 learning words a day,
 one at a time with meaning, › to advance; verified on the founder's phone. Bottom row reads "Today's words · n / 5".
 **Next up:** founder's call on stretch length; model evals on surviving words per article.
@@ -223,7 +223,7 @@ itself via the fetchers.
   `AddWordIntent` with all 4 phrases. Unit tests 34/35 pass, including the new rule test and the
   existing share-capture test. The 1 failure is unrelated and older: the reader header shows
   "Sep 25" for 2026-09-26 in Pacific time → logged as TD-18.
-- **Not verified yet (needs the phone):** Siri end to end, locked-phone run, and latency — a new
+- **2026-09-30: founder confirmed Siri capture works on the phone.** Still untested: locked-phone run, and latency — a new
   word waits for its card call (p50 3.7 s; the 5 s hedge caps the tail), and Siri's time limit
   isn't confirmed. If too slow: return right after saving and let backfill build the card
   (server change, founder decides). Device test list: common word, rare word (*sesquipedalian*),
