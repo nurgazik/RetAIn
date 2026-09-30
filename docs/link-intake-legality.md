@@ -7,6 +7,8 @@ docs/poc2-transform.md §8; founder ruling → PRD D37.*
 > **Update 2026-09-28:** the founder has since chosen to read shared links **on the phone**,
 > accepting the terms risk below while he is the only user: Reddit (PRD D45), Facebook public
 > posts (D46), X via oEmbed (D47). Revisit before anyone else uses the app (backlog AD-10).
+> **2026-09-30 (D52):** Reddit and Facebook reading paused ahead of launch — their links ask
+> the user to copy the text; X via oEmbed stays on, still under AD-10.
 > The findings below still stand as the risk record.
 
 ## Headline

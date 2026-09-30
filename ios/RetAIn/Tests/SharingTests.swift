@@ -23,11 +23,20 @@ final class SharingTests: XCTestCase {
         XCTAssertEqual(claimant(input(url: "https://cbc.ca/x", page: page)), "selection")
         XCTAssertEqual(claimant(input(url: "https://cbc.ca/x", page: ["text": Self.article, "selection": "one two"])), "safari-page")
         XCTAssertEqual(claimant(input(text: Self.article, url: "https://www.reddit.com/r/a/comments/b/c/")), "plain-text")
-        XCTAssertEqual(claimant(input(url: "https://www.reddit.com/r/ClaudeAI/s/nlvL3JzYxD")), "reddit")
-        XCTAssertEqual(claimant(input(url: "https://old.reddit.com/r/a/comments/b/c/")), "reddit")
+        XCTAssertEqual(claimant(input(url: "https://www.reddit.com/r/ClaudeAI/s/nlvL3JzYxD")), "reddit-paused")
+        XCTAssertEqual(claimant(input(url: "https://old.reddit.com/r/a/comments/b/c/")), "reddit-paused")
         XCTAssertEqual(claimant(input(url: "https://en.wikipedia.org/wiki/Readability")), "web-page")
         XCTAssertEqual(claimant(input(text: "short title", url: "https://notreddit.com/x")), "web-page")
         XCTAssertNil(claimant(input(url: "mailto:a@b.c")))
+    }
+
+    /// D52: Reddit and Facebook links ask for copied text and never fall through to the web-page reader.
+    func testPausedSourcesAskForCopiedText() async {
+        for (url, name) in [("https://www.reddit.com/r/a/comments/b/c/", "reddit-paused"),
+                            ("https://www.facebook.com/share/p/1DZxoEEMzn/", "facebook-paused")] {
+            guard case .unusable("Copy the text instead", let detail, name) = await ShareRouter().route(input(url: url)) else { return XCTFail(url) }
+            XCTAssertTrue(detail.contains("copied"))
+        }
     }
 
     func testWordIsCaptureAndNothingExplainsItself() async {
@@ -200,7 +209,7 @@ final class SharingTests: XCTestCase {
         i.promoteLinkText()
         XCTAssertEqual(i.url, "https://www.facebook.com/share/1DZxoEEMzn/?mibextid=wwXIfr")
         XCTAssertNil(i.text)
-        XCTAssertEqual(claimant(i), "facebook")
+        XCTAssertEqual(claimant(i), "facebook-paused")
         var words = input(text: "see https://example.com for more")
         words.promoteLinkText()
         XCTAssertNil(words.url)

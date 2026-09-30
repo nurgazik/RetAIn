@@ -15,8 +15,9 @@ struct ShareRouter {
         SelectionReader(),    // the user's own selection always wins
         SafariPageReader(),   // Safari ran our page script
         PlainTextReader(),    // text shared from any app
-        RedditReader(),       // reddit links: the post, or the comment the link points to
-        FacebookReader(),     // facebook links: public posts; private groups and logins explained
+        // reddit and facebook links: paused (D52, terms) — asks for copied text; the readers are kept for AD-10
+        PausedReader(RedditReader(), source: "Reddit"),
+        PausedReader(FacebookReader(), source: "Facebook"),
         XReader(),            // x links: X's oEmbed (X blocks web views); long posts arrive cut
         WebPageReader(),      // any other web link (Chrome, other apps' Share buttons)
     ]

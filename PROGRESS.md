@@ -43,8 +43,10 @@ Safari page, plain text, Reddit (post or the linked comment), any web link (Chro
 verified on device. Facebook (D46) built: public posts read; private groups / friends-only
 posts get specific messages; verified on device. X (D47) via oEmbed, verified on device —
 long posts arrive cut; the sheet points to Safari, which gets the full post.
-Reddit, Meta and X terms risks accepted while the founder is the only user — **revisit before
-anyone else installs the app, TestFlight included** (backlog AD-10). Open bug: date-only
+**2026-09-30 (D52): Reddit and Facebook link reading paused** (terms risk before launch) — their
+links now say "Copy the text instead"; the readers are kept, one line each to switch back on.
+X's terms risk is still accepted while the founder is the only user — **revisit before anyone
+else installs the app, TestFlight included** (backlog AD-10). Open bug: date-only
 publish dates show a day early (TD-15).
 **2026-09-27 (D44):** Safari shares keep page metadata (byline, site, date, sub-headline)
 out of the body and show it as a reader header; never sent to the model. Verified on device.
@@ -205,6 +207,17 @@ all needed for TestFlight and none waits on a decision.**
 vacation coding ends). Home Mac: clone normally with personal credentials; recreate
 `.env.local` (4 API keys — gitignored, never on GitHub) and `data/retain.db` refills
 itself via the fetchers.
+
+### 2026-09-30 — Reddit and Facebook link reading paused (D52)
+
+- Founder asked what AD-10 means and what shipping as is would risk: rejection under Apple 5.2.2
+  is the mild case; worse is removal after launch or a legal letter to an individual seller (D39).
+  Decision: pause the two readers that load pages in a hidden web view (Reddit, Facebook); keep X.
+- Built `Shared/Sharing/Readers/PausedReader.swift`: wraps a reader, keeps claiming its links (so
+  they don't fall through to the generic web-page reader) and answers "Copy the text instead".
+  `ShareRouter` wraps `RedditReader` and `FacebookReader`; the readers and their tests are unchanged.
+  Still works: text shared from those apps, and the Safari action on their pages.
+- SharingTests: 17 run, 0 failures, 1 skipped (live X probe, opt-in). **Not yet tried on the phone.**
 
 ### 2026-09-30 — Siri verified on device; backlog housekeeping
 
