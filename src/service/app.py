@@ -2,7 +2,6 @@
 import asyncio
 import json
 from contextlib import asynccontextmanager
-from datetime import date
 
 import jwt
 from fastapi import Depends, FastAPI, HTTPException
@@ -62,9 +61,9 @@ def me(user=Depends(auth.current_user)):
     try:
         n_words = con.execute("SELECT COUNT(*) FROM words WHERE user_id=? AND status='learning'", (user["id"],)).fetchone()[0]
         n_pieces = con.execute("SELECT COUNT(*) FROM pieces WHERE user_id=? AND status='done'", (user["id"],)).fetchone()[0]
-        today = date.today().isoformat()
-        spend_today = con.execute("SELECT COALESCE(SUM(usd),0) FROM calls WHERE user_id=? AND at LIKE ?", (user["id"], f"{today}%")).fetchone()[0]
-        spend_month = con.execute("SELECT COALESCE(SUM(usd),0) FROM calls WHERE user_id=? AND at LIKE ?", (user["id"], f"{today[:7]}%")).fetchone()[0]
+        spend = "SELECT COALESCE(SUM(usd),0) FROM calls WHERE user_id=? AND at >= ? AND at < ?"
+        spend_today = con.execute(spend, (user["id"], *db.local_period("day"))).fetchone()[0]
+        spend_month = con.execute(spend, (user["id"], *db.local_period("month"))).fetchone()[0]
         return {"user_id": user["id"], "email": user["email"], "learning_words": n_words, "pieces": n_pieces,
                 "spend_today_usd": round(spend_today, 4), "spend_month_usd": round(spend_month, 4)}
     finally:
@@ -169,9 +168,8 @@ def transform(body: TransformIn, user=Depends(auth.current_user)):
     text = text[:MAX_CHARS]
     con = db.connect()
     try:
-        today = date.today().isoformat()
-        n_today = con.execute("SELECT COUNT(*) FROM pieces WHERE user_id=? AND created_at LIKE ?",
-                              (user["id"], f"{today}%")).fetchone()[0]
+        n_today = con.execute("SELECT COUNT(*) FROM pieces WHERE user_id=? AND created_at >= ? AND created_at < ?",
+                              (user["id"], *db.local_period("day"))).fetchone()[0]
         if n_today >= DAILY_CAP:
             raise HTTPException(429, f"daily cap of {DAILY_CAP} transforms reached")
         pid = db.new_id("p")

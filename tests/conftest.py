@@ -15,6 +15,7 @@ def client(tmp_path, monkeypatch):
     monkeypatch.setenv("RETAIN_DEV_TOKEN", "dev-test")
     monkeypatch.setenv("RETAIN_SESSION_SECRET", "s" * 32)
     monkeypatch.setenv("RETAIN_DAILY_CAP", "3")
+    monkeypatch.setenv("RETAIN_TZ", "America/Los_Angeles")
     for m in [k for k in sys.modules if k == "service" or k.startswith("service.")]:
         del sys.modules[m]
     import service.engine as engine

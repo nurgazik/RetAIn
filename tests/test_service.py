@@ -1,4 +1,5 @@
 import time
+from datetime import datetime, timezone
 
 from conftest import TEXT
 
@@ -59,6 +60,18 @@ def test_daily_cap(client):
     for _ in range(3):
         assert client.post("/v1/transform", json={"text": TEXT}).status_code == 202
     assert client.post("/v1/transform", json={"text": TEXT}).status_code == 429
+
+
+def test_local_day_is_pacific_midnight(client):
+    """TD-17: 8 pm Pacific on Sep 28 is 03:00 UTC Sep 29 — it still counts toward Sep 28's cap."""
+    import service.db as db
+    at = datetime(2026, 9, 29, 3, 0, tzinfo=timezone.utc)
+    assert db.local_period("day", at) == ("2026-09-28T07:00:00.000000+00:00", "2026-09-29T07:00:00.000000+00:00")
+    assert db.local_period("month", at) == ("2026-09-01T07:00:00.000000+00:00", "2026-10-01T07:00:00.000000+00:00")
+    # DST ends 2026-11-01: that local day is 25 hours long
+    assert db.local_period("day", datetime(2026, 11, 1, 20, tzinfo=timezone.utc)) == \
+        ("2026-11-01T07:00:00.000000+00:00", "2026-11-02T08:00:00.000000+00:00")
+    assert db.local_period("month", datetime(2026, 12, 15, tzinfo=timezone.utc))[1] == "2027-01-01T08:00:00.000000+00:00"
 
 
 def test_diagnostics_stored(client):

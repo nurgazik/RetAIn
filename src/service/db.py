@@ -3,9 +3,9 @@ import json
 import sqlite3
 import threading
 import uuid
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 
-from .config import DB_PATH
+from .config import DB_PATH, TZ
 
 SCHEMA = """
 CREATE TABLE IF NOT EXISTS users (
@@ -105,7 +105,19 @@ _lock = threading.Lock()
 
 
 def now() -> str:
-    return datetime.now(timezone.utc).isoformat()
+    return datetime.now(timezone.utc).isoformat(timespec="microseconds")
+
+
+def local_period(kind: str = "day", at: datetime | None = None) -> tuple[str, str]:
+    """UTC bounds [start, end) of the current local day or month (config.TZ), comparable with now()."""
+    local = (at or datetime.now(timezone.utc)).astimezone(TZ)
+    start = local.replace(hour=0, minute=0, second=0, microsecond=0)
+    if kind == "month":
+        start = start.replace(day=1)
+        end = start.replace(year=start.year + start.month // 12, month=start.month % 12 + 1)
+    else:
+        end = start + timedelta(days=1)  # wall-clock arithmetic: DST days are 23 or 25 hours
+    return tuple(d.astimezone(timezone.utc).isoformat(timespec="microseconds") for d in (start, end))
 
 
 def connect() -> sqlite3.Connection:

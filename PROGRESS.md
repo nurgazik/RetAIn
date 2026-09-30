@@ -212,7 +212,10 @@ itself via the fetchers.
 - Backlog cleaned up (docs only): TD-18 marked as a duplicate of TD-15 (same date bug), UX-12
   folded into UX-3 (founder rule: no start without words, at least 20), and the decisions range
   corrected to D1–D50. This file's start-here note now says DEC-1..4 (there was never a DEC-5).
-- Still open, not housekeeping: TD-17 (the daily cap resets at 5 pm Pacific). A fix proposal is next.
+- **TD-17 fixed:** the daily cap and "spent today" now count local days (midnight to midnight,
+  `RETAIN_TZ`, default America/Los_Angeles). Before, the day ran 5 pm to 5 pm Pacific: 9 of 59 pieces
+  since Sep 26 were counted toward the wrong day. Added a test that covers evening and DST. 45/45
+  tests pass; service restarted, `/v1/me` 200.
 
 ### 2026-09-28 — Siri word capture (D50, UX-15)
 
