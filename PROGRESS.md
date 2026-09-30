@@ -15,6 +15,14 @@ shape: capture words → share/copy whatever you're reading → sheet over the h
 piece with your words → My Reads. Service: `src/service/` on the Mac mini, public HTTPS
 via Tailscale Funnel. App: `ios/RetAIn/` (xcodegen).
 
+**2026-09-30 (D53): in-app exercises join the transform.** The transform alone doesn't give
+retention: in 34 pieces with the full ~235-word menu, 77% of words were never placed. Next: daily
+exercises — fill in the word (code-checked) and write your own sentence (a model judges natural
+usage). Code schedules the words; the list stays unlimited; the user marks retained. Competitive
+scan done (docs/poc2-transform.md §10): AI-graded sentences already ship elsewhere (VORCA,
+ReadUnbound), so the combination with the transform is the differentiator.
+**Next up: TD-20 (sentence-judge eval) → UX-16 (exercise screens).** Founder to-do: try ReadUnbound.
+
 **Engine + reader (D40/D41, live 2026-09-26):** one model call places words three ways —
 SUBSTITUTE, REPHRASE, or a SUPPLEMENT note (general background, inline, code-checked) —
 aiming for one word per ~120-word stretch; judges stay, a rejected word reverts its
@@ -207,6 +215,26 @@ all needed for TestFlight and none waits on a decision.**
 vacation coding ends). Home Mac: clone normally with personal credentials; recreate
 `.env.local` (4 API keys — gitignored, never on GitHub) and `data/retain.db` refills
 itself via the fetchers.
+
+### 2026-09-30 — Exercises direction + competitive scan (D53)
+
+- Founder: 250 words is too many to meet "in the wild"; 10–20 at a time feels right. Checked the
+  service DB: **34 pieces** offered the ~235-word menu → 86 placements, 53 distinct words, 182 (77%)
+  never placed, max 4 placements for any word (*linchpin, protracted, deft, extrapolate*).
+- Founder rejected capping the list (users add as many as they like; they mark retained in MVP)
+  and proposed in-app exercises instead of more work on the transform. Assistant's cautions on record: exercises are the
+  crowded part of the market (Anki, Quizlet, Duolingo, ChatGPT for free); a daily feed faces the
+  PoC 1 habit problem; image generation fits poorly (the list is abstract words); AI chat as a paid
+  tier is weak — what's worth paying for is the user's state (words, misses, schedule).
+- Agreed: two types — fill in the word + write your own sentence (a model judges collocation,
+  register, connotation); code schedules, the model builds and judges. Logged as **D53**
+  (supersedes D34's no-scheduler rule for exercises only).
+- Competitive scan (three research agents, web only, no app installed) → docs/poc2-transform.md §10.
+  Closest: ReadUnbound (own list + AI-graded sentences + spaced review + reading, few ratings),
+  VORCA (fixed list, schools). No one places a user's English words into their own reading.
+  Research: three fill-ins beat one sentence (Folse 2006), so both types stay; LLM judges are
+  precise but miss errors; no naturalness benchmark exists → TD-20 eval comes first.
+- Backlog: TD-20 (sentence-judge eval), UX-16 (daily exercises). PRD §6 scan item closed.
 
 ### 2026-09-30 — Reddit and Facebook link reading paused (D52)
 

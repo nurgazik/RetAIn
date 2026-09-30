@@ -476,7 +476,94 @@ This file stays the PoC 2 record: rationale, gates, spike findings, engine measu
   Safari experience.
 - **Android:** has the hooks iOS lacks (`ACTION_PROCESS_TEXT`, accessibility overlays) —
   in-place transform is possible there. Parked; not pursued.
-- **Competitive scan** (PRD §6 open item): Toucan and Fluent (in-place foreign-language
-  substitution in the browser) are the closest analogs — from memory, unverified. Do the
-  scan before MVP investment.
+- ~~**Competitive scan** (PRD §6 open item)~~ **Done 2026-09-30 → §10.**
 - **Success-criteria thresholds** N and X (§6) — founder to set.
+
+---
+
+## 10. Competitive scan + exercise evidence (2026-09-30)
+
+**Why now.** The founder concluded that the transform alone doesn't produce retention. The data:
+- 34 pieces were run with the full ~235-word menu. They produced 86 placements covering 53 distinct words.
+- **182 of the 235 words (77%) were never placed.** No word was placed more than 4 times.
+- At ~2.5 placements per piece, the average word is seen about once per ~90 pieces.
+
+The founder's response is in-app daily exercises (D53). This scan checks who already does that, and what the research says about the two exercise types.
+
+**Method.** Three research agents ran on web sources, App Store pages and vendor sites, all fetched 2026-09-30. **No app was installed**, so the quality of competitors' feedback is untested. Items marked UNVERIFIED could not be confirmed from a primary page.
+
+### 10.1 Established vocabulary apps
+
+| Product | Audience | Own list | Sentence production + AI feedback | Spaced repetition | Price | App Store |
+|---|---|---|---|---|---|---|
+| [Vocabulary.com](https://www.vocabulary.com/help/the-basics/question-types-and-modes/) | Grades 3–12, test prep | Yes | **No**: 10 question types, all multiple choice or fill-in | Adaptive | $12.99/mo, $59.99/yr | 4.3 (5K); iOS app last updated 2021 |
+| [Membean](https://support.membean.com/support/solutions/articles/241244-training-session-details) | Grades 6–12, SAT/GRE | Teacher-set | No | Yes | $6–29/mo | none found |
+| [WordUp](https://apps.apple.com/us/app/wordup-vocabulary-builder/id1365078730) | ESL, fixed 25K-word list | Yes | **Partial**: AI tutor "Lexi" gives "feedback on your writing"; a graded write-with-this-word drill is UNVERIFIED | Yes | $49/yr, $149.99 lifetime | 4.8 (14K) |
+| [Magoosh GRE](https://apps.apple.com/us/app/gre-vocabulary-flashcards/id672962658) | GRE | No | No | Yes | Free | 4.8 (11K) |
+| [Anki](https://apps.apple.com/us/app/ankimobile-flashcards/id373493387) | Anyone, self-made cards | Yes, fully | No (no AI) | Yes (FSRS) | iOS $24.99 once | 4.0 (2.3K) |
+| [Quizlet](https://apps.apple.com/us/app/quizlet-ai-powered-flashcards/id546473125) | Students | Yes | Q-Chat tutor reportedly shut down June 2025 (third-party source, UNVERIFIED) | Paid tier only | $35.99–44.99/yr | 4.8 (1.1M) |
+| [Elevate](https://apps.apple.com/us/app/elevate-brain-training-games/id875063456) | General adults, often native speakers | No | No: you edit sentences it supplies | Adaptive | $4.99–39.99 | 4.8 (543K) |
+| [Vocabulary (Monkey Taps)](https://apps.apple.com/us/app/vocabulary-learn-words-daily/id1084540807) | General | Yes (paid) | No | Not stated | $9.99–149.99 | 4.8 (219K) |
+| [Lingvist](https://lingvist.com/blog/create-your-own-vocabulary-courses-with-custom-decks/) | Language learners | Custom decks from pasted text; English UNVERIFIED | No: type the missing word | Yes | ~$79.99/yr (third-party) | UNVERIFIED |
+| [Memrise](https://www.memrise.com/blog/changes-to-the-memrise-app) | Beginner–intermediate; Podchats for advanced (Feb 2026) | No (moved off the app 2024) | No: spoken AI chat, not grading | Yes | UNVERIFIED | 4.6 (190K), UNVERIFIED |
+
+### 10.2 AI-era entrants, closest overlap first
+
+1. **[ReadUnbound: Advanced Reader](https://apps.apple.com/us/app/-/id6743079025)** (iOS, June 2025). This is the closest match overall:
+   - What it does: tap a word while reading to save it, spaced review, and **AI-graded sentences you write** at its top tier. You read adapted literature or import your own documents.
+   - Level A2–C1. Pro $7.99–49.99, lifetime $29.99. Too few ratings to show a score.
+   - UNVERIFIED: whether its feedback covers collocation, register or connotation, or only correctness.
+2. **[VORCA](https://vorca.app/)** (iOS/Android). Closest to the exercise itself:
+   - You write 2 sentences per word and get "real-time AI revision and feedback".
+   - But the word list is fixed (3,700 words from the Oxford 5000), it is sold to families and schools, and costs $20/mo.
+3. **WordUp** (see 10.1). The incumbent with both traction and an AI layer. A 2026 roundup lists it as "app suggests words", with no mention of sentence feedback ([VibeLing](https://vibeling.app/en/blog/best-ai-vocabulary-apps-2026)).
+4. **[Langua](https://apps.apple.com/us/app/langua-ai-language-learning/id6737520234)** (4.6, 2.6K ratings). Saved words are woven into AI chats with corrections, plus spaced flashcards. Built around conversation. $19.99–29.99/mo.
+5. **[Sentino](https://www.sentino.app/)**. Saved words become AI-written examples and voice chats, with feedback on naturalness. Intermediate level. $50/yr.
+6. **[Vocabulary Builder by Atlas](https://apps.apple.com/us/app/vocabulary-builder-by-atlas/id1438344260)** (4.8, 12K ratings; GRE/TOEFL). Custom lists and an "AI Tutor" that gives example sentences. Sentence feedback is UNVERIFIED.
+7. **Long tail**, none with ratings:
+   - [AVA](https://apps.apple.com/us/app/id6502558321): a "Sentence Builder" with feedback, not stated to be AI.
+   - [Vocabia](https://apps.apple.com/us/app/vocabia-ai-powered-dictionary/id6755057195): AI fill-in-the-blank from saved words.
+   - [Vernacular Learn](https://apps.apple.com/bb/app/vernacular-learn/id6742847550).
+   - [Flowery](https://news.ycombinator.com/item?id=40717052) (Show HN, 2024): LLM fill-in-the-blank with spaced review.
+8. **Not close:** Duolingo Max, Speak and Praktika (4.7, 164K ratings). All are built around conversation, on a fixed course.
+
+**Placing words into reading.** [Toucan](https://techcrunch.com/2023/09/19/babbel-acquires-language-learning-browser-extension-toucan/) (acquired by Babbel in 2023) and Fluent swap words from your native language into a foreign one, and the product picks the words, not you. Readlang and LingQ save the words you look up while reading, with no sentence grading (absence UNVERIFIED). **No one found places a user's own English words idiomatically into English text they are reading.**
+
+### 10.3 Verdict
+
+- **The sentence judge is not a moat.** "Write a sentence, the AI critiques it and suggests a better one" already ships: VORCA uses a fixed list, and ReadUnbound uses your own list plus reading. It's a feature anyone can copy quickly.
+- **The unclaimed ground is the combination:**
+  - aimed at people who already speak English well, with feedback about collocation, register and connotation, not correctness;
+  - the user's own open-ended word list;
+  - the words placed into articles the user was reading anyway;
+  - exercises built from those same pieces.
+
+  So the transform is the part nobody else has, and the exercises are what turn it into retention.
+- **Nobody is clearly doing this well.** The products with traction (WordUp, Atlas, Praktika) use their own fixed lists or are built around conversation. ReadUnbound is the closest on features, with almost no ratings.
+- **Follow-up for the founder:** spend about 15 minutes in ReadUnbound (it has a free tier) to judge its feedback quality first-hand.
+
+### 10.4 What the research says about the two exercises
+
+- **Sentence writing works, but volume matters as much as depth.**
+  - Advanced adults: writing with the word beat fill-in, which beat reading with marginal glosses ([Hulstijn & Laufer 2001](https://www.researchgate.net/publication/227966361)).
+  - But **three fill-ins beat one sentence** ([Folse 2006](https://stars.library.ucf.edu/scopus2000/8818/)). The number of retrievals counts.
+  - The productive advantage shrinks when time on task is equal ([Webb 2005](https://www.semanticscholar.org/paper/40b3cf0cbaa428089a82f617d2abc9d0de5ef77b)).
+  - Across 42 studies, the "evaluation" component of the Involvement Load Hypothesis (judging whether a word fits a context) predicted learning best ([Yanagisawa & Webb 2021](https://eric.ed.gov/?id=EJ1296679)).
+  - → Keep both types: fill-in for volume, sentence writing for depth.
+- **Encounters needed.**
+  - About 10 spaced encounters gave large gains (Webb 2007, *Applied Linguistics* 28(1)).
+  - With deliberate learning, recall after a delay falls to 39% for meaning and **25% for the word itself** ([Webb, Yanagisawa & Uchihara 2020](https://onlinelibrary.wiley.com/doi/abs/10.1111/modl.12671)).
+  - → Producing the word is the skill that fades fastest, which argues for the writing exercise.
+- **LLM judges fail in the risky direction.**
+  - GPT-4 over-edits toward fluency and sometimes changes meaning ([Coyne et al. 2023](https://arxiv.org/abs/2303.14342)).
+  - On learner essays it is very precise but misses many errors ([Pfau, Polio & Xu 2023](https://doi.org/10.1016/j.rmal.2023.100083); exact recall figure UNVERIFIED).
+  - Only 73.5% of its feedback on word choice was relevant ([Saricaoglu & Bilki 2025](https://doi.org/10.1017/S0267190525100160)).
+  - LLMs back down when a user pushes back ([Kim & Khashabi 2025](https://aclanthology.org/2025.findings-emnlp.1222.pdf)).
+  - **No benchmark for judging collocation or naturalness was found**, so our own eval (TD-20) is the only evidence available.
+- **Corrective feedback helps.** Moderate effects that last, with feedback types about equal ([Kang & Han 2015](https://doi.org/10.1111/modl.12189); [Brown, Liu & Norouzian 2023](https://doi.org/10.1177/13621688221147374)). These studies mostly cover grammar; that the effect carries over to word choice is inferred.
+
+**Design rules for the sentence judge** (from 10.4):
+- Grade "wrong" separately from "could be more natural".
+- Suggest the smallest edit that fixes the sentence, not a rewrite.
+- A verdict can't be argued away in follow-up turns.
+- Test against a golden set with seeded collocation errors before any screen is built (TD-20).
