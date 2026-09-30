@@ -216,6 +216,10 @@ itself via the fetchers.
   `RETAIN_TZ`, default America/Los_Angeles). Before, the day ran 5 pm to 5 pm Pacific: 9 of 59 pieces
   since Sep 26 were counted toward the wrong day. Added a test that covers evening and DST. 45/45
   tests pass; service restarted, `/v1/me` 200.
+- **D51 agreed: the user's day.** Per-user timezone (sent by the app, saved on the user), days start at
+  4 am local, a day key stamped on every row beside UTC, the day never goes back. Written up in
+  docs/architecture.md + diagrams/user-day.md; build is TD-19. Founder wants daily in-app content
+  (quizzes/exercises) — that is a separate discussion, not yet decided.
 
 ### 2026-09-28 — Siri word capture (D50, UX-15)
 

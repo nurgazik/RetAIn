@@ -238,3 +238,56 @@ Adding a word already in the shared list makes no model call (verified in `calls
 Wiktionary word shows its meanings in Wiktionary order with IPA and examples; a made-up word
 is saved unverified and never appears in a rewrite; the 235 existing words have cards; all
 service and iOS tests pass; the card renders on the founder's phone.
+
+# The user's day (D51) — agreed 2026-09-30, not built yet
+
+Flow diagram: `diagrams/user-day.md`. Replaces the stopgap TD-17 fix (one service-wide
+`RETAIN_TZ`), which stays as the fallback.
+
+## What it is
+
+"Today" is a first-class concept, defined per user. The cap, "spent today", the widget's
+words and any future daily content (quizzes and exercises are a separate, open discussion)
+all read one value: the user's **day key**, their local date as a string (`2026-09-30`).
+Days start at **4 am local time**. One server function decides the day; every row is stamped
+with it when written.
+
+## Decisions (what / why / standard practice?)
+
+| Area | Decision | Why | Standard? |
+|---|---|---|---|
+| Timestamps | Stay UTC (`db.now()`), unchanged | Ordering and durations stay correct everywhere | Yes, universal |
+| User's timezone | IANA name (`America/Toronto`) sent by the app on every request as `X-Timezone`; saved on `users.tz` when it changes; invalid names ignored | The request uses it at once; the saved copy lets the server act without a request (pre-build a day's set, a notification at 8 am local). Offsets (`-07:00`) break twice a year with daylight saving | Yes (Duolingo: mobile use updates the streak time zone) |
+| Day boundary | **4 am local** (`DAY_STARTS_HOUR = 4`, service-wide) | A session past midnight stays one day. Bonus: daylight-saving switches happen at 2 am, so the boundary never lands in a skipped or repeated hour | Yes in spaced-repetition apps (Anki's default); Duolingo uses midnight. Founder's call |
+| Day key stored on rows | `day TEXT` on `pieces`, `calls`, `events`, `words`, set at write time by one helper; indexed `(user_id, day)` | History stays as lived when the timezone changes; "user X, day Y" is an indexed lookup; SQLite can't convert named timezones (checked: `datetime(…,'America/Los_Angeles')` → NULL), so grouping by local day in SQL needs the stored key; (user, day) is the natural unique key for daily content | Common (a stored local date beside UTC); applying it to every table is my design |
+| Never go back | `users.last_day`; the day is `max(computed, last_day)` | A flight west can't replay yesterday (fresh cap, second set). Cost: after flying west a day runs longer than 24 h | My design, founder-approved as the simpler rule |
+| Who decides | The server. `/v1/me` returns `day` and `next_day_at` (UTC); the widget uses them. Offline, the phone applies the same 4 am rule to its own timezone | The cap is a cost control; a phone's clock is user-settable | Yes |
+| Daily content (future) | Built on first open of a new day, stored under `UNIQUE (user_id, day)`; overnight pre-building only if push notifications arrive | Nothing generated for inactive users; a repeated build is harmless | Yes (on-demand, idempotent — same idea as D15's daily builds) |
+| Fallback | No header and no saved timezone → `RETAIN_TZ` (default America/Los_Angeles) | Old app builds and curl keep working | — |
+
+## What changes in the repo
+
+- `src/service/db.py`: `users.tz`, `users.last_day`; `day` + `(user_id, day)` index on
+  `pieces`, `calls`, `events`, `words` (added with `ALTER TABLE`, default `''`);
+  `user_day(con, user)` replaces `local_period`; every insert passes the day.
+  Backfill: existing rows get their day from the UTC stamp in America/Los_Angeles with the
+  4 am rule (only the founder's and the dev accounts exist).
+- `src/service/auth.py` / `app.py`: read `X-Timezone`, save it if new and valid; the cap and
+  spend queries become `day = ?` (month: `day LIKE '2026-09%'`); `/v1/me` adds `day`,
+  `next_day_at`.
+- `ios/RetAIn/Shared/API/RetAInClient.swift`: send `X-Timezone: TimeZone.current.identifier`
+  on every request (app, extensions, Siri intent all use this client).
+- `ios/RetAIn/Shared/Store/WordsStore.swift` + `Widget/TodaysWordsWidget.swift`: seed today's
+  words from the server's `day`; refresh at `next_day_at` instead of midnight.
+
+## Not in this build
+
+Quizzes and exercises (separate discussion), per-user choice of the 4 am hour, push
+notifications, streaks.
+
+## Done when
+
+Tests: an 8 pm Pacific read and a 1 am read count toward the same day; 4 am starts a new
+one; a Toronto header gives Toronto's day; an invalid header is ignored; flying west never
+moves the day back; no row is written with an empty `day`. The widget on the founder's phone
+shows the same day's set as `/v1/me`. All service and iOS tests pass.
