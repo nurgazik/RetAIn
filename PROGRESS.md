@@ -217,7 +217,7 @@ itself via the fetchers.
   they don't fall through to the generic web-page reader) and answers "Copy the text instead".
   `ShareRouter` wraps `RedditReader` and `FacebookReader`; the readers and their tests are unchanged.
   Still works: text shared from those apps, and the Safari action on their pages.
-- SharingTests: 17 run, 0 failures, 1 skipped (live X probe, opt-in). **Not yet tried on the phone.**
+- SharingTests: 17 run, 0 failures, 1 skipped (live X probe, opt-in). **Founder confirmed on the phone (2026-09-30).**
 
 ### 2026-09-30 — Siri verified on device; backlog housekeeping
 
