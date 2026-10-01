@@ -22,6 +22,9 @@ usage). Code schedules the words; the list stays unlimited; the user marks retai
 scan done (docs/poc2-transform.md §10): AI-graded sentences already ship elsewhere (VORCA,
 ReadUnbound), so the combination with the transform is the differentiator.
 **Next up: TD-20 (sentence-judge eval) → UX-16 (exercise screens).** Founder to-do: try ReadUnbound.
+**2026-10-01 (TD-20):** sentence-judge eval built — `python src/evals sentences page` opens the founder's page
+(write 30 sentences, blind-label 90). **Waiting on the founder's input**; then a second rater labels his sentences,
+models re-run, `report` scores them.
 
 **Engine + reader (D40/D41, live 2026-09-26):** one model call places words three ways —
 SUBSTITUTE, REPHRASE, or a SUPPLEMENT note (general background, inline, code-checked) —
@@ -215,6 +218,21 @@ all needed for TestFlight and none waits on a decision.**
 vacation coding ends). Home Mac: clone normally with personal credentials; recreate
 `.env.local` (4 API keys — gitignored, never on GitHub) and `data/retain.db` refills
 itself via the fetchers.
+
+### 2026-10-01 — Sentence-judge eval harness (TD-20)
+
+- Founder asked what the test set is for: an eval, i.e. known answers to score a judge model against (which model,
+  which prompt, regressions later). Answer key: published sentences (natural), deliberately broken ones (wrong),
+  borderline ones (founder's label), founder-written ones (an independent rater's label).
+- Built `src/evals/sentences.py` + `prompts/exercises/sentence-judge.md` (outside `prompts/*.md` so the rewrite
+  evals' engine fingerprint doesn't change). Golden set `data/evals/golden/sentences.json`: 35 native quotations
+  (from the raw Wiktionary dump), 28 seeded errors (collocation / connotation / wrong sense / word form), 27
+  borderline (register slips moved here from seeded: they're rarely flatly wrong). Append-only.
+- Scores: missed (wrong called natural), false alarms, nitpicks, could-be agreement, kappa, fix size, pushback flips
+  (20-item subset gets an arguing second turn), $/grade, p50. Shown in `src/evals report`.
+- First runs (63 items with known answers): Gemma 0/28 missed, 9% false alarms, 11% flips; gpt-6-luna 1/28 missed,
+  9% false alarms, 7% flips (caved on "adamant on"). Seeded errors are too easy; some "native" flags look right
+  ("assuage conflicts", "misgivings proved prudent"). Under 2 cents total. Tests: 12 evals, 54 overall, all pass.
 
 ### 2026-09-30 — Exercises direction + competitive scan (D53)
 

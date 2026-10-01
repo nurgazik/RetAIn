@@ -1,0 +1,753 @@
+{
+ "_readme": "Sentence-judge golden set (TD-20, D53). Frozen: items are only ever appended (founder sentences via `python src/evals sentences import`), never edited. origin: native = published quotation (gold natural), seeded = one deliberate error (gold wrong), borderline = gold set by the founder's blind label, founder = written by the founder, gold set by an independent blind rater. expected = the author's or source's answer; where the founder's label disagrees on native/seeded items, the item is flagged and left out of scoring until resolved.",
+ "items": [
+  {
+   "id": "n01",
+   "word": "acumen",
+   "sentence": "As the president turns up the pressure – calling the Fed chair names and questioning his acumen – he's ignited a firestorm in legal and financial circles.",
+   "origin": "native",
+   "expected": "natural",
+   "source": "news, 2025 (Wiktionary quotation, trimmed)"
+  },
+  {
+   "id": "n02",
+   "word": "adamant",
+   "sentence": "Most Panamanians are adamant that the canal, completed in 1914, will not return to U.S. control.",
+   "origin": "native",
+   "expected": "natural",
+   "source": "news, 2025 (Wiktionary quotation)"
+  },
+  {
+   "id": "n03",
+   "word": "adversity",
+   "sentence": "These are the people who will overcome the adversity, chaos, and destruction of combat and defeat the enemy in war.",
+   "origin": "native",
+   "expected": "natural",
+   "source": "book, 1998 (Wiktionary quotation)"
+  },
+  {
+   "id": "n04",
+   "word": "assuage",
+   "sentence": "Jaurès's ambition was not to intensify but to assuage conflicts, antagonisms, and enmity of every kind.",
+   "origin": "native",
+   "expected": "natural",
+   "source": "book, 1978 (Wiktionary quotation, trimmed)"
+  },
+  {
+   "id": "n05",
+   "word": "astute",
+   "sentence": "The best headteachers are like submarine captains – cool-headed, astute decision-makers – who trust their colleagues and surroundings to indicate where their ship is headed.",
+   "origin": "native",
+   "expected": "natural",
+   "source": "The Guardian, 2014 (Wiktionary quotation)"
+  },
+  {
+   "id": "n06",
+   "word": "belabor",
+   "sentence": "Rather too much space is devoted to belaboring the obvious.",
+   "origin": "native",
+   "expected": "natural",
+   "source": "review, 1981 (Wiktionary quotation, trimmed)"
+  },
+  {
+   "id": "n07",
+   "word": "bolster",
+   "sentence": "Once the bi-modes come on stream, the power supply will need to be bolstered by a feed at Braybrooke, just south of Market Harborough.",
+   "origin": "native",
+   "expected": "natural",
+   "source": "Modern Railways, 2019 (Wiktionary quotation, trimmed)"
+  },
+  {
+   "id": "n08",
+   "word": "caveat",
+   "sentence": "Two young Harvard M.B.A.'s worked up some highly optimistic projections—with the caveat that these were speculative and should of course be tested.",
+   "origin": "native",
+   "expected": "natural",
+   "source": "1986 (Wiktionary quotation)"
+  },
+  {
+   "id": "n09",
+   "word": "convoluted",
+   "sentence": "The plots of Mission: Impossible movies tend to be convoluted but negligible, really only there to provide connective tissue between jaw-dropping set pieces.",
+   "origin": "native",
+   "expected": "natural",
+   "source": "review, 2018 (Wiktionary quotation)"
+  },
+  {
+   "id": "n10",
+   "word": "curtail",
+   "sentence": "The branch lost its passenger services beyond Aintree in 1952, whereupon the timetable between Gateacre and Aintree was greatly curtailed.",
+   "origin": "native",
+   "expected": "natural",
+   "source": "1960 (Wiktionary quotation, trimmed)"
+  },
+  {
+   "id": "n11",
+   "word": "deft",
+   "sentence": "Alvarez then got on the scoresheet after the hosts carved open the Huddersfield defence with some intricate passing before the Argentina forward's deft finish rolled into the net.",
+   "origin": "native",
+   "expected": "natural",
+   "source": "BBC Sport, 2024 (Wiktionary quotation)"
+  },
+  {
+   "id": "n12",
+   "word": "dichotomy",
+   "sentence": "The dichotomy between maria and highlands dominates lunar mineralogy.",
+   "origin": "native",
+   "expected": "natural",
+   "source": "2003 (Wiktionary quotation)"
+  },
+  {
+   "id": "n13",
+   "word": "entrench",
+   "sentence": "Given these entrenched ideological assumptions about the colonial order, it is no wonder that the state viewed any challenge with suspicion and hostility.",
+   "origin": "native",
+   "expected": "natural",
+   "source": "book, 2009 (Wiktionary quotation, trimmed)"
+  },
+  {
+   "id": "n14",
+   "word": "eschew",
+   "sentence": "She was a doughty chatterbox from Ohio who adopted the manner of a Southern belle and eschewed both drink and sex.",
+   "origin": "native",
+   "expected": "natural",
+   "source": "2014 (Wiktionary quotation, trimmed)"
+  },
+  {
+   "id": "n15",
+   "word": "flounder",
+   "sentence": "Bus and tram competition was causing the Central London Railway to flounder after its early success.",
+   "origin": "native",
+   "expected": "natural",
+   "source": "2012 (Wiktionary quotation, trimmed)"
+  },
+  {
+   "id": "n16",
+   "word": "galvanize",
+   "sentence": "The proposal to take over the Gaza Strip and relocate its Palestinian inhabitants has made the forced transfer of populations a policy discussion, galvanizing Arab states.",
+   "origin": "native",
+   "expected": "natural",
+   "source": "news, 2025 (Wiktionary quotation, trimmed)"
+  },
+  {
+   "id": "n17",
+   "word": "gravitas",
+   "sentence": "She fails to display intellectual gravitas, they say, relying instead upon cheap slogans.",
+   "origin": "native",
+   "expected": "natural",
+   "source": "news, 2022 (Wiktionary quotation, trimmed)"
+  },
+  {
+   "id": "n18",
+   "word": "impasse",
+   "sentence": "The agreement is a significant step toward ending a yearslong impasse over gun reform legislation.",
+   "origin": "native",
+   "expected": "natural",
+   "source": "news, 2022 (Wiktionary quotation, trimmed)"
+  },
+  {
+   "id": "n19",
+   "word": "linchpin",
+   "sentence": "QAnon has become a linchpin in that ecosystem, and the absurdity of its claims in no way reduces its political influence.",
+   "origin": "native",
+   "expected": "natural",
+   "source": "news, 2020 (Wiktionary quotation, trimmed)"
+  },
+  {
+   "id": "n20",
+   "word": "meticulous",
+   "sentence": "In the paint shop, the bodyshells are undergoing a meticulous process to ensure a high-quality finish.",
+   "origin": "native",
+   "expected": "natural",
+   "source": "Modern Railways, 2024 (Wiktionary quotation, trimmed)"
+  },
+  {
+   "id": "n21",
+   "word": "mitigate",
+   "sentence": "Crashworthiness is not about preventing accidents, but about mitigating their consequences.",
+   "origin": "native",
+   "expected": "natural",
+   "source": "2021 (Wiktionary quotation, trimmed)"
+  },
+  {
+   "id": "n22",
+   "word": "panacea",
+   "sentence": "Dollarization is not a panacea for Argentina's crisis-stricken economy, analysts say.",
+   "origin": "native",
+   "expected": "natural",
+   "source": "news, 2023 (Wiktionary quotation)"
+  },
+  {
+   "id": "n23",
+   "word": "perfunctory",
+   "sentence": "He then poured some wine for me to taste, and harassed me with perfunctory courtesies that had to be acknowledged.",
+   "origin": "native",
+   "expected": "natural",
+   "source": "1976 (Wiktionary quotation)"
+  },
+  {
+   "id": "n24",
+   "word": "placate",
+   "sentence": "Her critics saw it as an attempt by CBS to placate the administration.",
+   "origin": "native",
+   "expected": "natural",
+   "source": "news, 2025 (Wiktionary quotation, trimmed)"
+  },
+  {
+   "id": "n25",
+   "word": "propensity",
+   "sentence": "He had a tremendous propensity for getting lost when driving.",
+   "origin": "native",
+   "expected": "natural",
+   "source": "1988 (Wiktionary quotation)"
+  },
+  {
+   "id": "n26",
+   "word": "prudent",
+   "sentence": "Brunel's misgivings were proved prudent, tragically, in the 1879 failure of the Tay bridge.",
+   "origin": "native",
+   "expected": "natural",
+   "source": "2025 (Wiktionary quotation, trimmed)"
+  },
+  {
+   "id": "n27",
+   "word": "quagmire",
+   "sentence": "The only way to know Shakespeare is through his works, and his works are textual quagmires.",
+   "origin": "native",
+   "expected": "natural",
+   "source": "2021 (Wiktionary quotation)"
+  },
+  {
+   "id": "n28",
+   "word": "salient",
+   "sentence": "Professionally published dictionaries do not seem to have extended coverage beyond the most frequent and salient items.",
+   "origin": "native",
+   "expected": "natural",
+   "source": "2018 (Wiktionary quotation)"
+  },
+  {
+   "id": "n29",
+   "word": "squander",
+   "sentence": "As the game opened up, Bolton squandered a fine opportunity to equalise.",
+   "origin": "native",
+   "expected": "natural",
+   "source": "BBC Sport, 2011 (Wiktionary quotation, trimmed)"
+  },
+  {
+   "id": "n30",
+   "word": "succinct",
+   "sentence": "He specifically told the class he wants succinct answers on exams.",
+   "origin": "native",
+   "expected": "natural",
+   "source": "2015 (Wiktionary quotation, trimmed)"
+  },
+  {
+   "id": "n31",
+   "word": "underscore",
+   "sentence": "The tale thus underscores the semiparadoxical fact that traders can lie by telling the truth.",
+   "origin": "native",
+   "expected": "natural",
+   "source": "1986 (Wiktionary quotation, trimmed)"
+  },
+  {
+   "id": "n32",
+   "word": "windfall",
+   "sentence": "Tottenham are also set to benefit from a £100m windfall after qualifying for next season's Champions League.",
+   "origin": "native",
+   "expected": "natural",
+   "source": "news, 2025 (Wiktionary quotation)"
+  },
+  {
+   "id": "n33",
+   "word": "zeitgeist",
+   "sentence": "Heinlein's gift was to catch the zeitgeist.",
+   "origin": "native",
+   "expected": "natural",
+   "source": "2007 (Wiktionary quotation, trimmed)"
+  },
+  {
+   "id": "n34",
+   "word": "ubiquitous",
+   "sentence": "Among the derelict colliery screens, the ubiquitous mountain sheep graze unconcernedly.",
+   "origin": "native",
+   "expected": "natural",
+   "source": "1955 (Wiktionary quotation, trimmed)"
+  },
+  {
+   "id": "n35",
+   "word": "elusive",
+   "sentence": "While you're sniffing the trunks of the ponderosas, watch for Brown Creepers, an elusive variety of bird.",
+   "origin": "native",
+   "expected": "natural",
+   "source": "2002 (Wiktionary quotation, trimmed)"
+  },
+  {
+   "id": "s01",
+   "word": "assuage",
+   "sentence": "The minister tried to assuage the crisis by announcing new funding.",
+   "origin": "seeded",
+   "expected": "wrong",
+   "error_type": "collocation",
+   "note": "assuage takes feelings (fears, guilt, anger), not events"
+  },
+  {
+   "id": "s02",
+   "word": "adamant",
+   "sentence": "Investors were adamant on getting their money back by Friday.",
+   "origin": "seeded",
+   "expected": "wrong",
+   "error_type": "collocation",
+   "note": "adamant about / adamant that, not 'on'"
+  },
+  {
+   "id": "s03",
+   "word": "curtail",
+   "sentence": "The company curtailed its prices to win back customers.",
+   "origin": "seeded",
+   "expected": "wrong",
+   "error_type": "collocation",
+   "note": "you cut or lower prices; curtail spending or services"
+  },
+  {
+   "id": "s04",
+   "word": "bolster",
+   "sentence": "Her report bolstered a strong impression on the committee.",
+   "origin": "seeded",
+   "expected": "wrong",
+   "error_type": "collocation",
+   "note": "you make an impression; bolster supports something existing"
+  },
+  {
+   "id": "s05",
+   "word": "mitigate",
+   "sentence": "We need to mitigate the gap between rich and poor districts.",
+   "origin": "seeded",
+   "expected": "wrong",
+   "error_type": "collocation",
+   "note": "narrow/close a gap; mitigate risks, effects, damage"
+  },
+  {
+   "id": "s06",
+   "word": "windfall",
+   "sentence": "The team reached a windfall when the sponsor doubled its budget.",
+   "origin": "seeded",
+   "expected": "wrong",
+   "error_type": "collocation",
+   "note": "you get/receive a windfall, not reach one"
+  },
+  {
+   "id": "s07",
+   "word": "acumen",
+   "sentence": "He has a deep acumen in marketing.",
+   "origin": "seeded",
+   "expected": "wrong",
+   "error_type": "collocation",
+   "note": "keen/sharp acumen, or marketing acumen; 'deep acumen in' is not idiomatic"
+  },
+  {
+   "id": "s08",
+   "word": "scathing",
+   "sentence": "Her scathing praise of the new chef made him blush with pride.",
+   "origin": "seeded",
+   "expected": "wrong",
+   "error_type": "connotation",
+   "note": "scathing means harshly critical"
+  },
+  {
+   "id": "s09",
+   "word": "windfall",
+   "sentence": "We were thrilled by the windfall of bad news from the hospital.",
+   "origin": "seeded",
+   "expected": "wrong",
+   "error_type": "connotation",
+   "note": "a windfall is an unexpected gain, never bad news"
+  },
+  {
+   "id": "s10",
+   "word": "perfunctory",
+   "sentence": "The nurse's perfunctory care saved my father's life; she checked on him every hour with real devotion.",
+   "origin": "seeded",
+   "expected": "wrong",
+   "error_type": "connotation",
+   "note": "perfunctory means done with minimal effort or interest"
+  },
+  {
+   "id": "s11",
+   "word": "placate",
+   "sentence": "Grandma placated us with a delicious dinner to celebrate our graduation.",
+   "origin": "seeded",
+   "expected": "wrong",
+   "error_type": "connotation",
+   "note": "placate means calming someone who is angry"
+  },
+  {
+   "id": "s12",
+   "word": "disparage",
+   "sentence": "He disparaged his best friend at the wedding with a warm, glowing toast.",
+   "origin": "seeded",
+   "expected": "wrong",
+   "error_type": "connotation",
+   "note": "disparage means belittle"
+  },
+  {
+   "id": "s13",
+   "word": "affable",
+   "sentence": "The dictator's affable crackdown left hundreds in prison.",
+   "origin": "seeded",
+   "expected": "wrong",
+   "error_type": "connotation",
+   "note": "affable means friendly and easy to talk to"
+  },
+  {
+   "id": "s14",
+   "word": "squander",
+   "sentence": "She squandered her savings on a house, a smart investment that tripled in value.",
+   "origin": "seeded",
+   "expected": "wrong",
+   "error_type": "connotation",
+   "note": "squander means waste"
+  },
+  {
+   "id": "s15",
+   "word": "extrapolate",
+   "sentence": "The doctor told me to extrapolate the splinter carefully with tweezers.",
+   "origin": "seeded",
+   "expected": "wrong",
+   "error_type": "wrong-sense",
+   "note": "confused with extract"
+  },
+  {
+   "id": "s16",
+   "word": "corroborate",
+   "sentence": "I need to corroborate with my team before I give you an answer.",
+   "origin": "seeded",
+   "expected": "wrong",
+   "error_type": "wrong-sense",
+   "note": "confused with collaborate/consult"
+  },
+  {
+   "id": "s17",
+   "word": "coalesce",
+   "sentence": "The heavy rain began to coalesce the streets.",
+   "origin": "seeded",
+   "expected": "wrong",
+   "error_type": "wrong-sense",
+   "note": "coalesce means come together into one; intransitive"
+  },
+  {
+   "id": "s18",
+   "word": "hindsight",
+   "sentence": "My hindsight told me the bridge would collapse, so I took another road.",
+   "origin": "seeded",
+   "expected": "wrong",
+   "error_type": "wrong-sense",
+   "note": "hindsight is understanding after the fact; confused with foresight"
+  },
+  {
+   "id": "s19",
+   "word": "entrench",
+   "sentence": "The new law will entrench on our freedom of speech.",
+   "origin": "seeded",
+   "expected": "wrong",
+   "error_type": "wrong-sense",
+   "note": "confused with encroach on"
+  },
+  {
+   "id": "s20",
+   "word": "tenuous",
+   "sentence": "The deadline is tenuous, so we must finish by 5 pm sharp.",
+   "origin": "seeded",
+   "expected": "wrong",
+   "error_type": "wrong-sense",
+   "note": "tenuous means weak or flimsy; the meaning intended is strict/firm"
+  },
+  {
+   "id": "s21",
+   "word": "ubiquitous",
+   "sentence": "The ubiquitous painting is the only one of its kind in the world.",
+   "origin": "seeded",
+   "expected": "wrong",
+   "error_type": "wrong-sense",
+   "note": "ubiquitous means found everywhere"
+  },
+  {
+   "id": "s22",
+   "word": "corroborate",
+   "sentence": "The witness's story was corroborate by two other people.",
+   "origin": "seeded",
+   "expected": "wrong",
+   "error_type": "word-form",
+   "note": "corroborated"
+  },
+  {
+   "id": "s23",
+   "word": "candor",
+   "sentence": "She spoke with great candid about her illness.",
+   "origin": "seeded",
+   "expected": "wrong",
+   "error_type": "word-form",
+   "note": "candor (noun) needed, not candid (adjective)"
+  },
+  {
+   "id": "s24",
+   "word": "pragmatic",
+   "sentence": "Their strategy was very pragmatism, focused only on what would work.",
+   "origin": "seeded",
+   "expected": "wrong",
+   "error_type": "word-form",
+   "note": "pragmatic (adjective) needed"
+  },
+  {
+   "id": "s25",
+   "word": "impasse",
+   "sentence": "The negotiations reached impasse, and both sides walked out.",
+   "origin": "seeded",
+   "expected": "wrong",
+   "error_type": "word-form",
+   "note": "reached an impasse (article needed)"
+  },
+  {
+   "id": "s26",
+   "word": "galvanize",
+   "sentence": "The teacher's speech galvanized, and the whole class signed up.",
+   "origin": "seeded",
+   "expected": "wrong",
+   "error_type": "word-form",
+   "note": "galvanize needs an object: galvanized the class"
+  },
+  {
+   "id": "s27",
+   "word": "propensity",
+   "sentence": "I have a propensity of losing my keys.",
+   "origin": "seeded",
+   "expected": "wrong",
+   "error_type": "word-form",
+   "note": "propensity for losing / propensity to lose"
+  },
+  {
+   "id": "s28",
+   "word": "delineate",
+   "sentence": "The report delineates about the new rules for drivers.",
+   "origin": "seeded",
+   "expected": "wrong",
+   "error_type": "word-form",
+   "note": "delineate takes a direct object: delineates the new rules"
+  },
+  {
+   "id": "b01",
+   "word": "convoluted",
+   "sentence": "The meeting was quite convoluted, so I left early.",
+   "origin": "borderline",
+   "expected": "could-be-better",
+   "note": "convoluted fits plans, plots, explanations; a meeting is 'long' or 'confusing'"
+  },
+  {
+   "id": "b02",
+   "word": "gravitas",
+   "sentence": "She has a lot of gravitas for a student.",
+   "origin": "borderline",
+   "expected": "could-be-better",
+   "note": "'has real gravitas' is more usual than 'a lot of'"
+  },
+  {
+   "id": "b03",
+   "word": "caveat",
+   "sentence": "My boss gave me a caveat not to be late again.",
+   "origin": "borderline",
+   "expected": "could-be-better",
+   "note": "a caveat is a qualification, not a warning to a person; may be wrong"
+  },
+  {
+   "id": "b04",
+   "word": "salient",
+   "sentence": "The salient point of the movie is the ending.",
+   "origin": "borderline",
+   "expected": "could-be-better",
+   "note": "salient = most noticeable; 'best part' is meant"
+  },
+  {
+   "id": "b05",
+   "word": "assuage",
+   "sentence": "I tried to assuage my hunger with a sandwich.",
+   "origin": "borderline",
+   "expected": "natural",
+   "note": "assuage hunger/thirst is attested, slightly literary"
+  },
+  {
+   "id": "b06",
+   "word": "coalesce",
+   "sentence": "Prices have coalesced around $20 for most of these books.",
+   "origin": "borderline",
+   "expected": "natural",
+   "note": "figurative coalesce around a value; plausible"
+  },
+  {
+   "id": "b07",
+   "word": "meticulous",
+   "sentence": "He is a very meticulous person in his cleaning.",
+   "origin": "borderline",
+   "expected": "could-be-better",
+   "note": "'meticulous about cleaning' / 'a meticulous cleaner'"
+  },
+  {
+   "id": "b08",
+   "word": "dichotomy",
+   "sentence": "This dichotomy between my two friends makes parties hard.",
+   "origin": "borderline",
+   "expected": "could-be-better",
+   "note": "dichotomy = a split into two opposed categories, not a feud"
+  },
+  {
+   "id": "b09",
+   "word": "underscore",
+   "sentence": "We must underscore that the store will be closed on Monday.",
+   "origin": "borderline",
+   "expected": "natural",
+   "note": "formal but correct"
+  },
+  {
+   "id": "b10",
+   "word": "acumen",
+   "sentence": "The new manager's acumen is impressive in all things.",
+   "origin": "borderline",
+   "expected": "could-be-better",
+   "note": "stiff; acumen is usually domain-specific (business acumen)"
+  },
+  {
+   "id": "b11",
+   "word": "perfunctory",
+   "sentence": "The interview felt a little perfunctory, like they had already chosen someone.",
+   "origin": "borderline",
+   "expected": "natural",
+   "note": "natural use"
+  },
+  {
+   "id": "b12",
+   "word": "succinct",
+   "sentence": "Her explanation was succinct, but it lacked details that were salient.",
+   "origin": "borderline",
+   "expected": "could-be-better",
+   "note": "'lacked the salient details' reads better"
+  },
+  {
+   "id": "b13",
+   "word": "pitfall",
+   "sentence": "The ubiquitous use of phones in class is a pitfall for teachers.",
+   "origin": "borderline",
+   "expected": "could-be-better",
+   "note": "a pitfall is a hidden danger in doing something; 'a challenge' is meant"
+  },
+  {
+   "id": "b14",
+   "word": "windfall",
+   "sentence": "His windfall of a promotion surprised everyone.",
+   "origin": "borderline",
+   "expected": "could-be-better",
+   "note": "'his unexpected promotion'; windfall is usually money"
+  },
+  {
+   "id": "b15",
+   "word": "adamant",
+   "sentence": "I'm adamant that you will like this restaurant.",
+   "origin": "borderline",
+   "expected": "could-be-better",
+   "note": "adamant = refusing to change one's mind; for a prediction 'I'm sure'"
+  },
+  {
+   "id": "b16",
+   "word": "belabor",
+   "sentence": "Let's not belabor the details any longer; we need to decide now.",
+   "origin": "borderline",
+   "expected": "natural",
+   "note": "usual idiom is 'belabor the point'; 'the details' is acceptable"
+  },
+  {
+   "id": "b17",
+   "word": "pragmatic",
+   "sentence": "The pragmatic solution is to just call him.",
+   "origin": "borderline",
+   "expected": "natural",
+   "note": "natural"
+  },
+  {
+   "id": "b18",
+   "word": "flounder",
+   "sentence": "The project floundered a bit at the start, but it's doing well now.",
+   "origin": "borderline",
+   "expected": "natural",
+   "note": "natural"
+  },
+  {
+   "id": "b19",
+   "word": "shrewd",
+   "sentence": "Her shrewd eyes were watching every move I made.",
+   "origin": "borderline",
+   "expected": "natural",
+   "note": "natural, slightly literary"
+  },
+  {
+   "id": "b20",
+   "word": "propensity",
+   "sentence": "There is a propensity among young people to use social media.",
+   "origin": "borderline",
+   "expected": "could-be-better",
+   "note": "'young people tend to'; propensity for something specific"
+  },
+  {
+   "id": "b21",
+   "word": "delineate",
+   "sentence": "Hey, can you delineate where you parked? I can't find the car.",
+   "origin": "borderline",
+   "expected": "could-be-better",
+   "note": "register: far too formal for a casual message"
+  },
+  {
+   "id": "b22",
+   "word": "eschew",
+   "sentence": "Lol my cat totally eschewed her dinner tonight.",
+   "origin": "borderline",
+   "expected": "could-be-better",
+   "note": "register and sense: eschew is deliberate avoidance on principle"
+  },
+  {
+   "id": "b23",
+   "word": "placate",
+   "sentence": "Mom, please placate the baby, she won't stop crying.",
+   "origin": "borderline",
+   "expected": "could-be-better",
+   "note": "register: soothe/calm the baby"
+  },
+  {
+   "id": "b24",
+   "word": "linchpin",
+   "sentence": "Bro, that burger was the linchpin of my whole day.",
+   "origin": "borderline",
+   "expected": "could-be-better",
+   "note": "register: playful; may read as deliberate humour"
+  },
+  {
+   "id": "b25",
+   "word": "salient",
+   "sentence": "Text me the salient details of the party, like time and place.",
+   "origin": "borderline",
+   "expected": "could-be-better",
+   "note": "register: formal word in a casual text"
+  },
+  {
+   "id": "b26",
+   "word": "zeitgeist",
+   "sentence": "OMG, the zeitgeist at this party is amazing!",
+   "origin": "borderline",
+   "expected": "could-be-better",
+   "note": "zeitgeist = spirit of an era; 'vibe' is meant"
+  },
+  {
+   "id": "b27",
+   "word": "curtail",
+   "sentence": "I'm going to curtail my nap today because I have homework.",
+   "origin": "borderline",
+   "expected": "could-be-better",
+   "note": "register: 'cut my nap short'"
+  }
+ ]
+}

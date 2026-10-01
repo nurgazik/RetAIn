@@ -17,6 +17,14 @@
   .venv/bin/python src/evals labels <labels.json>  import the founder's labels
   .venv/bin/python src/evals report                leaderboard (terminal + output/evals/leaderboard.html)
 
+Sentence judge (TD-20, D53; golden set data/evals/golden/sentences.json):
+  .venv/bin/python src/evals sentences page        founder page: write sentences + blind-label the rest
+  .venv/bin/python src/evals sentences import <file> [rater]
+                                                   load that page's export (rater defaults to founder)
+  .venv/bin/python src/evals sentences export      founder-written sentences → blind packet for a second rater
+  .venv/bin/python src/evals sentences judge <name>
+                                                   run a registry model as the judge (scored in `report`)
+
 New model, end to end: add → run → grade → report.
 """
 import json
@@ -26,7 +34,7 @@ import sys
 SRC = pathlib.Path(__file__).resolve().parent.parent
 sys.path[0] = str(SRC)  # import siblings as evals.*, never shadow src/ modules
 
-from evals import dataset, grade, judge, label, report, results, run  # noqa: E402
+from evals import dataset, grade, judge, label, report, results, run, sentences  # noqa: E402
 
 
 def main(argv: list) -> None:
@@ -65,6 +73,14 @@ def main(argv: list) -> None:
         label.import_labels(args[0])
     elif cmd == "report":
         report.report()
+    elif cmd == "sentences" and args[:1] == ["page"]:
+        sentences.write_page()
+    elif cmd == "sentences" and args[:1] == ["import"]:
+        sentences.import_input(args[1], args[2] if len(args) > 2 else "founder")
+    elif cmd == "sentences" and args[:1] == ["export"]:
+        sentences.export_packet()
+    elif cmd == "sentences" and args[:1] == ["judge"]:
+        sentences.judge(args[1])
     else:
         print(__doc__)
 

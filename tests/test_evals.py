@@ -97,3 +97,78 @@ def test_route_roles_sends_checks_to_checker(monkeypatch):
     assert writer_calls == ["generate"] and seen == ["c-model"] and set(costing) == {"w-model", "c-model"}
     run.route_roles(specs["w"], checks=False, checker=None)
     assert G.run_judges("b", {}, "s", {}) == ([], ([], []))
+
+
+# --- sentence judge (TD-20) --------------------------------------------------------------
+
+SENT_ITEMS = [
+    {"id": "n01", "word": "bolster", "sentence": "Aid will bolster the plan.", "origin": "native", "expected": "natural"},
+    {"id": "n02", "word": "candor", "sentence": "She spoke with candor.", "origin": "native", "expected": "natural"},
+    {"id": "s01", "word": "bolster", "sentence": "He bolstered an impression.", "origin": "seeded", "expected": "wrong"},
+    {"id": "s02", "word": "candor", "sentence": "She spoke with great candid.", "origin": "seeded", "expected": "wrong"},
+    {"id": "b01", "word": "bolster", "sentence": "We bolstered the mood a bit.", "origin": "borderline",
+     "expected": "could-be-better"},
+]
+
+
+@pytest.fixture()
+def sent_env(tmp_path, monkeypatch):
+    from evals import sentences
+    golden = tmp_path / "sentences.json"
+    golden.write_text(json.dumps({"items": SENT_ITEMS}))
+    monkeypatch.setattr(sentences, "GOLDEN", golden)
+    monkeypatch.setattr(results, "DB_PATH", tmp_path / "evals.db")
+    return sentences
+
+
+def fake_judge(verdict):
+    return lambda system, user: {"text": json.dumps({"verdict": verdict, "reason": "r", "fix": None}), "cost": 0.001}
+
+
+def test_always_natural_judge_misses_every_wrong_and_raises_no_false_alarm(sent_env):
+    run_id = sent_env.judge("always-natural", call=fake_judge("natural"), workers=1)
+    s = sent_env.score(sent_env.connect(), run_id)
+    assert (s["n_wrong"], s["missed"], s["n_natural"], s["false_alarm"]) == (2, 1.0, 2, 0.0)
+    assert s["scored"] == 4  # borderline has no founder label yet → no gold
+
+
+def test_founder_disagreement_flags_known_item_and_sets_borderline_gold(sent_env, tmp_path):
+    f = tmp_path / "input.json"
+    f.write_text(json.dumps({"labels": {"s01": "natural", "b01": "wrong"},
+                             "written": [{"word": "candor", "sentence": "I value candor.", "unsure": True}]}))
+    sent_env.import_input(str(f))
+    con = sent_env.connect()
+    items, labels = sent_env.load(), sent_env.read_labels(con)
+    g = sent_env.gold(items, labels)
+    assert g["s01"] is None and g["b01"] == "wrong" and g["n01"] == "natural"
+    assert [it["id"] for it in sent_env.flagged(items, labels)] == ["s01"]
+    assert items[-1] == {"id": "f01", "word": "candor", "sentence": "I value candor.", "origin": "founder",
+                         "expected": None, "unsure": True}
+    assert items[:5] == SENT_ITEMS  # append-only
+    assert g["f01"] is None  # needs an independent rater, not the founder
+
+
+def test_pushback_flip_counts_only_abandoned_correct_verdicts(sent_env, monkeypatch):
+    monkeypatch.setattr(sent_env, "pushback_ids", lambda items: {"n01", "s01"})
+    calls = []
+
+    def caller(system, user):
+        calls.append(user)
+        first = "wrong" if "impression" in user else "natural"
+        v = first if "earlier answer" not in user else "natural"  # caves on s01, holds on n01
+        return {"text": json.dumps({"verdict": v, "reason": "r", "fix": None}), "cost": 0.0}
+    run_id = sent_env.judge("caver", call=caller, workers=1)
+    s = sent_env.score(sent_env.connect(), run_id)
+    assert (s["n_pushed"], s["flips"]) == (2, 0.5)
+
+
+def test_edit_share():
+    from evals import sentences
+    assert sentences.edit_share("He made a deep acumen", "He made a keen acumen") == 0.2
+    assert sentences.edit_share("a b c d", "a b c d") == 0.0
+
+
+def test_parse_takes_first_json_object():
+    from evals import sentences
+    text = '```json\n{"verdict": "natural", "reason": "ok", "fix": null}\n```\n{"verdict": "wrong"}'
+    assert sentences.parse(text)["verdict"] == "natural"

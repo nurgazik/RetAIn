@@ -5,7 +5,7 @@ import json
 import pathlib
 import statistics
 
-from . import dataset, label, results
+from . import dataset, label, results, sentences
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent.parent
 PAGE = ROOT / "output" / "evals" / "leaderboard.html"
@@ -86,6 +86,8 @@ def report() -> None:
                f"kappa {ag['kappa']:.2f} (3 labels), {ag['kappa_wrong']:.2f} (wrong vs not)"
                if ag["n"] else "Grader not yet checked against founder labels (python src/evals label).")
     print(ag_line)
+    s_lines, s_html = sentences.leaderboard()
+    print("\n" + "\n".join(s_lines))
 
     head = "".join(f"<th>{html_mod.escape(c[0])}</th>" for c in cols)
     body = "".join("<tr>" + "".join(f"<td>{html_mod.escape(cell(r, k, kind))}</td>" for _, k, kind in cols) + "</tr>"
@@ -110,5 +112,5 @@ $/piece = all calls (billed cost where the provider reports it). p50/p90 = secon
 Coverage = share of the engine's target stretches (or paragraphs) carrying a word; longest gap =
 median, over pieces, of the longest run of words with no highlighted word. Idiomatic / Wrong = share of highlighted
 words, per the fixed grader. {html_mod.escape(ag_line)}</p>
-<div class="scroll"><table><tr>{head}</tr>{body}</table></div></body></html>""")
+<div class="scroll"><table><tr>{head}</tr>{body}</table></div>{s_html}</body></html>""")
     print(f"wrote {PAGE}")
