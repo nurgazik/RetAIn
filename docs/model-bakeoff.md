@@ -209,3 +209,47 @@ already provider-agnostic). Logged as PRD D5 (updated). Code follow-up: switch
 4. Founder skim-test data point: all four passed a casual read — differences only
    surfaced under close per-word review. Supports D19 (occasional imperfection is
    survivable) but also shows why the close-read QC matters for pre-generated slots.
+
+---
+
+## Sentence judge (TD-20, D53) — 2026-10-01
+
+**Task:** judge one sentence a user wrote with a target word. Verdict natural / could-be-better / wrong, a
+one-line reason, the smallest fix. Prompt `prompts/exercises/sentence-judge.md`; harness
+`python src/evals sentences judge <model>`; set `data/evals/golden/sentences.json` (120 items).
+
+**Answer key.**
+- 35 published quotations (natural) and 28 seeded errors (wrong): fixed answers.
+- 27 borderline and 30 synthetic learner sentences: Claude Code's labels. The founder chose this for now
+  (2026-10-01) instead of writing and labelling himself. **57 of 120 answers have no human check yet.**
+
+**Results** (n = 120 per model, 6 models, $0.68 total including two earlier runs):
+
+| Model | Missed (wrong→natural) | False alarms (natural→wrong) | Could-be agreement | Pushback flips | Fix size | $/grade | p50 |
+|---|---|---|---|---|---|---|---|
+| deepseek-v4.1-flash@nothink | 0% of 35 | **2% of 56 (1)** | 54% | **0% of 18** | 23% | $0.00008 | 1.1 s |
+| gemma-4-26b (production checker) | 0% | 9% (5) | 57% | 11% (2) | 17% | $0.00007 | 1.5 s |
+| gemini-3.1-flash-lite | 0% | 9% | 68% | 24% (4) | 18% | $0.00024 | 0.9 s |
+| gpt-6-luna@none | 3% (1) | 9% | 11% | 12% | 19% | $0.00008 | 1.4 s |
+| gemini-3.8-flash | 0% | 9% | 29% | 0% of 19 | 18% | $0.00244 | 4.7 s |
+| deepseek-v4-pro | 0% | 9% | 46% | 17% | 14% | $0.00264 | 13.1 s |
+
+**Findings.**
+- **Clearly wrong sentences are easy.** Every model caught all 35, including the 7 subtle synthetic ones,
+  so the models separate on the in-between calls instead.
+- **Stronger models were not better.** The two 30× pricier models did no better than the cheap ones, and
+  deepseek-v4-pro took 13 s per grade.
+- **deepseek-v4.1-flash leads provisionally.** It had the fewest false alarms and never backed down under
+  pushback. The differences are small in counts, though: 1 vs 5 false alarms, 0 vs 2 flips.
+- **The answer key is the weakest link.**
+  - On 16 items, at least 4 of 6 models disagree with the key. Eleven of them are borderline, and on
+    several the models look right: "windfall of a promotion", "adamant that you will like it",
+    "zeitgeist at this party" and "a caveat not to be late" are probably *wrong*, not could-be-better.
+  - So Claude's labels lean lenient, which is the circularity risk that came up when choosing who labels.
+  - Agreement on borderline items is only 54% (pooled).
+  - **Cheapest human step:** the founder or a native speaker reviews those 16 items (about 5 minutes)
+    before a model is chosen.
+- **Shared false alarms.** Most models flag the same 3–5 published sentences ("assuage conflicts",
+  "misgivings proved prudent", "an elusive variety of bird"). Published text is not always idiomatic.
+
+**Not decided:** no judge model is chosen yet. Choose after the 16-item human review; re-run is free of new code.

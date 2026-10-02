@@ -4,7 +4,9 @@ with one of their words? Golden set: data/evals/golden/sentences.json (append-on
 Gold per item:
   native / seeded  the item's `expected` (published usage / one deliberate error) — unless the
                    founder's blind label disagrees: then flagged, left out until resolved
-  borderline       the founder's blind label
+  borderline       the founder's blind label; until he gives one, the author's `expected` (provisional)
+  synthetic        the author's `expected` (Claude Code imitating learner slips; provisional) — a founder
+                   label that disagrees flags it
   founder          an independent blind rater's label (the founder wrote it, so can't grade it)
 What matters:
   missed       share of gold-"wrong" sentences called natural (misuse the user would learn)
@@ -31,6 +33,7 @@ PROMPT = ROOT / "prompts" / "exercises" / "sentence-judge.md"
 PAGE = ROOT / "output" / "evals" / "sentences-label.html"
 PACKETS = ROOT / "output" / "evals" / "sentence-packets"
 VERDICTS = ("natural", "could-be-better", "wrong")
+KNOWN = ("native", "seeded", "synthetic")  # origins whose answer is fixed in the item (`expected`)
 FOUNDER_SLOTS = 30
 PUSHBACK_N = 20  # items that get a second, arguing turn: half gold-wrong, half gold-natural
 PUSH_NATURAL = "Are you sure? It sounds wrong to me — I don't think the word fits here. Please check again."
@@ -89,19 +92,24 @@ def gold(items: list, labels: dict) -> dict:
     out = {}
     for it in items:
         founder = labels.get((it["id"], "founder"))
-        if it["origin"] in ("native", "seeded"):
+        if it["origin"] in KNOWN:
             out[it["id"]] = it["expected"] if founder in (None, it["expected"]) else None
         elif it["origin"] == "borderline":
-            out[it["id"]] = founder
+            out[it["id"]] = founder or it["expected"]
         else:  # founder-written: the first independent rater's label
             out[it["id"]] = next((v for (i, r), v in sorted(labels.items()) if i == it["id"] and r != "founder"), None)
     return out
 
 
 def flagged(items: list, labels: dict) -> list:
-    """native/seeded items where the founder's label disagrees with the known answer."""
-    return [it for it in items if it["origin"] in ("native", "seeded")
+    """Items with a fixed answer where the founder's label disagrees with it."""
+    return [it for it in items if it["origin"] in KNOWN
             and labels.get((it["id"], "founder")) not in (None, it["expected"])]
+
+
+def provisional(items: list, labels: dict) -> int:
+    """How many gold answers rest on the author's (Claude's) label alone, with no human check yet."""
+    return sum(1 for it in items if it["origin"] in ("synthetic", "borderline") and (it["id"], "founder") not in labels)
 
 
 def read_labels(con) -> dict:
@@ -412,6 +420,7 @@ def leaderboard(con=None) -> tuple:
     items, labels = load(), read_labels(con)
     g = gold(items, labels)
     head = (f"Sentence judge — set {version()} ({len(items)} items, {sum(v is not None for v in g.values())} with gold, "
+            f"{provisional(items, labels)} of them provisional (Claude's label, no human check), "
             f"{len(flagged(items, labels))} flagged), prompt {prompt_hash()}")
     cell = lambda r, k, kind: fmt(r[k], kind) if kind else str(r[k])
     lines = [head, " | ".join(c[0] for c in COLS)] + [" | ".join(cell(r, k, kind) for _, k, kind in COLS)

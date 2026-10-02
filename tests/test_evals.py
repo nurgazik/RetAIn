@@ -129,7 +129,7 @@ def test_always_natural_judge_misses_every_wrong_and_raises_no_false_alarm(sent_
     run_id = sent_env.judge("always-natural", call=fake_judge("natural"), workers=1)
     s = sent_env.score(sent_env.connect(), run_id)
     assert (s["n_wrong"], s["missed"], s["n_natural"], s["false_alarm"]) == (2, 1.0, 2, 0.0)
-    assert s["scored"] == 4  # borderline has no founder label yet → no gold
+    assert s["scored"] == 5  # borderline without a founder label scores against its provisional `expected`
 
 
 def test_founder_disagreement_flags_known_item_and_sets_borderline_gold(sent_env, tmp_path):

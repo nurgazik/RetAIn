@@ -22,9 +22,9 @@ usage). Code schedules the words; the list stays unlimited; the user marks retai
 scan done (docs/poc2-transform.md §10): AI-graded sentences already ship elsewhere (VORCA,
 ReadUnbound), so the combination with the transform is the differentiator.
 **Next up: TD-20 (sentence-judge eval) → UX-16 (exercise screens).** Founder to-do: try ReadUnbound.
-**2026-10-01 (TD-20):** sentence-judge eval built — `python src/evals sentences page` opens the founder's page
-(write 30 sentences, blind-label 90). **Waiting on the founder's input**; then a second rater labels his sentences,
-models re-run, `report` scores them.
+**2026-10-01 (TD-20):** sentence-judge eval built and run (120 items × 6 models, $0.68). All models catch clearly
+wrong sentences; deepseek-v4.1-flash leads provisionally. 57 answers are Claude's labels (founder's call for now) —
+**next: a human looks at the 16 disputed items (~5 min), then pick the judge model.**
 
 **Engine + reader (D40/D41, live 2026-09-26):** one model call places words three ways —
 SUBSTITUTE, REPHRASE, or a SUPPLEMENT note (general background, inline, code-checked) —
@@ -218,6 +218,17 @@ all needed for TestFlight and none waits on a decision.**
 vacation coding ends). Home Mac: clone normally with personal credentials; recreate
 `.env.local` (4 API keys — gitignored, never on GitHub) and `data/retain.db` refills
 itself via the fetchers.
+
+### 2026-10-01 — Sentence-judge eval run (TD-20)
+
+- Founder asked why he should write and label instead of Claude; told: real learner sentences can't be faked (seeded
+  errors were too easy), and an AI answer key makes the test circular. Founder: "do it yourself for now."
+- Added 30 synthetic learner sentences (origin `synthetic`, 14 natural / 9 could-be-better / 7 wrong) and treated
+  Claude's borderline labels as provisional gold; any founder label overrides. The report counts provisional answers.
+- Registered gemini-3.8-flash and deepseek-v4-pro (OpenRouter list price). Ran 6 models on 120 items: results table
+  in docs/model-bakeoff.md. Every model caught all 35 wrong items; deepseek-v4.1-flash fewest false alarms (1) and no
+  pushback flips; pricier models no better. 16 items where most models disagree with the key, several looking like
+  Claude's labels were too lenient — human review of those 16 is the next step. Tests: 54 pass.
 
 ### 2026-10-01 — Sentence-judge eval harness (TD-20)
 

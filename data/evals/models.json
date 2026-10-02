@@ -196,6 +196,26 @@
       },
       "price_source": "openrouter /api/v1/models (list price)",
       "added": "2026-09-28"
+    },
+    {
+      "name": "gemini-3.8-flash",
+      "provider": "openrouter",
+      "model": "google/gemini-3.8-flash",
+      "in": 0.75,
+      "out": 3.75,
+      "params": {},
+      "price_source": "openrouter /api/v1/models (list price)",
+      "added": "2026-10-01"
+    },
+    {
+      "name": "deepseek-v4-pro",
+      "provider": "openrouter",
+      "model": "deepseek/deepseek-v4-pro",
+      "in": 0.2088,
+      "out": 0.4176,
+      "params": {},
+      "price_source": "openrouter /api/v1/models (list price)",
+      "added": "2026-10-01"
     }
   ],
   "_retired": [

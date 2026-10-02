@@ -1,5 +1,5 @@
 {
- "_readme": "Sentence-judge golden set (TD-20, D53). Frozen: items are only ever appended (founder sentences via `python src/evals sentences import`), never edited. origin: native = published quotation (gold natural), seeded = one deliberate error (gold wrong), borderline = gold set by the founder's blind label, founder = written by the founder, gold set by an independent blind rater. expected = the author's or source's answer; where the founder's label disagrees on native/seeded items, the item is flagged and left out of scoring until resolved.",
+ "_readme": "Sentence-judge golden set (TD-20, D53). Frozen: items are only ever appended (founder sentences via `python src/evals sentences import`), never edited. origin: native = published quotation (gold natural), seeded = one deliberate error (gold wrong), borderline = gold set by the founder's blind label, founder = written by the founder, gold set by an independent blind rater. expected = the author's or source's answer; where the founder's label disagrees on native/seeded items, the item is flagged and left out of scoring until resolved. synthetic = written by Claude Code imitating an advanced speaker's slips (founder 2026-10-01: stand-in for founder sentences for now); expected is Claude's label, provisional like the borderline items until a human confirms.",
  "items": [
   {
    "id": "n01",
@@ -748,6 +748,232 @@
    "origin": "borderline",
    "expected": "could-be-better",
    "note": "register: 'cut my nap short'"
+  },
+  {
+   "id": "t01",
+   "word": "bolster",
+   "sentence": "The new hire really bolstered our team's morale during the crunch.",
+   "origin": "synthetic",
+   "expected": "natural"
+  },
+  {
+   "id": "t02",
+   "word": "bolster",
+   "sentence": "This decision could bolster the risk of a recession.",
+   "origin": "synthetic",
+   "expected": "wrong",
+   "note": "bolster strengthens something you want; 'raise the risk'"
+  },
+  {
+   "id": "t03",
+   "word": "adamant",
+   "sentence": "My manager was adamant in keeping the deadline.",
+   "origin": "synthetic",
+   "expected": "could-be-better",
+   "note": "adamant about keeping; 'adamant in his refusal' exists, so not flatly wrong"
+  },
+  {
+   "id": "t04",
+   "word": "adversity",
+   "sentence": "She faced a lot of adversities in her first year abroad.",
+   "origin": "synthetic",
+   "expected": "could-be-better",
+   "note": "adversity is usually uncountable: 'a lot of adversity'"
+  },
+  {
+   "id": "t05",
+   "word": "candor",
+   "sentence": "I appreciated the candor of his feedback, even though it stung.",
+   "origin": "synthetic",
+   "expected": "natural"
+  },
+  {
+   "id": "t06",
+   "word": "candor",
+   "sentence": "She talked with candor and told us all the gossip about her boss.",
+   "origin": "synthetic",
+   "expected": "could-be-better",
+   "note": "candor is frankness about your own views, not sharing gossip"
+  },
+  {
+   "id": "t07",
+   "word": "squander",
+   "sentence": "We squandered two hours in traffic this morning.",
+   "origin": "synthetic",
+   "expected": "could-be-better",
+   "note": "squander implies wasting a resource through your own fault; 'lost two hours'"
+  },
+  {
+   "id": "t08",
+   "word": "galvanize",
+   "sentence": "The scandal galvanized voters to come out in record numbers.",
+   "origin": "synthetic",
+   "expected": "natural"
+  },
+  {
+   "id": "t09",
+   "word": "corroborate",
+   "sentence": "Can anyone corroborate that the meeting was moved to Thursday?",
+   "origin": "synthetic",
+   "expected": "natural"
+  },
+  {
+   "id": "t10",
+   "word": "eschew",
+   "sentence": "I eschewed the meeting because I was sick.",
+   "origin": "synthetic",
+   "expected": "wrong",
+   "note": "eschew = avoid deliberately, on principle; 'missed'"
+  },
+  {
+   "id": "t11",
+   "word": "placate",
+   "sentence": "To placate the angry customer, the waiter offered a free dessert.",
+   "origin": "synthetic",
+   "expected": "natural"
+  },
+  {
+   "id": "t12",
+   "word": "flounder",
+   "sentence": "After the CEO left, the startup was floundering for direction.",
+   "origin": "synthetic",
+   "expected": "could-be-better",
+   "note": "'floundering without direction' / 'searching for direction'"
+  },
+  {
+   "id": "t13",
+   "word": "conundrum",
+   "sentence": "Choosing between the two job offers was a real conundrum for me.",
+   "origin": "synthetic",
+   "expected": "natural"
+  },
+  {
+   "id": "t14",
+   "word": "impasse",
+   "sentence": "We're at an impasse with the landlord about the deposit.",
+   "origin": "synthetic",
+   "expected": "natural"
+  },
+  {
+   "id": "t15",
+   "word": "windfall",
+   "sentence": "Winning the scholarship was a windfall for my career.",
+   "origin": "synthetic",
+   "expected": "could-be-better",
+   "note": "a windfall is luck, usually money; a scholarship is earned"
+  },
+  {
+   "id": "t16",
+   "word": "linchpin",
+   "sentence": "She is the linchpin of our team; without her, nothing gets done.",
+   "origin": "synthetic",
+   "expected": "natural"
+  },
+  {
+   "id": "t17",
+   "word": "acumen",
+   "sentence": "His business acumen helped the company survive the downturn.",
+   "origin": "synthetic",
+   "expected": "natural"
+  },
+  {
+   "id": "t18",
+   "word": "quagmire",
+   "sentence": "I'm in a quagmire about which laptop to buy.",
+   "origin": "synthetic",
+   "expected": "wrong",
+   "note": "quagmire = a messy situation hard to get out of; 'dilemma'"
+  },
+  {
+   "id": "t19",
+   "word": "astute",
+   "sentence": "He made an astute decision to invest early.",
+   "origin": "synthetic",
+   "expected": "natural"
+  },
+  {
+   "id": "t20",
+   "word": "perfunctory",
+   "sentence": "The hotel staff were perfunctory and helpful.",
+   "origin": "synthetic",
+   "expected": "wrong",
+   "note": "perfunctory = minimal effort; contradicts 'helpful'"
+  },
+  {
+   "id": "t21",
+   "word": "tenuous",
+   "sentence": "The link between the two events is tenuous at best.",
+   "origin": "synthetic",
+   "expected": "natural"
+  },
+  {
+   "id": "t22",
+   "word": "scathing",
+   "sentence": "The critic wrote a scathing review on the new restaurant.",
+   "origin": "synthetic",
+   "expected": "could-be-better",
+   "note": "a review of, not on"
+  },
+  {
+   "id": "t23",
+   "word": "affable",
+   "sentence": "The interview was very affable, I felt relaxed.",
+   "origin": "synthetic",
+   "expected": "could-be-better",
+   "note": "affable describes people, not events"
+  },
+  {
+   "id": "t24",
+   "word": "shrewd",
+   "sentence": "My grandmother was a shrewd woman who never overpaid for anything.",
+   "origin": "synthetic",
+   "expected": "natural"
+  },
+  {
+   "id": "t25",
+   "word": "deft",
+   "sentence": "The diplomat deftly avoided answering the question.",
+   "origin": "synthetic",
+   "expected": "natural"
+  },
+  {
+   "id": "t26",
+   "word": "curtail",
+   "sentence": "The government curtailed the protesters from entering the square.",
+   "origin": "synthetic",
+   "expected": "wrong",
+   "note": "curtail limits an activity; 'prevented/barred the protesters from'"
+  },
+  {
+   "id": "t27",
+   "word": "delineate",
+   "sentence": "The contract clearly delineates the responsibilities of each party.",
+   "origin": "synthetic",
+   "expected": "natural"
+  },
+  {
+   "id": "t28",
+   "word": "extrapolate",
+   "sentence": "We can extrapolate from his silence that he disagrees.",
+   "origin": "synthetic",
+   "expected": "could-be-better",
+   "note": "infer is meant; extrapolate extends a trend"
+  },
+  {
+   "id": "t29",
+   "word": "underscore",
+   "sentence": "The report underscores on the need for better training.",
+   "origin": "synthetic",
+   "expected": "wrong",
+   "note": "underscore takes a direct object"
+  },
+  {
+   "id": "t30",
+   "word": "entrench",
+   "sentence": "Smartphones have entrenched in our daily lives.",
+   "origin": "synthetic",
+   "expected": "wrong",
+   "note": "become entrenched / entrenched themselves"
   }
  ]
 }
