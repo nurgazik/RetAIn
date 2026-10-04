@@ -253,3 +253,39 @@ one-line reason, the smallest fix. Prompt `prompts/exercises/sentence-judge.md`;
   "misgivings proved prudent", "an elusive variety of bird"). Published text is not always idiomatic.
 
 **Not decided:** no judge model is chosen yet. Choose after the 16-item human review; re-run is free of new code.
+
+---
+
+## Jev PoC (D54, backlog TD-21) — plan, 2026-10-04
+
+**Question:** at every live step that returns yes/no, a choice or a score, does TypeSafe's Jev
+(~$0.00002/call, ~100 ms, no text output) match the current model's quality? If it does, it
+replaces it or pre-screens for it.
+
+**Where Jev competes:** the founder's list. These are all the decision-shaped steps in the four
+user flows (diagrams/README.md); every other step writes text or is plain code.
+
+| Order | Step (flow) | Jev question shape | Eval | Notes |
+|---|---|---|---|---|
+| 1 | Word checker (share an article) | one Noul per highlighted word: "is `word` used idiomatically in `sentence`?" | ✅ `judge` (n = 216 graded words) | biggest gap: Gemma catches 55% of wrong words |
+| 2 | Sentence judge, write-a-sentence verdict | one 3-way Choice, and separately 5 Nouls (meaning, collocation, register, connotation, word grammar) combined in code | ✅ `sentences judge` (n = 120) | an LLM still writes the reason and fix when the verdict isn't natural |
+| 3 | Fact checker (share an article) | one Noul per edited sentence: "does `edited` state anything `original` doesn't?" — not the whole article (Jev degrades on large, mostly irrelevant input) | ❌ build: answer key per edited sentence | users' reading goes to TypeSafe; retention is not zero → founder call before production (D54) |
+| 4 | "Is this sentence natural?" check on model-written fill-in sentences | same judge as 2 | ✅ reuses `sentences judge` | only if the check is kept in the fill-in design (UX-16); written once per word, so cost is small either way |
+| 5 | "Is this a real English word?" (save a word) | one Noul | ❌ build: small key of real rare words + misspellings / misheard words | low value: runs only when Wiktionary lacks the word, and a real word still needs an LLM for its card |
+
+**Not a Jev step:** the grader inside the article-rewrite eval. It is the answer key, so it stays
+the strongest fixed model. It runs only while building, and Jev would otherwise grade a contest
+it competes in.
+
+**Method:** a plain HTTP caller (`POST https://api.typesafe.ai/v1/systemone`, no SDK) as a new
+eval provider. Same frozen sets and metrics as the LLM candidates. Shuffle Choice options and
+re-run, because Jev leans toward the first option. Report Jev's confidence beside each answer to
+test confidence-gating: Jev decides confident cases and an LLM takes the rest. Expected cost per
+eval: well under 1 cent.
+
+**Win condition (proposed — founder to confirm):** on a step's eval, Jev misses no more wrong
+items than the current pick, raises false alarms at most 5 points more, and is cheaper. For a
+step that sends users' reading (3), retention must also be accepted.
+
+**Blocked on:** the founder creating a TypeSafe account and putting `TYPESAFE_API_KEY` in
+`.env.local`.

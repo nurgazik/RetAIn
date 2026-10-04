@@ -22,6 +22,10 @@ usage). Code schedules the words; the list stays unlimited; the user marks retai
 scan done (docs/poc2-transform.md §10): AI-graded sentences already ship elsewhere (VORCA,
 ReadUnbound), so the combination with the transform is the differentiator.
 **Next up: TD-20 (sentence-judge eval) → UX-16 (exercise screens).** Founder to-do: try ReadUnbound.
+**2026-10-04 (D54, TD-21): Jev PoC planned** — test TypeSafe's Jev at all five yes/no / choice steps (word checker,
+sentence judge, fact checker, fill-in naturalness, real word); plan in docs/model-bakeoff.md "Jev PoC". **Next up: Jev on the
+word checker, then the sentence judge — blocked on the founder adding `TYPESAFE_API_KEY`.** Diagrams reorganised: one per user
+flow, one per eval (diagrams/README.md).
 **2026-10-01 (TD-20):** sentence-judge eval built and run (120 items × 6 models, $0.68). All models catch clearly
 wrong sentences; deepseek-v4.1-flash leads provisionally. 57 answers are Claude's labels (founder's call for now) —
 **next: a human looks at the 16 disputed items (~5 min), then pick the judge model.**
@@ -218,6 +222,19 @@ all needed for TestFlight and none waits on a decision.**
 vacation coding ends). Home Mac: clone normally with personal credentials; recreate
 `.env.local` (4 API keys — gitignored, never on GitHub) and `data/retain.db` refills
 itself via the fetchers.
+
+### 2026-10-04 — Jev research, D54, diagrams per flow and per eval
+
+- Founder: cost is decisive (P2 open; 10K free users) — corrected Claude's lean toward gemini-3.8-flash (~$3,700/mo at 10K users
+  × 5 grades/day vs ~$120 for deepseek-v4.1-flash). Founder: users can't argue with a verdict, so pushback doesn't count.
+- Read TypeSafe's Jev docs (~20 of 60+ pages): typed answers only (choice / score / yes-no) with probabilities, $0.042 per
+  million input tokens, output free, ~100 ms; no text; weak spots: literal reading, option-order bias, large irrelevant input;
+  zero retention is enterprise-only. Logged **D54**: every yes/no, choice or score step is tested against Jev.
+- Diagrams reorganised at the founder's request: `flow-` per user interaction (share an article, save a word, fill in the
+  word, write a sentence), `eval-` per eval (article rewrite, word checker, sentence judge), `infra-` (model fallback, user
+  day). Live model steps are separated from evals: checkers run live as quality gates; evals run only while building.
+- Founder listed the five Jev steps; plan recorded (TD-21, docs/model-bakeoff.md "Jev PoC"). Jev is not used as the grader.
+- Fixed a date-dependent test (`test_day_never_moves_back` failed on any day after 2026-10-01). 54 tests pass.
 
 ### 2026-10-01 — Sentence-judge eval run (TD-20)
 
