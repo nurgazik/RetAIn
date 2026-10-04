@@ -89,3 +89,23 @@ enum WordLink {
         return Int(url.lastPathComponent)
     }
 }
+
+// MARK: daily practice (D56) — src/service/practice.py is the contract
+struct PracticeSet: Codable { let day: String; var items: [PracticeItem] }
+struct PracticeItem: Codable, Identifiable, Hashable {
+    let wordId: Int
+    let word: String
+    let definition: String
+    let box: Int
+    let fill: Fill?
+    var attempts: Attempts
+    var status: String
+    var id: Int { wordId }
+    struct Fill: Codable, Hashable { let text: String; let source: String; let answer: String? }
+    struct Attempts: Codable, Hashable { var fill: Attempt?; var write: Attempt? }
+    struct Attempt: Codable, Hashable {
+        let correct: Int?; let verdict: String?; let reason: String?; let fix: String?; let answer: String?
+    }
+}
+struct FillResult: Codable, Hashable { let correct: Bool; let expected: String; let note: String? }
+struct WriteResult: Codable, Hashable { let verdict: String; let reason: String?; let fix: String? }

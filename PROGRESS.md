@@ -22,6 +22,10 @@ usage). Code schedules the words; the list stays unlimited; the user marks retai
 scan done (docs/poc2-transform.md §10): AI-graded sentences already ship elsewhere (VORCA,
 ReadUnbound), so the combination with the transform is the differentiator.
 **Next up: TD-20 (sentence-judge eval) → UX-16 (exercise screens).** Founder to-do: try ReadUnbound.
+**2026-10-04 (D56, UX-16): daily practice BUILT** — new **Practice** tab: 5 words/day, fill-in (from your reads or
+Gemma+Jev, meaning shown as the cue) then write-a-sentence (Jev ✓ at ≥ 0.9, else Gemma verdict + reason + fix), summary
+with Mark retained, Leitner 1/3/7/14/30, 7 pm reminder. Simulator walk-through passes; **not yet on the founder's phone —
+install from Xcode and react on the UI.** Rule D55: every model step has an eval (feedback + fill-in evals built today).
 **2026-10-04 (D54, TD-21): Jev PoC planned** — test TypeSafe's Jev at all five yes/no / choice steps (word checker,
 sentence judge, fact checker, fill-in naturalness, real word); plan in docs/model-bakeoff.md "Jev PoC". **Next up: Jev on the
 word checker, then the sentence judge — blocked on the founder adding `TYPESAFE_API_KEY`.** Diagrams reorganised: one per user
@@ -222,6 +226,23 @@ all needed for TestFlight and none waits on a decision.**
 vacation coding ends). Home Mac: clone normally with personal credentials; recreate
 `.env.local` (4 API keys — gitignored, never on GitHub) and `data/retain.db` refills
 itself via the fetchers.
+
+### 2026-10-04 — Jev PoC steps 1–2, rule D55, daily practice built (D56)
+
+- Jev word checker: AUC 0.90 but probabilities sit high; at its best cut it rejects 8% of good words vs Gemma's 1% → Gemma
+  stays (founder). Jev sentence judge: too lenient alone (softens 43% of wrong sentences), but as a gate (✓ only at
+  P(natural) ≥ 0.9) 0/35 wrong passed → founder: Jev is the first-tier decider.
+- Founder rule **D55**: anywhere a model does anything, there's an eval. Built two: sentence-feedback writer (218 entries graded
+  blind; 4 models tie at 67–73%, shared failure = fixes that change meaning; Gemma on cost) and fill-in sentence writer (95
+  graded; 94/95 natural, ~3/4 blanks admit a synonym → UI shows the meaning as the cue). deepseek dropped as default.
+- Founder delegated the exercise design ("I will react on UI"). Built **UX-16 / D56**: `src/service/practice.py`,
+  `src/service/typesafe.py` (one Jev caller shared with the evals), routes /v1/practice/{today,fill,write}, tables
+  practice_sets / practice_attempts / practice_sentences, words.box + due_day; iOS `PracticeView`, `PracticeReminder`,
+  Settings toggle. Live check (dev user): set in 1.6 s, Jev ✓ 0.15 s / $0.00002, Gemma verdict 3.2 s / $0.00013, schedule moves
+  as designed. Tests: service 65 pass (8 new); iOS 41/42 (the 1 = known TD-15 date bug); UI walk-through passes — it caught
+  an error message hidden under the keyboard (fixed: Check closes the keyboard).
+- Open: feedback prompt v2 (keep the writer's meaning) through the eval first; definitions on cards are Wiktionary's first
+  sense, sometimes the literal one (e.g. linchpin's axle pin) — shows as the fill-in cue too.
 
 ### 2026-10-04 — Jev research, D54, diagrams per flow and per eval
 

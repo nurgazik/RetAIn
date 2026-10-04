@@ -59,6 +59,19 @@ final class RetAInClient {
         try await send(request("v1/words/\(id)", method: "PATCH", body: ["status": status]), as: Word.self)
     }
 
+    // MARK: practice (D56)
+    /// Today's set; the first call of the day builds it (a few seconds when a sentence must be written).
+    func practiceToday() async throws -> PracticeSet {
+        var req = try request("v1/practice/today"); req.timeoutInterval = 90
+        return try await send(req, as: PracticeSet.self)
+    }
+    func practiceFill(wordId: Int, answer: String) async throws -> FillResult {
+        try await send(request("v1/practice/fill", method: "POST", body: ["word_id": wordId, "answer": answer]), as: FillResult.self)
+    }
+    func practiceWrite(wordId: Int, sentence: String) async throws -> WriteResult {
+        try await send(request("v1/practice/write", method: "POST", body: ["word_id": wordId, "sentence": sentence]), as: WriteResult.self)
+    }
+
     // MARK: transform
     /// sourceFields: byline / site_name / published / dek — shown in the reader's header only.
     func transform(text: String, title: String?, url: String?, source: String, meta: [String: Any]? = nil,

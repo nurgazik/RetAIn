@@ -1,16 +1,16 @@
 # User flow: write a sentence (daily exercise)
 
-**Status: designed, not built** (PRD D53, backlog UX-16). Which model fills each box is being
-measured now (TD-20, TD-21); the split below — a cheap decider, an LLM only when feedback is
-needed — is the design under test, not yet decided.
+**Status: built 2026-10-04** (PRD D56, backlog UX-16): `src/service/practice.py`, `ios/RetAIn/App/PracticeView.swift`.
 
 ```mermaid
 flowchart TD
     A["Code: today's word<br/>(same daily set as fill-in)"]:::code --> B([You write a sentence using the word<br/>typing or dictation])
-    B --> J["<b>JUDGE</b> · model, choice of three<br/>natural · could be better · wrong<br/>(candidates: Jev or an LLM)"]:::gate
-    J -- natural --> OK(["✓ Natural"])
-    J -- "could be better / wrong" --> F["<b>FEEDBACK WRITER</b> · model writes text<br/>one-line reason + the smallest fix"]:::writer
-    F --> SHOW([You see the verdict, why, and the fix])
+    B --> CK{"Code: does the sentence<br/>use the word?"}:::code
+    CK -- no --> B
+    CK -- yes --> J["<b>JEV</b> · model, choice of three<br/>how sure is it the sentence is natural?"]:::gate
+    J -- "P(natural) ≥ 0.9" --> OK(["✓ Natural · ~0.2 s"])
+    J -- "less sure, or Jev down" --> F["<b>GEMMA</b> · model writes text<br/>verdict + one-line reason + smallest fix"]:::writer
+    F --> SHOW([You see the verdict, why, and the fix · ~3 s])
     OK --> S["Code: record the attempt,<br/>schedule the word's next date"]:::code
     SHOW --> S
     S --> RET(["You decide when a word is retained<br/>(the verdicts are evidence, not the call)"])

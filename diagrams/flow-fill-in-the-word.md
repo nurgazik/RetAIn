@@ -1,7 +1,6 @@
 # User flow: fill in the word (daily exercise)
 
-**Status: designed, not built** (PRD D53, backlog UX-16). Open details are marked below; this
-drawing changes when UX-16 is designed with the founder.
+**Status: built 2026-10-04** (PRD D56, backlog UX-16): `src/service/practice.py`, `ios/RetAIn/App/PracticeView.swift`.
 
 ```mermaid
 flowchart TD
@@ -10,13 +9,13 @@ flowchart TD
         P1["Code: pick today's due words<br/>(scheduler; ~5 to start)"]:::code --> P2{"Code: was this word placed<br/>in one of your past articles?"}:::code
         P2 -- yes --> P3["Use that sentence,<br/>blank out the word"]:::code
         P2 -- no --> P4["<b>SENTENCE WRITER</b> · model writes text<br/>one natural sentence using the word"]:::writer
-        P4 --> P5["Saved for reuse:<br/>written once per word"]:::code
-        P4 -.-> P6["Possible check (open):<br/>is the sentence natural? yes/no"]:::gate
+        P6 --> P5["Saved for reuse:<br/>up to 3 per word, shared"]:::code
+        P4 --> P6["<b>JEV CHECK</b> · natural? P ≥ 0.9<br/>else one retry, else no fill-in today"]:::gate
     end
 
     P3 --> X
     P5 --> X
-    X([You see the sentence with a blank]) --> Y([You type the word])
+    X([You see the sentence with a blank<br/>and the word's meaning as the cue]) --> Y([You type the word])
     Y --> Z{"Code: does it match the blanked form?<br/>(exact, ignoring case)"}:::code
     Z -- yes --> OK([Correct])
     Z -- no --> NO([Shown the answer])
@@ -42,9 +41,8 @@ no sentence from your own reading yet.
 | Naturalness check (Jev) | [eval-sentence-judge.md](eval-sentence-judge.md) — same question as the sentence judge |
 | Answer check | none needed (code) |
 
-## Open (decide in UX-16)
+## Decided (D56)
 
-- **Word forms:** the blank may hold "bolstered" while the list says "bolster" — accept only the
-  form in the sentence, or any form?
-- Hints (first letter?), second tries, and what a miss does to the schedule.
-- Whether prep runs on first open (D51) or ahead of time so it's instant.
+- **Word forms:** the blanked form is right, and so is the base word (shown the form used).
+- **One try**, then the answer; a miss sends the word back to tomorrow. No hints beyond the meaning.
+- **Prep runs on the first open of the day** (1.6 s measured with four sentences to write).

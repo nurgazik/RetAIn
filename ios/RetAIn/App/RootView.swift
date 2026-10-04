@@ -10,6 +10,7 @@ struct RootView: View {
         if session.signedIn {
             TabView(selection: $tab) {
                 TransformView().tabItem { Label("RetAInize", systemImage: "sparkles") }.tag("transform")
+                PracticeView().tabItem { Label("Practice", systemImage: "pencil.and.list.clipboard") }.tag("practice")
                 WordsView(openWordId: $openWordId).tabItem { Label("Words", systemImage: "character.book.closed") }.tag("words")
                 ReadsView().tabItem { Label("My Reads", systemImage: "books.vertical") }.tag("reads")
                 SettingsView().tabItem { Label("Settings", systemImage: "gearshape") }.tag("settings")
