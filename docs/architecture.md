@@ -179,7 +179,7 @@ host app ─► ShareInput (what arrived: text / link / Safari page-script resul
 
 # Word cards from Wiktionary (D48, UX-4) — built 2026-09-27
 
-Flow diagram: `diagrams/word-capture-flow.md`. Source research: `docs/content-sources.md`.
+Flow diagram: `diagrams/flow-save-a-word.md`. Source research: `docs/content-sources.md`.
 
 ## What it is
 
@@ -241,7 +241,7 @@ service and iOS tests pass; the card renders on the founder's phone.
 
 # The user's day (D51) — agreed and built 2026-09-30
 
-Flow diagram: `diagrams/user-day.md`. Replaces the stopgap TD-17 fix (one service-wide
+Flow diagram: `diagrams/infra-user-day.md`. Replaces the stopgap TD-17 fix (one service-wide
 `RETAIN_TZ`), which stays as the fallback.
 
 ## What it is

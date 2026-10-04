@@ -117,7 +117,7 @@ def now() -> str:
 
 # ---------------------------------------------------------------- the user's day (D51)
 # Every row carries `day` — the user's local date, starting at 4 am — beside its UTC time.
-# See docs/architecture.md "The user's day" and diagrams/user-day.md.
+# See docs/architecture.md "The user's day" and diagrams/infra-user-day.md.
 
 def zone(name: str | None) -> ZoneInfo | None:
     """A timezone from its IANA name (America/Toronto); None for missing or unknown names."""

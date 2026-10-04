@@ -1,4 +1,4 @@
-"""Word cards (D48, diagrams/word-capture-flow.md): Wiktionary for the facts, the model for
+"""Word cards (D48, diagrams/flow-save-a-word.md): Wiktionary for the facts, the model for
 examples, a shared card per headword reused by every user.
 
 Reference data: data/dictionary/wiktionary.db — a read-only SQLite file built once from

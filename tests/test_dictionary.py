@@ -1,4 +1,4 @@
-"""Word cards (D48): the capture flow in diagrams/word-capture-flow.md, on a tiny fixture
+"""Word cards (D48): the capture flow in diagrams/flow-save-a-word.md, on a tiny fixture
 dictionary with the model stubbed."""
 import json
 

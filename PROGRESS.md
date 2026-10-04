@@ -288,7 +288,7 @@ itself via the fetchers.
   tests pass; service restarted, `/v1/me` 200.
 - **D51 agreed: the user's day.** Per-user timezone (sent by the app, saved on the user), days start at
   4 am local, a day key stamped on every row beside UTC, the day never goes back. Written up in
-  docs/architecture.md + diagrams/user-day.md; build is TD-19. Founder wants daily in-app content
+  docs/architecture.md + diagrams/infra-user-day.md; build is TD-19. Founder wants daily in-app content
   (quizzes/exercises) — that is a separate discussion, not yet decided.
 - **TD-19 built (D51):** every request carries the phone's timezone; the server saves it, works out the
   day (4 am start, never back) and stamps it on pieces, calls, events and words (1,223 older rows
@@ -345,7 +345,7 @@ itself via the fetchers.
   cache on public plans; Oxford enterprise only); iOS exposes no dictionary text. Wiktionary via
   kaikki.org's Wiktextract dump (CC BY-SA 4.0, 3.3 GB, download marked deprecated — our copy kept
   in `data/dictionary/`): 235/235 found, IPA 99%, modern usage example 62%. Spike:
-  `spikes/wiktionary_coverage.py`. Decision **D48**. Diagram: `diagrams/word-capture-flow.md`
+  `spikes/wiktionary_coverage.py`. Decision **D48**. Diagram: `diagrams/flow-save-a-word.md`
   (new `diagrams/` folder for major architecture/UX moments).
 - **Built:** `src/service/dictionary.py` (reference DB build in 23 s, lookups < 1 ms; redirect
   rules ran → run, ubiquitious → ubiquitous, adjectives stay: protracted, scathing; proper names

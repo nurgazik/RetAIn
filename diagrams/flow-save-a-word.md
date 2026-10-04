@@ -1,4 +1,4 @@
-# Word capture: where a word card comes from
+# User flow: save a word → its word card
 
 Decisions: PRD D48 (2026-09-27); Siri entry point D50 (2026-09-28). Research and spike numbers: `docs/content-sources.md`,
 "Dictionary sources for word cards".
@@ -21,6 +21,11 @@ flowchart TD
     S --> U[("User's word list")]
     H --> U
 ```
+
+## Tested by
+
+No eval yet. The model writes examples (text) and decides "is this a real English word?" (yes/no —
+a Jev candidate, D54).
 
 ## Rules the diagram encodes
 

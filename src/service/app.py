@@ -109,7 +109,7 @@ def add_word(body: WordIn, user=Depends(auth.current_user)):
         existing = con.execute("SELECT * FROM words WHERE user_id=? AND word=?", (user["id"], word)).fetchone()
         if existing and not definition and existing["lexicon_id"]:
             definition, pos, lexicon_id = existing["definition"], pos or existing["pos"], existing["lexicon_id"]
-        elif not definition:  # the capture flow: diagrams/word-capture-flow.md
+        elif not definition:  # the capture flow: diagrams/flow-save-a-word.md
             lexicon_id, definition, calls = dictionary.build_card(con, word, engine.model_env())
             db.record_calls(con, user["id"], None, calls, engine.PRICES, day=user["day"])
             if lexicon_id and not pos:
