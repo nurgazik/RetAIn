@@ -5,36 +5,60 @@ model changes go through `src/evals` first (CLAUDE.md). Harness: `src/evals/`; r
 `data/evals.db` (gitignored); leaderboard `python src/evals report` → `output/evals/leaderboard.html`.
 
 ```mermaid
-flowchart TD
-    S([A model step in the app<br/>rewrite · word check · fact check · sentence judge]) --> Q{What does the<br/>step return?}
-    Q -- "free text<br/>rewrite, feedback, fix" --> L["Candidates: LLMs only"]
-    Q -- "yes/no · choice · score" --> J["Candidates: LLMs <b>+ Jev</b><br/>(D54: always test Jev here)"]
-    L --> R
-    J --> R
-
-    subgraph GOLD["Golden set: frozen, append-only, one per task"]
-        G1["Items<br/>e.g. a sentence with a target word"]
-        G2{"Where the right<br/>answer comes from"}
-        G1 --> G2
-        G2 --> K1["Fixed by construction<br/>published usage · seeded error"]
-        G2 --> K2["Human: founder's blind label"]
-        G2 --> K3["Provisional: Claude Code's label<br/>counted in the report until a human checks"]
-        G2 --> K4["Grader model<br/>older rewrite evals"]
+flowchart TB
+    subgraph REW["Article rewrite · D40 · returns text"]
+        direction TB
+        R1["Judges: the rewritten article"]
+        R2["Test set: golden pieces<br/>data/evals/golden/public + private"]
+        R3["Answer key: grader model<br/>(+ founder labels when given)"]
+        R4["Scored on: words placed, coverage,<br/>wrong usages, invented facts"]
+        R5["Candidates: LLMs only"]
+        R1 --> R2 --> R3 --> R4 --> R5
     end
 
-    R["Registry: data/evals/models.json<br/>model + settings + list price"] --> RUN["Run every candidate on the same set<br/>python src/evals … &lt;model&gt;"]
-    GOLD --> RUN
-    RUN --> DB[("data/evals.db<br/>one row per item per run")]
-    DB --> SC["Score against the answer key<br/>quality · $ per call · seconds"]
-    SC --> F{"Human answer key disagrees<br/>with a fixed answer?"}
-    F -- yes --> FL["Flag the item:<br/>left out until resolved"]
-    F -- no --> LB["Leaderboard<br/>only same set version + same prompt compare"]
-    FL --> LB
-    LB --> D{"Founder decides"}
-    D -- "pick" --> P["PRD decision + production config"]
-    D -- "not yet" --> H["Human review of disputed items,<br/>more data, or a new candidate"]
-    H --> RUN
-    P -. "prompt or model changes later" .-> RUN
+    subgraph CHK["Word checker · D19 · yes/no per word"]
+        direction TB
+        C1["Judges: is this highlighted word idiomatic?"]
+        C2["Test set: none of its own —<br/>the highlighted words from rewrite runs"]
+        C3["Answer key: grader verdicts<br/>(+ founder labels when given)"]
+        C4["Scored on: wrong words caught,<br/>good words rejected"]
+        C5["Candidates: LLMs + Jev"]
+        C1 --> C2 --> C3 --> C4 --> C5
+    end
+
+    subgraph SEN["Sentence judge · D53 · choice of 3"]
+        direction TB
+        S1["Judges: natural / could-be-better / wrong"]
+        S2["Test set: sentences.json, 120 items"]
+        S3["Answer key: fixed + founder +<br/>provisional (Claude, 57 items)"]
+        S4["Scored on: wrong sentences called natural,<br/>false alarms"]
+        S5["Candidates: LLMs + Jev for the verdict;<br/>an LLM writes the feedback"]
+        S1 --> S2 --> S3 --> S4 --> S5
+    end
+
+    subgraph FAC["Fact check · D36 · yes/no — no eval yet"]
+        direction TB
+        F1["Judges: did the rewrite invent something?"]
+        F2["Test set: none yet"]
+        F3["Candidates: LLMs + Jev, once built"]
+        F1 --> F2 --> F3
+    end
+
+    R2 -. "highlighted words" .-> C2
+
+    REG["Model registry<br/>data/evals/models.json"]
+    DB[("Results<br/>data/evals.db")]
+    LB["Leaderboard<br/>python src/evals report"]
+    PICK{"Founder picks"}
+    DEC["PRD decision +<br/>production config"]
+
+    R5 --> REG
+    C5 --> REG
+    S5 --> REG
+    F3 -.-> REG
+    REG --> DB --> LB --> PICK --> DEC
+
+    style FAC stroke-dasharray: 6 4
 ```
 
 ## The three eval families today
@@ -50,11 +74,17 @@ Fact check (D36) is yes/no too and has no eval yet.
 
 ## Why
 
+- **Four separate evals, shared machinery.** Each eval has its own question, test set, answer key
+  and success measure; they share only the model list, the results store, the leaderboard and the
+  founder's pick. The word checker is the one exception to "own test set": it re-judges the
+  highlighted words that rewrite runs produced.
+- **The answer key is labelled by source, in every eval.** Fixed by construction (published usage,
+  a seeded error), human (the founder's blind label), provisional (Claude Code's label, counted in
+  the report until a human checks) or a grader model. Where a human label disagrees with a fixed
+  answer, the item is flagged and left out until resolved. The report says how many answers no
+  human has checked, so a ranking built on Claude's own labels is never mistaken for a settled one.
 - **One set, many models.** A model is only compared with others on the same frozen set
   and the same prompt version; anything else isn't a comparison.
-- **The answer key is labelled by source.** Fixed, human, provisional and grader answers
-  carry different weight; the report says how many answers no human has checked, so a
-  ranking built on Claude's own labels is never mistaken for a settled one.
 - **Cost and speed sit beside quality.** With monetization undecided (P2), $ per call at
   10K users decides as much as accuracy. That's why yes/no, choice and score steps always
   get a Jev run: about $0.00002 per call, ~100 ms per TypeSafe's docs.
