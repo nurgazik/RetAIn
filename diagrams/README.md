@@ -34,7 +34,7 @@ choice or score step also gets a Jev run (D54).
 | [eval-sentence-feedback.md](eval-sentence-feedback.md) | write-a-sentence → feedback writer | built 2026-10-04 (D55) |
 | — | share-an-article → fact checker | **missing** |
 | — | save-a-word → example writer, "real word?" check | **missing** |
-| — | fill-in-the-word → sentence writer | **missing** (needed before it ships) |
+| [eval-fill-sentence.md](eval-fill-sentence.md) | fill-in-the-word → sentence writer | built 2026-10-04 (D55) |
 
 ## Infrastructure — under every flow
 

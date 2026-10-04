@@ -8,7 +8,7 @@ from fastapi import Depends, FastAPI, HTTPException
 from fastapi.sse import EventSourceResponse, ServerSentEvent
 from pydantic import BaseModel, Field
 
-from . import auth, db, dictionary, engine
+from . import auth, db, dictionary, engine, practice
 from .config import DAILY_CAP, MAX_CHARS, MIN_WORDS
 
 
@@ -134,6 +134,66 @@ def patch_word(word_id: int, body: WordPatch, user=Depends(auth.current_user)):
         if cur.rowcount == 0:
             raise HTTPException(404, "no such word")
         return with_cards(con, [dict(con.execute("SELECT * FROM words WHERE id=?", (word_id,)).fetchone())])[0]
+    finally:
+        con.close()
+
+
+# ---------------------------------------------------------------- practice (D53, D56)
+
+class FillIn(BaseModel):
+    word_id: int
+    answer: str = Field(min_length=1, max_length=60)
+
+
+class WriteIn(BaseModel):
+    word_id: int
+    sentence: str = Field(min_length=3, max_length=400)
+
+
+@app.get("/v1/practice/today")
+def practice_today(user=Depends(auth.current_user)):
+    """Today's set; built on the first call of the user's day (may take a few seconds when a
+    fill-in sentence has to be written)."""
+    con = db.connect()
+    try:
+        return practice.get_set(con, user["id"], user["day"]) or practice.build_set(con, user, engine.model_env())
+    finally:
+        con.close()
+
+
+def _practice_item(con, user, word_id: int) -> dict:
+    try:
+        return practice.item_of(con, user, word_id)
+    except KeyError:
+        raise HTTPException(404, "that word isn't in today's practice")
+
+
+@app.post("/v1/practice/fill")
+def practice_fill(body: FillIn, user=Depends(auth.current_user)):
+    con = db.connect()
+    try:
+        item = _practice_item(con, user, body.word_id)
+        if not item.get("fill"):
+            raise HTTPException(409, "no fill-in for this word today")
+        result = practice.check_fill(item, body.answer)
+        practice.record(con, user, item, "fill", body.answer.strip(), result)
+        return result
+    finally:
+        con.close()
+
+
+@app.post("/v1/practice/write")
+def practice_write(body: WriteIn, user=Depends(auth.current_user)):
+    sentence = " ".join(body.sentence.split())
+    con = db.connect()
+    try:
+        item = _practice_item(con, user, body.word_id)
+        if not practice.uses_word(sentence, item["word"]):
+            raise HTTPException(422, f"Use “{item['word']}” in your sentence.")
+        result, calls = practice.judge_sentence(item["word"], item["definition"], sentence, engine.model_env())
+        db.record_calls(con, user["id"], None, calls, practice.prices(), day=user["day"])
+        practice.record(con, user, item, "write", sentence, result)
+        return {k: result[k] for k in ("verdict", "reason", "fix")}
     finally:
         con.close()
 

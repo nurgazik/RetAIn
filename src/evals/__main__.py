@@ -29,6 +29,12 @@ Sentence judge (TD-20, D53; golden set data/evals/golden/sentences.json):
   .venv/bin/python src/evals sentences feedback-import <folder> <grader>
                                                    load grades.json written into that folder
 
+Fill-in sentence writer (D55; prompts/exercises/fill-sentence.md):
+  .venv/bin/python src/evals fill run <name>        one sentence per golden word + blank check + Jev gate score
+  .venv/bin/python src/evals fill export <run> [run ...]   blind packet (natural / right sense / clear blank)
+  .venv/bin/python src/evals fill import <folder> <grader>
+  .venv/bin/python src/evals fill report
+
 New model, end to end: add → run → grade → report.
 """
 import json
@@ -38,7 +44,7 @@ import sys
 SRC = pathlib.Path(__file__).resolve().parent.parent
 sys.path[0] = str(SRC)  # import siblings as evals.*, never shadow src/ modules
 
-from evals import dataset, grade, judge, label, report, results, run, sentences  # noqa: E402
+from evals import dataset, fillin, grade, judge, label, report, results, run, sentences  # noqa: E402
 
 
 def main(argv: list) -> None:
@@ -89,6 +95,14 @@ def main(argv: list) -> None:
         sentences.feedback_export([int(a) for a in args[1:]])
     elif cmd == "sentences" and args[:1] == ["feedback-import"]:
         sentences.feedback_import(args[1], args[2])
+    elif cmd == "fill" and args[:1] == ["run"]:
+        fillin.run(args[1])
+    elif cmd == "fill" and args[:1] == ["export"]:
+        fillin.export([int(a) for a in args[1:]])
+    elif cmd == "fill" and args[:1] == ["import"]:
+        fillin.import_grades(args[1], args[2])
+    elif cmd == "fill" and args[:1] == ["report"]:
+        print("\n".join(fillin.report()))
     else:
         print(__doc__)
 

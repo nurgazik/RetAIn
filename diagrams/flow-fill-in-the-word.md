@@ -38,8 +38,8 @@ no sentence from your own reading yet.
 
 | Step | Eval |
 |---|---|
-| Sentence writer | none yet — needed before it ships |
-| Possible naturalness check | none yet (yes/no, so Jev is a candidate, D54) |
+| Sentence writer | [eval-fill-sentence.md](eval-fill-sentence.md) |
+| Naturalness check (Jev) | [eval-sentence-judge.md](eval-sentence-judge.md) — same question as the sentence judge |
 | Answer check | none needed (code) |
 
 ## Open (decide in UX-16)

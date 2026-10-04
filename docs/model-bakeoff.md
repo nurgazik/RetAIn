@@ -380,3 +380,23 @@ right, is the fix natural, does the fix keep the writer's meaning. "Fully right"
   already backed by the Flash-Lite fallback (D49). At 10K users × 5 sentences/day with the Jev gate
   sending ~59% on: Gemma ≈ $62/mo, deepseek ≈ $71/mo, flash-lite ≈ $212/mo. deepseek is no longer the
   default.
+
+### Fill-in sentence writer (D55) — first eval, 2026-10-04
+
+51 golden words; one sentence each, production prompt. Graded blind by Claude Code (one rater).
+
+| Model | Good exercises (natural + right sense + clear blank) | Usable blanks | Natural / right sense | Pass Jev gate | $/sentence |
+|---|---|---|---|---|---|
+| gemma-4-26b (production) | **14/51** | 50/51 | 50/50 | 50 | **$0.00003** |
+| gemini-3.1-flash-lite | 11/51 | 45/51 | 44/45 | 45 (one unnatural got through) | $0.00011 |
+
+- **The sentences are fine; the blanks are ambiguous.** 94 of 95 are natural and in the right sense,
+  but in about 3 of 4 a common synonym fits the blank as well as the target word ("wise" for
+  prudent, "dilemma" for conundrum). The prompt already asks for an unambiguous blank, and models
+  can't reliably produce one.
+- **Design answer: the fill-in card shows the word's meaning as the cue,** so recall is "which of my
+  words means this and fits here", not a synonym guess. Not measured yet with the cue shown.
+- **The Jev gate barely filters here** (it checks naturalness, which was already there). It stays as a
+  cheap guard (~$0.00001).
+- **Pick: Gemma.** Better and a third of the cost; it is already the production chain (with the
+  Flash-Lite fallback).

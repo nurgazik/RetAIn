@@ -90,6 +90,36 @@ CREATE TABLE IF NOT EXISTS diagnostics (
     payload   TEXT,                 -- JSON: types, char counts, flags — never content
     at        TEXT NOT NULL
 );
+-- Daily practice (D56): today's set per user (keyed by the user's day, D51), every answer, and
+-- model-written fill-in sentences shared by all users (no user data, like word cards).
+CREATE TABLE IF NOT EXISTS practice_sets (
+    user_id     TEXT NOT NULL REFERENCES users(id),
+    day         TEXT NOT NULL,
+    items       TEXT NOT NULL,      -- JSON: word_id, word, definition, box, fill {text, answer, source}
+    created_at  TEXT NOT NULL,
+    PRIMARY KEY (user_id, day)
+);
+CREATE TABLE IF NOT EXISTS practice_attempts (
+    id          INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id     TEXT NOT NULL REFERENCES users(id),
+    word_id     INTEGER NOT NULL REFERENCES words(id),
+    day         TEXT NOT NULL,
+    kind        TEXT NOT NULL,      -- fill | write
+    answer      TEXT NOT NULL,      -- what the user typed
+    correct     INTEGER,            -- fill: code's check
+    verdict     TEXT,               -- write: natural | could-be-better | wrong
+    reason      TEXT,
+    fix         TEXT,
+    created_at  TEXT NOT NULL
+);
+CREATE TABLE IF NOT EXISTS practice_sentences (
+    id          INTEGER PRIMARY KEY AUTOINCREMENT,
+    word        TEXT NOT NULL,
+    sentence    TEXT NOT NULL,
+    answer      TEXT NOT NULL,      -- the word as it appears in the sentence
+    p_natural   REAL,               -- Jev's check when written
+    created_at  TEXT NOT NULL
+);
 CREATE TABLE IF NOT EXISTS calls (
     id         INTEGER PRIMARY KEY AUTOINCREMENT,
     user_id    TEXT,
@@ -197,6 +227,8 @@ def init() -> None:
                  "ALTER TABLE words ADD COLUMN lexicon_id INTEGER REFERENCES lexicon(id)",
                  "ALTER TABLE calls ADD COLUMN host TEXT",
                  "ALTER TABLE users ADD COLUMN tz TEXT", "ALTER TABLE users ADD COLUMN last_day TEXT",
+                 "ALTER TABLE words ADD COLUMN box INTEGER NOT NULL DEFAULT 0",  # practice schedule (D56)
+                 "ALTER TABLE words ADD COLUMN due_day TEXT",                    # NULL = never practised
                  *(f"ALTER TABLE {t} ADD COLUMN day TEXT NOT NULL DEFAULT ''" for t in ("pieces", "calls", "events", "words"))):
         try:  # migrations for DBs created before these columns
             con.execute(stmt)
