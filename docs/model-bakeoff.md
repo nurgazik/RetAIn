@@ -317,3 +317,41 @@ Answer key = the grader's verdicts, never checked by a human.
   be off by a few items.
 - Not tried yet: tightening Jev's question per the docs (explicit boundary cases, examples in the
   criteria), and choosing a threshold on a held-out half.
+
+### Jev PoC step 2 — sentence judge, first run (2026-10-04)
+
+One request per sentence (n = 120) asked three variants at once: the 3-way Choice, the same Choice
+with options reversed, and five single-property Nouls combined in code (thresholds fixed before
+the run). $0.00004 per request for all seven questions; 0.2 s p50. Same answer key as the LLM runs
+(57 answers are Claude's provisional labels).
+
+| | Wrong → natural (harmful) | Wrong → could-be | Natural → wrong | Natural → could-be | Could-be → natural |
+|---|---|---|---|---|---|
+| Jev 3-way Choice | 2/35 (6%) | 15/35 (43%) | **0/57** | 1/57 | 19/28 |
+| Jev 3-way, options reversed | same verdict on 119 of 120 — no order bias seen | | | | |
+| Jev 5 Nouls | 0/35 | 7/35 | 3/57 | 36/57 (too strict at these thresholds) | |
+| Best LLMs (gemma, gemini-3.8-flash) | 0/35 | 0/35 | 5/57 | 1–3/57 | — |
+
+- **As the whole judge, Jev is too lenient.** It softens 43% of wrong sentences, passes 2 wrong
+  sentences as natural ("adamant on", "mitigate the gap"), and passes 19 of 28 could-be-better
+  sentences as natural. The 5-Noul variant goes the other way: too strict.
+- **As a gate it works.** The design (flow-write-a-sentence) sends every not-natural verdict to
+  an LLM for feedback, so the only harmful Jev error is a false "natural". Give ✓ only when
+  P(natural) is high, and send the rest to the LLM:
+
+  | ✓ if P(natural) ≥ | Wrong passed | Could-be passed | Natural given ✓ without an LLM call |
+  |---|---|---|---|
+  | 0.8 | 0/35 | 8/28 | 50/57 |
+  | 0.9 | 0/35 | 2/28 | 47/57 |
+
+  On fixed-answer items only (no Claude labels): at 0.9, 0/28 wrong passed and 28/35 natural
+  given ✓. Thresholds were read off this same set, so they flatter Jev. Confirm on fresh
+  sentences (ideally the founder's real ones) before production.
+- **Money: a modest saving against deepseek, a large one against strong models.** At 10K users ×
+  5 sentences/day with the gate at 0.9 (on this set ~59% of sentences still go to the LLM):
+  deepseek alone ≈ $120/mo, Jev gate + deepseek ≈ $90–100/mo, Jev gate + gemini-3.8-flash ≈
+  $2,200/mo instead of $3,700. The share of natural sentences real users write is unknown; more
+  natural sentences means larger savings.
+- **Speed:** a natural sentence gets its ✓ in ~0.2 s instead of 1–5 s.
+- **Jev raised no false alarms on published sentences** (0/35 fixed natural), where every LLM
+  flagged 1–5.

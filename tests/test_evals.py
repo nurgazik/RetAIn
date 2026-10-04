@@ -182,3 +182,14 @@ def test_jev_word_questions_one_noul_per_word_over_one_state():
     assert [i["word"] for i in state["items"]] == ["bolster", "candor"]
     assert list(qs) == ["w0", "w1"] and all(q["type"] == "noul" for q in qs.values())
     assert "`items[1].word`" in qs["w1"]["instructions"] and "`items[1].sentence`" in qs["w1"]["instructions"]
+
+
+def test_jev_sentence_questions_and_dimension_verdict():
+    from evals import jev
+    qs = jev.sentence_questions()
+    assert list(qs["choice"]["criteria"]) == ["natural", "could-be-better", "wrong"]
+    assert list(qs["choice_reversed"]["criteria"]) == ["wrong", "could-be-better", "natural"]
+    dims = lambda **p: {f"dim_{k}": {"noul": p.get(k, 0.95)} for k in jev.DIMENSIONS}
+    assert jev.dims_verdict(dims())[0] == "natural"
+    assert jev.dims_verdict(dims(collocation=0.6))[0] == "could-be-better"
+    assert jev.dims_verdict(dims(grammar=0.2))[0] == "wrong"

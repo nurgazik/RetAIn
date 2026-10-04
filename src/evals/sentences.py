@@ -331,6 +331,8 @@ def model_caller(name: str):
 def judge(name: str, call=None, spec: dict = None, workers: int = 8) -> int:
     """Run every item through one model; scoring happens at report time against current gold,
     so labels that arrive later still count."""
+    if call is None and results.spec(name)["provider"] == "typesafe":
+        return judge_jev(name, results.spec(name), workers)
     if call is None:
         spec, call = model_caller(name)
     items, defs, system = load(), definitions(), PROMPT.read_text()
@@ -350,6 +352,47 @@ def judge(name: str, call=None, spec: dict = None, workers: int = 8) -> int:
     s = score(con, run_id)
     print(f"[sentences] run {run_id} {name}: {line(s)}")
     return run_id
+
+
+def judge_jev(name: str, spec: dict, workers: int = 8) -> list:
+    """Jev (D54): one request per sentence asks the 3-way Choice (both option orders, to expose
+    order bias) and five single-property Nouls; stored as three runs. Jev writes no reason or fix."""
+    from . import jev
+    items, defs = load(), definitions()
+    qs = jev.sentence_questions()
+
+    def one(it):
+        t0 = time.time()
+        try:
+            out = jev.ask({"word": it["word"], "definition": defs.get(it["word"], ""), "sentence": it["sentence"]},
+                          qs, spec)
+            return it["id"], out, None, time.time() - t0
+        except Exception as exc:
+            return it["id"], None, str(exc)[:300], time.time() - t0
+    with ThreadPoolExecutor(workers) as pool:
+        got = list(pool.map(one, items))
+    con = connect()
+    now = datetime.now(timezone.utc).isoformat()
+    variants = {"choice": lambda a: (a["choice"]["choice"], a["choice"]),
+                "choice reversed": lambda a: (a["choice_reversed"]["choice"], a["choice_reversed"]),
+                "5 nouls": lambda a: (jev.dims_verdict(a)[0], {k: v["noul"] for k, v in a.items() if k.startswith("dim_")})}
+    run_ids = []
+    for label, pick in variants.items():
+        cur = con.execute("INSERT INTO sentence_runs (model_name, spec, dataset, prompt, started_at, finished_at) "
+                          "VALUES (?,?,?,?,?,?)", (f"{name} {label}", json.dumps(spec), version(items),
+                                                   jev.questions_hash(), now, now))
+        run_ids.append(cur.lastrowid)
+        rows = []
+        for iid, out, err, secs in got:
+            v, raw = pick(out["answers"]) if out else (None, None)
+            # one request serves all three variants: split its cost so $/grade isn't counted three times
+            rows.append((cur.lastrowid, iid, int(out is not None), err, v, None, None, json.dumps(raw), secs,
+                         (out["cost"] / len(variants)) if out else 0.0, None, None))
+        con.executemany("INSERT INTO sentence_verdicts VALUES (?,?,?,?,?,?,?,?,?,?,?,?)", rows)
+    con.commit()
+    for rid, label in zip(run_ids, variants):
+        print(f"[sentences] run {rid} {name} {label}: {line(score(con, rid))}")
+    return run_ids
 
 
 # --- scoring -----------------------------------------------------------------------------
@@ -413,9 +456,10 @@ COLS = [("Model", "model", None), ("Run", "run", None), ("Scored", "scored", Non
 def leaderboard(con=None) -> tuple:
     """Latest finished run per model on the current set + prompt → (terminal lines, html section)."""
     con = con or connect()
-    runs = con.execute("SELECT max(id) id, model_name FROM sentence_runs WHERE dataset=? AND prompt=? "
+    from . import jev
+    runs = con.execute("SELECT max(id) id, model_name FROM sentence_runs WHERE dataset=? AND prompt IN (?, ?) "
                        "AND finished_at IS NOT NULL GROUP BY model_name ORDER BY id",
-                       (version(), prompt_hash())).fetchall()
+                       (version(), prompt_hash(), jev.questions_hash())).fetchall()
     rows = [{**score(con, r["id"]), "model": r["model_name"]} for r in runs]
     items, labels = load(), read_labels(con)
     g = gold(items, labels)

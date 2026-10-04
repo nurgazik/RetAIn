@@ -51,3 +51,47 @@ def word_questions(marks: list) -> tuple:
             w=f"items[{i}].word", s=f"items[{i}].sentence", d=f"items[{i}].definition")
         qs[f"w{i}"] = q
     return state, qs
+
+
+# --- sentence judge (D53): one call per sentence, every variant asked at once ------------------
+
+VERDICT_CRITERIA = {
+    "natural": ("A careful native writer could have written this as is: the word has the right sense, a "
+                "natural pairing with the words around it, a fitting tone and slant, and correct grammar."),
+    "could-be-better": ("The word's meaning is right, but the phrasing is stiff, the tone is off for the "
+                        "context, or a native writer would usually put it differently."),
+    "wrong": ("The word is misused: wrong meaning, an unnatural pairing, the wrong positive/negative slant, "
+              "or wrong form or grammar. Someone copying this sentence would learn wrong usage."),
+}
+VERDICT_Q = "How well is `word` (meaning: `definition`) used in `sentence`?"
+DIMENSIONS = {  # one property each, combined in code (the docs' "atomic questions")
+    "meaning": "Is `word` used in `sentence` with a meaning that matches `definition`?",
+    "collocation": ("Are the words paired with `word` in `sentence` (its verbs, nouns, prepositions) ones a "
+                    "native writer would naturally combine with it?"),
+    "register": "Does `word` fit the tone of `sentence`, formal or casual?",
+    "connotation": "Does the positive or negative slant of `word` fit what `sentence` describes?",
+    "grammar": ("Is `word` used with correct grammar in `sentence`: the right word form, articles, "
+                "prepositions and objects?"),
+}
+# fixed before the first run (2026-10-04), not tuned on results: weakest dimension decides
+NATURAL_AT, WRONG_BELOW = 0.8, 0.5
+
+
+def sentence_questions() -> dict:
+    fwd = {"type": "choice", "instructions": VERDICT_Q, "criteria": VERDICT_CRITERIA}
+    rev = {"type": "choice", "instructions": VERDICT_Q, "criteria": dict(reversed(list(VERDICT_CRITERIA.items())))}
+    qs = {"choice": fwd, "choice_reversed": rev}
+    qs.update({f"dim_{k}": {"type": "noul", "instructions": v} for k, v in DIMENSIONS.items()})
+    return qs
+
+
+def questions_hash() -> str:
+    import hashlib
+    return "jev:" + hashlib.sha1(json.dumps([sentence_questions(), NATURAL_AT, WRONG_BELOW],
+                                            sort_keys=True).encode()).hexdigest()[:8]
+
+
+def dims_verdict(answers: dict) -> tuple:
+    weakest = min(answers[f"dim_{k}"]["noul"] for k in DIMENSIONS)
+    v = "natural" if weakest >= NATURAL_AT else "wrong" if weakest < WRONG_BELOW else "could-be-better"
+    return v, weakest
