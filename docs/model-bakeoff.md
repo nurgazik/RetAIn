@@ -269,7 +269,7 @@ user flows (diagrams/README.md); every other step writes text or is plain code.
 |---|---|---|---|---|
 | 1 | Word checker (share an article) | one Noul per highlighted word: "is `word` used idiomatically in `sentence`?" | ✅ `judge` (n = 216 graded words) | biggest gap: Gemma catches 55% of wrong words |
 | 2 | Sentence judge, write-a-sentence verdict | one 3-way Choice, and separately 5 Nouls (meaning, collocation, register, connotation, word grammar) combined in code | ✅ `sentences judge` (n = 120) | an LLM still writes the reason and fix when the verdict isn't natural |
-| 3 | Fact checker (share an article) | one Noul per edited sentence: "does `edited` state anything `original` doesn't?" — not the whole article (Jev degrades on large, mostly irrelevant input) | ❌ build: answer key per edited sentence | users' reading goes to TypeSafe; retention is not zero → founder call before production (D54) |
+| 3 | Fact checker (share an article) | one Noul per edited sentence: "does `edited` state anything `original` doesn't?" — not the whole article (Jev degrades on large, mostly irrelevant input) | ❌ build: answer key per edited sentence | users' reading goes to TypeSafe; retention is not zero — accepted by the founder 2026-10-04 |
 | 4 | "Is this sentence natural?" check on model-written fill-in sentences | same judge as 2 | ✅ reuses `sentences judge` | only if the check is kept in the fill-in design (UX-16); written once per word, so cost is small either way |
 | 5 | "Is this a real English word?" (save a word) | one Noul | ❌ build: small key of real rare words + misspellings / misheard words | low value: runs only when Wiktionary lacks the word, and a real word still needs an LLM for its card |
 
