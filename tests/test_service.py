@@ -97,6 +97,9 @@ def test_day_never_moves_back(client):
     import service.db as db
     uid = client.get("/v1/me").json()["user_id"]
     con = db.connect()
+    # /v1/me above saved the real today as last_day; clear it so the fixed `at` below is the
+    # latest day seen (otherwise the test fails on any date after 2026-10-01)
+    con.execute("UPDATE users SET last_day=NULL WHERE id=?", (uid,))
     user = dict(con.execute("SELECT * FROM users WHERE id=?", (uid,)).fetchone())
     at = utc(2026, 9, 30, 20)  # 5 am Oct 1 in Tokyo, 10 am Sep 30 in Honolulu
     tokyo = db.resolve_day(con, user, "Asia/Tokyo", at=at)
