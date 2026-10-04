@@ -355,3 +355,28 @@ the run). $0.00004 per request for all seven questions; 0.2 s p50. Same answer k
 - **Speed:** a natural sentence gets its ✓ in ~0.2 s instead of 1–5 s.
 - **Jev raised no false alarms on published sentences** (0/35 fixed natural), where every LLM
   flagged 1–5.
+
+### Sentence feedback writer (D55) — first eval, 2026-10-04
+
+The 63 sentences the answer key calls not natural; each candidate's reason + fix from the sentence-judge
+runs (same prompt). 218 entries graded blind by Claude Code (one rater, so provisional): is the reason
+right, is the fix natural, does the fix keep the writer's meaning. "Fully right" = all three, over all 63
+(a model that called the sentence natural gave no feedback).
+
+| Model | Fully right | Reason right | Fix right | Gave feedback | Fix size | $/call | s |
+|---|---|---|---|---|---|---|---|
+| gemini-3.1-flash-lite | **46/63 (73%)** | 55/57 | 48/57 | 57 | 19% | $0.00024 | 1.0 |
+| gemma-4-26b (production) | 43/63 (68%) | 56/57 | 43/57 | 57 | 19% | **$0.00007** | 2.6 |
+| gpt-6-luna | 43/63 (68%) | 47/48 | 44/48 | 48 | 18% | $0.00008 | 1.6 |
+| deepseek-v4.1-flash | 42/63 (67%) | 56/56 | 42/56 | 56 | 23% | $0.00008 | 1.6 |
+
+- **A tie within noise** (3–4 sentences out of 63). Reasons are almost always right (≥ 96%); the
+  differences come from the fixes.
+- **The shared failure is a fix that changes the meaning:** "perfunctory and helpful" →
+  "perfunctory and unhelpful", "squandered … on a house" → "on lottery tickets", and new content
+  invented ("flexible hours", "a sudden bonus"). Next prompt change for all models: keep the meaning of
+  the rest of the sentence; if the target word can't fit, replace it rather than rewrite the sentence.
+- **Provisional pick: Gemma.** Quality is tied and it's cheapest, already the production model, and
+  already backed by the Flash-Lite fallback (D49). At 10K users × 5 sentences/day with the Jev gate
+  sending ~59% on: Gemma ≈ $62/mo, deepseek ≈ $71/mo, flash-lite ≈ $212/mo. deepseek is no longer the
+  default.

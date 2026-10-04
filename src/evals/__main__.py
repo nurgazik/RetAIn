@@ -24,6 +24,10 @@ Sentence judge (TD-20, D53; golden set data/evals/golden/sentences.json):
   .venv/bin/python src/evals sentences export      founder-written sentences → blind packet for a second rater
   .venv/bin/python src/evals sentences judge <name>
                                                    run a registry model as the judge (scored in `report`)
+  .venv/bin/python src/evals sentences feedback-export <run> [run ...]
+                                                   blind packet of those runs' reasons + fixes (D55)
+  .venv/bin/python src/evals sentences feedback-import <folder> <grader>
+                                                   load grades.json written into that folder
 
 New model, end to end: add → run → grade → report.
 """
@@ -81,6 +85,10 @@ def main(argv: list) -> None:
         sentences.export_packet()
     elif cmd == "sentences" and args[:1] == ["judge"]:
         sentences.judge(args[1])
+    elif cmd == "sentences" and args[:1] == ["feedback-export"]:
+        sentences.feedback_export([int(a) for a in args[1:]])
+    elif cmd == "sentences" and args[:1] == ["feedback-import"]:
+        sentences.feedback_import(args[1], args[2])
     else:
         print(__doc__)
 

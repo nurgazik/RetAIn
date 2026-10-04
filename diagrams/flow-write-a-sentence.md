@@ -28,7 +28,7 @@ grey = plain code, no model.
 | Step | Eval |
 |---|---|
 | Judge | [eval-sentence-judge.md](eval-sentence-judge.md) |
-| Feedback writer | measured inside the same eval today (one model returns verdict, reason and fix); its own eval comes if the split is chosen |
+| Feedback writer | [eval-sentence-feedback.md](eval-sentence-feedback.md) |
 
 ## Why
 

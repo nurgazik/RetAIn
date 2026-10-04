@@ -30,7 +30,8 @@ choice or score step also gets a Jev run (D54).
 |---|---|---|
 | [eval-article-rewrite.md](eval-article-rewrite.md) | share-an-article → writer | built |
 | [eval-word-checker.md](eval-word-checker.md) | share-an-article → word checker | built; Jev next (TD-21) |
-| [eval-sentence-judge.md](eval-sentence-judge.md) | write-a-sentence → judge | built (TD-20); Jev next (TD-21) |
+| [eval-sentence-judge.md](eval-sentence-judge.md) | write-a-sentence → judge | built (TD-20); Jev tested (TD-21) |
+| [eval-sentence-feedback.md](eval-sentence-feedback.md) | write-a-sentence → feedback writer | built 2026-10-04 (D55) |
 | — | share-an-article → fact checker | **missing** |
 | — | save-a-word → example writer, "real word?" check | **missing** |
 | — | fill-in-the-word → sentence writer | **missing** (needed before it ships) |

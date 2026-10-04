@@ -51,6 +51,14 @@ CREATE TABLE IF NOT EXISTS sentence_runs (
     prompt TEXT NOT NULL,           -- hash of the judge prompt: only same-prompt runs compare
     started_at TEXT NOT NULL, finished_at TEXT
 );
+CREATE TABLE IF NOT EXISTS feedback_grades (
+    run_id INTEGER NOT NULL, item_id TEXT NOT NULL, grader TEXT NOT NULL,
+    reason_ok INTEGER,              -- the reason names the real problem
+    fix_natural INTEGER,            -- the fix reads as natural English
+    fix_meaning INTEGER,            -- the fix keeps what the writer meant
+    at TEXT NOT NULL,
+    PRIMARY KEY (run_id, item_id, grader)
+);
 CREATE TABLE IF NOT EXISTS sentence_verdicts (
     run_id INTEGER NOT NULL, item_id TEXT NOT NULL, ok INTEGER NOT NULL, error TEXT,
     verdict TEXT, reason TEXT, fix TEXT, raw TEXT, seconds REAL, cost_usd REAL,
@@ -393,6 +401,75 @@ def judge_jev(name: str, spec: dict, workers: int = 8) -> list:
     for rid, label in zip(run_ids, variants):
         print(f"[sentences] run {rid} {name} {label}: {line(score(con, rid))}")
     return run_ids
+
+
+# --- feedback writer (D55): grade the reason + fix a model wrote for a not-natural sentence ----
+
+FEEDBACK_RUBRIC = """Each entry is a sentence an advanced learner wrote with a target word, which is NOT natural
+as written, plus feedback an app gave: a verdict, a one-line reason, and a suggested fix.
+Grade the feedback, not the sentence. For each entry answer:
+  reason_ok    true if the reason names the real problem with how the word is used; false if it is
+               wrong, vague, or about something else.
+  fix_natural  true if the fix reads as natural English a careful native writer would accept.
+  fix_meaning  true if the fix keeps what the writer meant (the target word may change only if it
+               cannot be used correctly here).
+Write {"<id>": {"reason_ok": b, "fix_natural": b, "fix_meaning": b}, ...} to grades.json."""
+
+
+def feedback_export(run_ids: list) -> pathlib.Path:
+    """Blind packet of feedback from several runs on gold not-natural items (model names hidden,
+    order shuffled). A run that called the sentence natural gave no feedback: scored as missing."""
+    con = connect()
+    items = {it["id"]: it for it in load()}
+    g = gold(list(items.values()), read_labels(con))
+    defs = definitions()
+    entries, key = [], {}
+    for run_id in run_ids:
+        for r in con.execute("SELECT * FROM sentence_verdicts WHERE run_id=? AND ok=1 AND verdict != 'natural'",
+                             (run_id,)):
+            if g.get(r["item_id"]) not in ("wrong", "could-be-better"):
+                continue
+            it = items[r["item_id"]]
+            blind = hashlib.sha1(f"{run_id}:{it['id']}".encode()).hexdigest()[:8]
+            key[blind] = [run_id, it["id"]]
+            entries.append({"id": blind, "word": it["word"], "definition": defs.get(it["word"], ""),
+                            "sentence": it["sentence"], "verdict": r["verdict"], "reason": r["reason"], "fix": r["fix"]})
+    random.Random(11).shuffle(entries)
+    out = PACKETS / f"feedback-{'-'.join(map(str, run_ids))}"
+    out.mkdir(parents=True, exist_ok=True)
+    (out / "packet.json").write_text(json.dumps({"rubric": FEEDBACK_RUBRIC, "entries": entries}, indent=1,
+                                                ensure_ascii=False))
+    (out / "_key.json").write_text(json.dumps(key))  # graders must not open this
+    print(f"[sentences] {len(entries)} feedback entries in {out}/packet.json")
+    return out
+
+
+def feedback_import(folder: str, grader: str) -> None:
+    folder = pathlib.Path(folder)
+    key = json.loads((folder / "_key.json").read_text())
+    grades = json.loads((folder / "grades.json").read_text())
+    con = connect()
+    now = datetime.now(timezone.utc).isoformat()
+    rows = [(*key[b], grader, int(v["reason_ok"]), int(v["fix_natural"]), int(v["fix_meaning"]), now)
+            for b, v in grades.items() if b in key]
+    con.executemany("INSERT OR REPLACE INTO feedback_grades VALUES (?,?,?,?,?,?,?)", rows)
+    con.commit()
+    print(f"[sentences] {len(rows)} feedback grades imported as '{grader}'")
+
+
+def feedback_score(con, run_id: int) -> dict:
+    """Over gold not-natural items: share where the run gave feedback that is fully right
+    (reason, natural fix, meaning kept). Calling the sentence natural counts as no feedback."""
+    items = load()
+    g = gold(items, read_labels(con))
+    target = [i for i, v in g.items() if v in ("wrong", "could-be-better")]
+    graded = {r["item_id"]: r for r in con.execute("SELECT * FROM feedback_grades WHERE run_id=?", (run_id,))}
+    if not graded:
+        return None
+    full = [graded[i] for i in target if i in graded]
+    good = sum(r["reason_ok"] and r["fix_natural"] and r["fix_meaning"] for r in full)
+    return {"n": len(target), "graded": len(full), "good": good,
+            "reason_ok": sum(r["reason_ok"] for r in full), "fix_ok": sum(r["fix_natural"] and r["fix_meaning"] for r in full)}
 
 
 # --- scoring -----------------------------------------------------------------------------

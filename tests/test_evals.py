@@ -193,3 +193,13 @@ def test_jev_sentence_questions_and_dimension_verdict():
     assert jev.dims_verdict(dims())[0] == "natural"
     assert jev.dims_verdict(dims(collocation=0.6))[0] == "could-be-better"
     assert jev.dims_verdict(dims(grammar=0.2))[0] == "wrong"
+
+
+def test_feedback_score_counts_missing_feedback_as_not_right(sent_env, tmp_path):
+    run_id = sent_env.judge("w", call=fake_judge("wrong"), workers=1)
+    con = sent_env.connect()
+    con.execute("INSERT INTO feedback_grades VALUES (?,?,?,?,?,?,?)", (run_id, "s01", "t", 1, 1, 1, "now"))
+    con.execute("INSERT INTO feedback_grades VALUES (?,?,?,?,?,?,?)", (run_id, "s02", "t", 1, 0, 1, "now"))
+    con.commit()
+    f = sent_env.feedback_score(con, run_id)
+    assert (f["n"], f["graded"], f["good"], f["fix_ok"]) == (3, 2, 1, 1)  # s01, s02 + borderline b01

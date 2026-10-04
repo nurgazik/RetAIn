@@ -66,6 +66,7 @@ in `spikes/`.
   wrong usage — worse than nothing); advanced reading level, never simplified.
 - Cost posture: engine model is Gemma 4 26B via OpenRouter, zero-retention hosts,
   ~$0.001/piece, self-checking; fallback gemini-3.1-flash-lite (PRD D42, docs/model-bakeoff.md).
+  **Every model step has an eval (D55): no model step ships without a matching eval set.**
   Model changes go through `src/evals` first. Any yes/no, choice or score step is also tested against
   TypeSafe's Jev (D54; flow in diagrams/README.md (evals section)). QC gate is ON (D19);
   check its revisit triggers before MVP work or model changes.
