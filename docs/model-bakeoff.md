@@ -289,3 +289,31 @@ step that sends users' reading (3), retention must also be accepted.
 
 **Blocked on:** the founder creating a TypeSafe account and putting `TYPESAFE_API_KEY` in
 `.env.local`.
+
+### Jev PoC step 1 — word checker, first run (2026-10-04)
+
+Same 557 graded words for both models (127 wrong, 189 idiomatic, 241 acceptable, per the grader).
+Answer key = the grader's verdicts, never checked by a human.
+
+| Checker | Wrong words caught | Idiomatic rejected | Cost, all 173 pieces | Time |
+|---|---|---|---|---|
+| Gemma 4 26B (production) | **58%** (74/127) | **1%** (2/189) | $0.028 | — |
+| Jev, keep if P ≥ 0.5 | 18% | 3% | $0.007 | 27 s total (~0.15 s/piece) |
+| Jev, keep if P ≥ 0.7 | 35% | 4% | | |
+| Jev, keep if P ≥ 0.8 | 57% | 8% | | |
+| Jev, keep if P ≥ 0.9 | 97% | 35% | | |
+
+- **Good ranking, misplaced probabilities.** AUC 0.90: a random wrong word scores below a random
+  idiomatic word 90% of the time. But almost everything scores high (median 0.78 for wrong words,
+  0.91 for idiomatic), so the useful cut-off sits around 0.8–0.9, not at 0.5. On our definition of
+  "idiomatic", Jev's probabilities are not calibrated.
+- **Fails the proposed win condition as run.** At 0.8 it matches Gemma's catch rate (57% vs 58%),
+  but rejects 8% of good words vs 1% (+7 points; the bar is +5). The thresholds above were read off
+  the same data they are scored on, so they flatter Jev slightly.
+- **The cost gain is small here.** The checker is one call per article, and Gemma is already cheap
+  ($0.00016 vs $0.00004 per article). Jev's case at this step would have to be quality, and it
+  isn't better.
+- Some "wrong" grader verdicts look doubtful (e.g. "a tenuous connection"), so the answer key may
+  be off by a few items.
+- Not tried yet: tightening Jev's question per the docs (explicit boundary cases, examples in the
+  criteria), and choosing a threshold on a held-out half.

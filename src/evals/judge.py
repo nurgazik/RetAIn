@@ -23,8 +23,13 @@ CREATE TABLE IF NOT EXISTS judge_evals (
 """
 
 
+JEV_THRESHOLDS = (0.3, 0.5, 0.7)  # keep a word when P(idiomatic) ≥ t; Jev is calibrated, so the cut is ours
+
+
 def judge(name: str, gold: str = "grader") -> None:
     spec = results.spec(name)
+    if spec["provider"] == "typesafe":
+        return judge_jev(name, spec, gold)
     chk = results.primary_for(spec)
     env = load_env()
     defs_all = {w["word"]: w["definition"] for w in dataset.load_words()}
@@ -71,3 +76,43 @@ def judge(name: str, gold: str = "grader") -> None:
     print(f"[judge] {name} vs {gold} labels on {len(pieces)} pieces: caught wrong {pct('wrong')}, "
           f"rejected idiomatic {pct('idiomatic')}, rejected acceptable {pct('acceptable')}; "
           f"{failed} failed calls, ${cost:.4f}")
+
+
+def judge_jev(name: str, spec: dict, gold: str) -> None:
+    """Jev as the word checker (D54): one Noul per highlighted word, sentence-level state, one call
+    per piece. Scored at several keep-thresholds; each is stored as its own checker row."""
+    from . import jev
+    defs_all = {w["word"]: w["definition"] for w in dataset.load_words()}
+    con = results.connect()
+    con.executescript(SCHEMA)
+    col = "verdict" if gold == "grader" else "human"
+    pieces = con.execute(f"SELECT DISTINCT run_id, piece_id FROM marks WHERE {col} IS NOT NULL").fetchall()
+    scored, failed, cost, secs = [], 0, 0.0, 0.0  # scored: (gold, P(idiomatic))
+    for p in pieces:
+        marks = [dict(m) for m in con.execute(
+            f"SELECT n, word, sentence, {col} AS gold FROM marks WHERE run_id=? AND piece_id=? "
+            f"AND {col} IS NOT NULL ORDER BY n", (p["run_id"], p["piece_id"]))]
+        for m in marks:
+            m["definition"] = next((d for w, d in defs_all.items() if m["word"].lower().startswith(w[:6].lower())), "")
+        t0 = __import__("time").time()
+        try:
+            out = jev.ask(*jev.word_questions(marks), spec)
+        except Exception as exc:
+            failed += 1
+            print(f"[judge] {p['piece_id']}: Jev failed ({exc})")
+            continue
+        secs += __import__("time").time() - t0
+        cost += out["cost"]
+        scored += [(m["gold"], out["answers"][f"w{i}"]["noul"]) for i, m in enumerate(marks)]
+    now = datetime.now(timezone.utc).isoformat()
+    for t in JEV_THRESHOLDS:
+        tally = {k: [sum(g == k for g, _ in scored), sum(g == k and p < t for g, p in scored)]
+                 for k in ("wrong", "idiomatic", "acceptable")}
+        con.execute("INSERT INTO judge_evals VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)",
+                    (f"{name}@keep≥{t}", gold, dataset.version(), *tally["wrong"], *tally["idiomatic"],
+                     *tally["acceptable"], failed, cost, secs, now))
+        pct = lambda k: f"{tally[k][1]}/{tally[k][0]}" + (f" ({tally[k][1] / tally[k][0]:.0%})" if tally[k][0] else "")
+        print(f"[judge] {name} keep≥{t} vs {gold} labels on {len(pieces)} pieces: caught wrong {pct('wrong')}, "
+              f"rejected idiomatic {pct('idiomatic')}, rejected acceptable {pct('acceptable')}; "
+              f"{failed} failed calls, ${cost:.5f}, {secs:.1f}s total")
+    con.commit()

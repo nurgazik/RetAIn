@@ -172,3 +172,13 @@ def test_parse_takes_first_json_object():
     from evals import sentences
     text = '```json\n{"verdict": "natural", "reason": "ok", "fix": null}\n```\n{"verdict": "wrong"}'
     assert sentences.parse(text)["verdict"] == "natural"
+
+
+def test_jev_word_questions_one_noul_per_word_over_one_state():
+    from evals import jev
+    marks = [{"word": "bolster", "definition": "to support", "sentence": "Aid will bolster it."},
+             {"word": "candor", "definition": "honesty", "sentence": "She spoke with candor."}]
+    state, qs = jev.word_questions(marks)
+    assert [i["word"] for i in state["items"]] == ["bolster", "candor"]
+    assert list(qs) == ["w0", "w1"] and all(q["type"] == "noul" for q in qs.values())
+    assert "`items[1].word`" in qs["w1"]["instructions"] and "`items[1].sentence`" in qs["w1"]["instructions"]

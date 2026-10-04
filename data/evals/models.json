@@ -216,6 +216,17 @@
       "params": {},
       "price_source": "openrouter /api/v1/models (list price)",
       "added": "2026-10-01"
+    },
+    {
+      "name": "jev-1.13",
+      "provider": "typesafe",
+      "model": "jev-1.13.0",
+      "in": 0.042,
+      "out": 0.0,
+      "params": {},
+      "key_env": "TYPESAFE_API_KEY",
+      "price_source": "docs.typesafe.ai/models 2026-10-04 ($42/Btok input; output free)",
+      "added": "2026-10-04"
     }
   ],
   "_retired": [
