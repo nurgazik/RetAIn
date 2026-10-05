@@ -16,11 +16,14 @@ def stubs(client, monkeypatch):
             return json.dumps({"sentence": f"The new plan will {word} the team's confidence this year.",
                                "answer": word}), "stub"
         state["llm"] += 1
-        return json.dumps({"verdict": state["verdict"], "reason": "r", "fix": "f"}), "stub"
+        raw = json.dumps({"verdict": state["verdict"], "reason": "r", "fix": "f"})
+        practice.G.CALL_LOG.append((purpose, "stub", 500, 100, 900, 0.00007, None, raw, "p1"))  # as the real call logs
+        return raw, "stub"
 
     monkeypatch.setattr(practice.G, "call_model", fake_model)
     monkeypatch.setattr(practice.typesafe, "p_natural",
-                        lambda w, d, s: (state["p"], ("judge-jev", "jev-1.13.0", 300, 0, 200, 0.0000126)))
+                        lambda w, d, s: (state["p"], ("judge-jev", "jev-1.13.0", 300, 0, 200, 0.0000126, None,
+                                                      json.dumps({"natural": state["p"]}), "q1")))
     return state
 
 
@@ -59,6 +62,22 @@ def test_unsure_jev_hands_the_sentence_to_the_llm(client, stubs):
     item = today(client)["items"][0]
     r = client.post("/v1/practice/write", json={"word_id": item["word_id"], "sentence": f"They {item['word']} it badly."})
     assert r.json() == {"verdict": "wrong", "reason": "r", "fix": "f"} and stubs["llm"] == 1
+
+
+def test_a_judged_sentence_keeps_the_whole_record(client, stubs):
+    import service.db as db
+    stubs["p"] = 0.4
+    item = today(client)["items"][0]
+    sentence = f"They {item['word']} it badly."
+    client.post("/v1/practice/write", json={"word_id": item["word_id"], "sentence": sentence})
+    con = db.connect()
+    a = con.execute("SELECT * FROM practice_attempts WHERE kind='write' ORDER BY id DESC LIMIT 1").fetchone()
+    calls = con.execute("SELECT purpose, response, prompt_sha FROM calls WHERE attempt_id=? ORDER BY id", (a["id"],)).fetchall()
+    con.close()
+    assert (a["answer"], a["verdict"], a["p_natural"], a["judged_by"]) == (sentence, "wrong", 0.4, "llm")
+    assert [c["purpose"] for c in calls] == ["judge-jev", "feedback"]
+    assert json.loads(calls[0]["response"]) == {"natural": 0.4} and calls[0]["prompt_sha"] == "q1"
+    assert '"verdict": "wrong"' in calls[1]["response"]
 
 
 def test_a_sentence_without_the_word_is_refused(client, stubs):

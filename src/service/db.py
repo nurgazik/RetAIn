@@ -110,6 +110,8 @@ CREATE TABLE IF NOT EXISTS practice_attempts (
     verdict     TEXT,               -- write: natural | could-be-better | wrong
     reason      TEXT,
     fix         TEXT,
+    p_natural   REAL,               -- write: Jev's P(natural); NULL if Jev failed
+    judged_by   TEXT,               -- write: jev (✓ at the threshold) | llm
     created_at  TEXT NOT NULL
 );
 CREATE TABLE IF NOT EXISTS practice_sentences (
@@ -134,7 +136,8 @@ CREATE TABLE IF NOT EXISTS calls (
     response   TEXT,                -- the model's raw output, before any parsing or guard
     prompt_sha TEXT,                -- first 12 hex of sha1(system prompt): which prompt version
     host       TEXT,                -- who served it: an OpenRouter host (makora, venice…) or google
-    day        TEXT NOT NULL DEFAULT ''   -- the user's day (the piece's, for engine calls)
+    day        TEXT NOT NULL DEFAULT '',  -- the user's day (the piece's, for engine calls)
+    attempt_id INTEGER                -- the practice attempt this call judged (practice_attempts.id)
 );
 """
 
@@ -229,6 +232,9 @@ def init() -> None:
                  "ALTER TABLE users ADD COLUMN tz TEXT", "ALTER TABLE users ADD COLUMN last_day TEXT",
                  "ALTER TABLE words ADD COLUMN box INTEGER NOT NULL DEFAULT 0",  # practice schedule (D56)
                  "ALTER TABLE words ADD COLUMN due_day TEXT",                    # NULL = never practised
+                 "ALTER TABLE practice_attempts ADD COLUMN p_natural REAL",      # full judging record
+                 "ALTER TABLE practice_attempts ADD COLUMN judged_by TEXT",
+                 "ALTER TABLE calls ADD COLUMN attempt_id INTEGER",
                  *(f"ALTER TABLE {t} ADD COLUMN day TEXT NOT NULL DEFAULT ''" for t in ("pieces", "calls", "events", "words"))):
         try:  # migrations for DBs created before these columns
             con.execute(stmt)
@@ -275,7 +281,8 @@ def learning_words(con, user_id: str) -> list:
     return sorted(rows, key=lambda w: counts.get(w["word"], 0))
 
 
-def record_calls(con, user_id: str, piece_id: str | None, calls: list, prices: dict, *, day: str) -> float:
+def record_calls(con, user_id: str, piece_id: str | None, calls: list, prices: dict, *, day: str,
+                 attempt_id: int | None = None) -> float:
     """calls: [(purpose, model, tokens_in, tokens_out[, ms[, billed_usd[, reasoning, response, prompt_sha[, host]]]])]
     → rows in `calls`; returns USD total."""
     total = 0.0
@@ -290,7 +297,8 @@ def record_calls(con, user_id: str, piece_id: str | None, calls: list, prices: d
             response, prompt_sha = (c[7], c[8]) if len(c) > 8 else (None, None)
             host = c[9] if len(c) > 9 else None
             con.execute("INSERT INTO calls (user_id, piece_id, purpose, model, tokens_in, tokens_out, usd, ms, at, "
-                        "response, prompt_sha, host, day) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)",
-                        (user_id, piece_id, purpose, model, tin, tout, usd, ms, now(), response, prompt_sha, host, day))
+                        "response, prompt_sha, host, day, attempt_id) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+                        (user_id, piece_id, purpose, model, tin, tout, usd, ms, now(), response, prompt_sha, host, day,
+                         attempt_id))
         con.commit()
     return total

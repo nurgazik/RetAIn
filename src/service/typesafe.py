@@ -1,6 +1,7 @@
 """TypeSafe's Jev (D54): typed answers with probabilities, never text. POST /v1/systemone,
 charged per input token, output free (docs.typesafe.ai/api, /models — read 2026-10-04).
 Shared by the service and the evals, so an eval tests the call that ships."""
+import hashlib
 import json
 import os
 import time
@@ -54,6 +55,10 @@ def verdict_question() -> dict:
 
 def p_natural(word: str, definition: str, sentence: str) -> tuple:
     """Jev's probability that the sentence uses the word naturally → (p, call row for `calls`)."""
-    out = ask({"word": word, "definition": definition, "sentence": sentence}, {"verdict": verdict_question()})
-    row = ("judge-jev", out["model"] or MODEL, out["tokens_in"], 0, out["ms"], cost(out["tokens_in"]))
-    return out["answers"]["verdict"]["probabilities"]["natural"], row
+    q = verdict_question()
+    out = ask({"word": word, "definition": definition, "sentence": sentence}, {"verdict": q})
+    probs = out["answers"]["verdict"]["probabilities"]
+    sha = hashlib.sha1(json.dumps(q, sort_keys=True).encode()).hexdigest()[:12]  # which question wording
+    row = ("judge-jev", out["model"] or MODEL, out["tokens_in"], 0, out["ms"], cost(out["tokens_in"]),
+           None, json.dumps(probs), sha)
+    return probs["natural"], row

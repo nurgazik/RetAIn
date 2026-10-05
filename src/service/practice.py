@@ -209,14 +209,17 @@ def uses_word(sentence: str, word: str) -> bool:
     return any(t.startswith(stem(word)) for t in re.findall(r"[a-z]+", sentence.lower()))
 
 
-def record(con, user: dict, item: dict, kind: str, answer: str, result: dict) -> None:
+def record(con, user: dict, item: dict, kind: str, answer: str, result: dict) -> int:
+    """Store the attempt (with Jev's score and who judged, for sentences) → its id."""
     with db._lock:
-        con.execute("INSERT INTO practice_attempts (user_id, word_id, day, kind, answer, correct, verdict, reason, fix, "
-                    "created_at) VALUES (?,?,?,?,?,?,?,?,?,?)",
-                    (user["id"], item["word_id"], user["day"], kind, answer, result.get("correct"),
-                     result.get("verdict"), result.get("reason"), result.get("fix"), db.now()))
+        cur = con.execute("INSERT INTO practice_attempts (user_id, word_id, day, kind, answer, correct, verdict, reason, "
+                          "fix, p_natural, judged_by, created_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)",
+                          (user["id"], item["word_id"], user["day"], kind, answer, result.get("correct"),
+                           result.get("verdict"), result.get("reason"), result.get("fix"), result.get("p_natural"),
+                           result.get("by"), db.now()))
         con.commit()
     reschedule(con, user, item)
+    return cur.lastrowid
 
 
 def reschedule(con, user: dict, item: dict) -> None:

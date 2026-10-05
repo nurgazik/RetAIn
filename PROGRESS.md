@@ -229,6 +229,17 @@ vacation coding ends). Home Mac: clone normally with personal credentials; recre
 `.env.local` (4 API keys — gitignored, never on GitHub) and `data/retain.db` refills
 itself via the fetchers.
 
+### 2026-10-05 — Full record of every judged sentence
+
+- Founder asked for everything about a sentence judgment to be saved; agreed after weighing it (tuning data,
+  real eval material, explaining verdicts vs. privacy of users' writing → AD-11 before anyone else installs).
+- `practice_attempts` gains `p_natural` and `judged_by` (jev | llm); `calls` gains `attempt_id`; Jev's call row now
+  keeps all three probabilities in `response` and a hash of its question wording in `prompt_sha`. Full prompts are
+  not copied per call (the hash identifies the version).
+- Tests 68/68 (1 new). Live check on the dev account (1 sentence, ~$0.0001): attempt 18 stored Jev
+  {wrong 0.75, could-be-better 0.24, natural 0.01} and Gemma's raw reply, both linked. Older attempts (≤ 17) have
+  no score or link: that data was never kept.
+
 ### 2026-10-05 — Practice: chooser, any order (D57)
 
 - Founder testing on the phone asked where the fill-in sentence comes from: own reads first (newest piece where the
