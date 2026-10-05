@@ -1,6 +1,6 @@
 # User flow: fill in the word (daily exercise)
 
-**Status: built 2026-10-04** (PRD D56, backlog UX-16): `src/service/practice.py`, `ios/RetAIn/App/PracticeView.swift`.
+**Status: built 2026-10-04** (PRD D56; any order since D57: the user picks this exercise on the Practice chooser, and may skip it; backlog UX-16): `src/service/practice.py`, `ios/RetAIn/App/PracticeView.swift`.
 
 ```mermaid
 flowchart TD

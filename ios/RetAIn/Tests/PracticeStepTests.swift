@@ -1,7 +1,7 @@
 import XCTest
 @testable import RetAIn
 
-/// The practice order (D56): every fill-in first, then every sentence, then the summary.
+/// The two exercises are independent (D57): each has its own next word and progress.
 final class PracticeStepTests: XCTestCase {
     private func item(_ id: Int, fill: Bool = true, filled: Bool = false, written: Bool = false,
                       status: String = "learning") -> PracticeItem {
@@ -11,23 +11,33 @@ final class PracticeStepTests: XCTestCase {
                             attempts: .init(fill: filled ? a : nil, write: written ? a : nil), status: status)
     }
 
-    func testFillInsComeBeforeAnyWriting() {
-        XCTAssertEqual(PracticeStep.next([item(1), item(2)]), .fill(0))
-        XCTAssertEqual(PracticeStep.next([item(1, filled: true), item(2)]), .fill(1))
-        XCTAssertEqual(PracticeStep.next([item(1, filled: true), item(2, filled: true)]), .write(0))
+    func testEachExerciseWalksItsOwnWords() {
+        let items = [item(1, filled: true), item(2, written: true)]
+        XCTAssertEqual(PracticeExercise.fill.next(items), 1)
+        XCTAssertEqual(PracticeExercise.write.next(items), 0)
     }
 
-    func testAWordWithoutAFillInGoesStraightToWriting() {
-        XCTAssertEqual(PracticeStep.next([item(1, fill: false)]), .write(0))
+    func testWritingNeedsNoFillInFirst() {
+        XCTAssertEqual(PracticeExercise.write.next([item(1), item(2)]), 0)
     }
 
-    func testSummaryWhenAllDoneOrRetained() {
-        XCTAssertEqual(PracticeStep.next([item(1, filled: true, written: true), item(2, status: "retained")]), .summary)
+    func testAWordWithoutAFillInIsOnlyInWriting() {
+        let items = [item(1, fill: false)]
+        XCTAssertNil(PracticeExercise.fill.next(items))
+        XCTAssertEqual(PracticeExercise.fill.progress(items).total, 0)
+        XCTAssertEqual(PracticeExercise.write.next(items), 0)
     }
 
-    func testProgressCountsTwoExercisesPerWordWithAFillIn() {
-        let p = PracticeStep.progress([item(1, filled: true), item(2, fill: false)])
-        XCTAssertEqual(p.done, 1); XCTAssertEqual(p.total, 3)
+    func testRetainedWordsLeaveBothExercises() {
+        let items = [item(1, status: "retained"), item(2, filled: true, written: true)]
+        XCTAssertNil(PracticeExercise.fill.next(items)); XCTAssertNil(PracticeExercise.write.next(items))
+    }
+
+    func testProgressIsPerExercise() {
+        let items = [item(1, filled: true), item(2, fill: false), item(3, written: true)]
+        let f = PracticeExercise.fill.progress(items), w = PracticeExercise.write.progress(items)
+        XCTAssertEqual(f.done, 1); XCTAssertEqual(f.total, 2)
+        XCTAssertEqual(w.done, 1); XCTAssertEqual(w.total, 3)
     }
 
     func testDecodesTheServerShape() throws {

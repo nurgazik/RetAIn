@@ -83,6 +83,41 @@ def test_schedule_up_a_box_on_clean_pass_back_to_tomorrow_on_a_miss(client, stub
     con.close()
 
 
+def boxes(ids):
+    import service.db as db
+    con = db.connect()
+    rows = {r["id"]: (r["box"], r["due_day"]) for r in con.execute(
+        f"SELECT id, box, due_day FROM words WHERE id IN ({','.join('?' * len(ids))})", ids)}
+    con.close()
+    return rows
+
+
+def test_either_exercise_alone_moves_a_word_and_both_count_once(client, stubs):
+    from service.practice import add_days
+    s = today(client)
+    fill_only, write_only, both, slip = (i["word_id"] for i in s["items"][:4])
+    words = {i["word_id"]: i["word"] for i in s["items"]}
+    client.post("/v1/practice/fill", json={"word_id": fill_only, "answer": words[fill_only]})
+    client.post("/v1/practice/write", json={"word_id": write_only, "sentence": f"We {words[write_only]} it."})
+    client.post("/v1/practice/fill", json={"word_id": both, "answer": words[both]})
+    client.post("/v1/practice/write", json={"word_id": both, "sentence": f"We {words[both]} it."})
+    client.post("/v1/practice/write", json={"word_id": slip, "sentence": f"We {words[slip]} it."})
+    client.post("/v1/practice/fill", json={"word_id": slip, "answer": "nope"})  # a miss after a clean pass
+    rows = boxes([fill_only, write_only, both, slip])
+    for w in (fill_only, write_only, both):
+        assert rows[w] == (1, add_days(s["day"], 3))
+    assert rows[slip] == (0, add_days(s["day"], 1))
+
+
+def test_could_be_better_holds_the_gap(client, stubs):
+    from service.practice import add_days
+    stubs["p"], stubs["verdict"] = 0.4, "could-be-better"
+    item = today(client)["items"][0]
+    client.post("/v1/practice/fill", json={"word_id": item["word_id"], "answer": item["word"]})
+    client.post("/v1/practice/write", json={"word_id": item["word_id"], "sentence": f"We {item['word']} it."})
+    assert boxes([item["word_id"]])[item["word_id"]] == (0, add_days(today(client)["day"], 1))
+
+
 def test_own_reading_sentence_is_preferred(client, stubs):
     import service.db as db
     import service.practice as practice

@@ -22,6 +22,8 @@ usage). Code schedules the words; the list stays unlimited; the user marks retai
 scan done (docs/poc2-transform.md §10): AI-graded sentences already ship elsewhere (VORCA,
 ReadUnbound), so the combination with the transform is the differentiator.
 **Next up: TD-20 (sentence-judge eval) → UX-16 (exercise screens).** Founder to-do: try ReadUnbound.
+**2026-10-05 (D57): Practice opens on a chooser** (fill-in or sentences, any order, either alone); the schedule moves a word
+on either exercise. Needs a fresh install from Xcode to see it on the phone.
 **2026-10-04 (D56, UX-16): daily practice BUILT** — new **Practice** tab: 5 words/day, fill-in (from your reads or
 Gemma+Jev, meaning shown as the cue) then write-a-sentence (Jev ✓ at ≥ 0.9, else Gemma verdict + reason + fix), summary
 with Mark retained, Leitner 1/3/7/14/30, 7 pm reminder. Simulator walk-through passes; **not yet on the founder's phone —
@@ -226,6 +228,20 @@ all needed for TestFlight and none waits on a decision.**
 vacation coding ends). Home Mac: clone normally with personal credentials; recreate
 `.env.local` (4 API keys — gitignored, never on GitHub) and `data/retain.db` refills
 itself via the fetchers.
+
+### 2026-10-05 — Practice: chooser, any order (D57)
+
+- Founder testing on the phone asked where the fill-in sentence comes from: own reads first (newest piece where the
+  word was highlighted), else a cached Gemma sentence that Jev passed at ≥ 0.9. In the dev account's 2 sets (n = 10
+  exercises), 4 came from reads.
+- Founder: the user picks where to start; neither exercise is mandatory. Built: the Practice tab opens on a chooser
+  (two cards with "n of 5 left", today's words and Mark retained below); a back button leaves an exercise at any point.
+- Schedule rewritten (`reschedule`): any miss → tomorrow; "could be better" → same gap; otherwise +1 gap from the box
+  at set-build time, so either exercise alone moves a word and both clean count once. Tradeoff (fill-only users climb
+  without ever writing) recorded in D57.
+- Tests: service 67/67 (2 new schedule tests); iOS practice unit tests rewritten (5) and pass; UI walk-through passes
+  (sentence first, leave, fill-ins, back to the chooser). Unrelated failure seen: ReaderPopupTests date off by a day
+  (`testHeaderShowsDekAndSourceLine`), not touched here.
 
 ### 2026-10-04 — Jev PoC steps 1–2, rule D55, daily practice built (D56)
 

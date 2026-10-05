@@ -220,22 +220,19 @@ def record(con, user: dict, item: dict, kind: str, answer: str, result: dict) ->
 
 
 def reschedule(con, user: dict, item: dict) -> None:
-    """After an attempt: a miss → box 0, due tomorrow (at once). Once every exercise the word has
-    today is done: all clean → up a box; a "could be better" → same box. Gap from GAPS[box]."""
+    """After every attempt, from all of today's attempts on the word (D57: either exercise counts on
+    its own): a miss → box 0, due tomorrow; a "could be better" → same box; otherwise up one box.
+    The base is the box when today's set was built, so two clean exercises are still one step."""
     tries = {a["kind"]: a for a in con.execute(
         "SELECT kind, correct, verdict FROM practice_attempts WHERE user_id=? AND word_id=? AND day=?",
         (user["id"], item["word_id"], user["day"]))}
-    missed = (tries.get("fill") and not tries["fill"]["correct"]) or (tries.get("write") and tries["write"]["verdict"] == "wrong")
-    expected = {"write"} | ({"fill"} if item.get("fill") else set())
-    box = con.execute("SELECT box FROM words WHERE id=?", (item["word_id"],)).fetchone()[0]
-    if missed:
-        box, due = 0, add_days(user["day"], GAPS[0])
-    elif expected <= set(tries):
-        if tries["write"]["verdict"] == "natural":
-            box = min(box + 1, len(GAPS) - 1)
-        due = add_days(user["day"], GAPS[box])
-    else:
-        return
+    fill, write = tries.get("fill"), tries.get("write")
+    box = item["box"]
+    if (fill and not fill["correct"]) or (write and write["verdict"] == "wrong"):
+        box = 0
+    elif not (write and write["verdict"] == "could-be-better"):
+        box = min(box + 1, len(GAPS) - 1)
+    due = add_days(user["day"], GAPS[box])
     with db._lock:
         con.execute("UPDATE words SET box=?, due_day=? WHERE id=?", (box, due, item["word_id"]))
         con.commit()

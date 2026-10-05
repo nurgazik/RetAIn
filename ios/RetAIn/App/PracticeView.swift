@@ -1,23 +1,30 @@
 import SwiftUI
 
-/// Daily practice (D53, D56; diagrams/flow-fill-in-the-word.md, flow-write-a-sentence.md).
-/// Order: a fill-in for every word first (quick recall), then a sentence for every word (production),
-/// then a summary where words can be marked retained.
-enum PracticeStep: Equatable {
-    case fill(Int), write(Int), summary   // index into the set's items
+/// Daily practice (D53, D56, D57; diagrams/flow-fill-in-the-word.md, flow-write-a-sentence.md).
+/// Opens on a chooser: the user picks fill-in or sentences, in any order, and may skip either (D57).
+/// Today's words and their results sit under the two choices, with Mark retained per word.
+enum PracticeExercise: Equatable {
+    case fill, write
 
-    /// The next unanswered exercise; fill-ins (where the word has one) come before any writing.
-    static func next(_ items: [PracticeItem]) -> PracticeStep {
-        if let i = items.firstIndex(where: { $0.fill != nil && $0.attempts.fill == nil && $0.status == "learning" }) { return .fill(i) }
-        if let i = items.firstIndex(where: { $0.attempts.write == nil && $0.status == "learning" }) { return .write(i) }
-        return .summary
+    /// Whether this word still has this exercise to do today.
+    func pending(_ item: PracticeItem) -> Bool {
+        guard item.status == "learning" else { return false }
+        switch self {
+        case .fill: return item.fill != nil && item.attempts.fill == nil
+        case .write: return item.attempts.write == nil
+        }
     }
-    /// Exercises done / total, for the progress bar.
-    static func progress(_ items: [PracticeItem]) -> (done: Int, total: Int) {
-        let live = items.filter { $0.status == "learning" || $0.attempts.write != nil }
-        let total = live.reduce(0) { $0 + ($1.fill == nil ? 1 : 2) }
-        let done = live.reduce(0) { $0 + ($1.attempts.fill == nil ? 0 : 1) + ($1.attempts.write == nil ? 0 : 1) }
-        return (done, total)
+    private func done(_ item: PracticeItem) -> Bool {
+        self == .fill ? item.attempts.fill != nil : item.attempts.write != nil
+    }
+
+    /// The next word to do in this exercise, if any.
+    func next(_ items: [PracticeItem]) -> Int? { items.firstIndex(where: pending) }
+
+    /// Done / total for this exercise; words retained before they were tried drop out.
+    func progress(_ items: [PracticeItem]) -> (done: Int, total: Int) {
+        let counted = items.filter { pending($0) || done($0) }
+        return (counted.filter(done).count, counted.count)
     }
 }
 
@@ -25,7 +32,8 @@ struct PracticeView: View {
     @State private var set: PracticeSet?
     @State private var error: String?
     @State private var loading = false
-    @State private var shown: PracticeStep?          // what's on screen (stays while a result is shown)
+    @State private var exercise: PracticeExercise?   // nil: the chooser
+    @State private var shown: Int?                   // the word on screen (stays while a result is shown)
     @State private var answer = ""
     @State private var fillResult: FillResult?
     @State private var writeResult: WriteResult?
@@ -43,6 +51,13 @@ struct PracticeView: View {
                 else { ProgressView("Preparing today's words…") }
             }
             .navigationTitle("Practice")
+            .toolbar {
+                if exercise != nil {
+                    ToolbarItem(placement: .topBarLeading) {
+                        Button { leave() } label: { Label("Exercises", systemImage: "chevron.left").labelStyle(.titleAndIcon) }
+                    }
+                }
+            }
             .task { await load() }
             .onChange(of: scenePhase) { _, p in if p == .active, set != nil { Task { await load() } } }
             .alert("Remind you to practise each day?", isPresented: $askReminder) {
@@ -56,21 +71,21 @@ struct PracticeView: View {
         if set.items.isEmpty {
             ContentUnavailableView("Nothing to practise", systemImage: "checkmark.seal",
                                    description: Text("Add words in the Words tab, or come back when some are due."))
-        } else {
-            let step = shown ?? PracticeStep.next(set.items)
-            let p = PracticeStep.progress(set.items)
+        } else if let exercise, let i = shown ?? exercise.next(set.items) {
+            let p = exercise.progress(set.items)
             VStack(spacing: 0) {
                 ProgressView(value: Double(p.done), total: Double(max(p.total, 1)))
                     .padding(.horizontal).padding(.top, 4)
                 ScrollView {
-                    switch step {
-                    case .fill(let i): fillCard(set.items[i])
-                    case .write(let i): writeCard(set.items[i])
-                    case .summary: summary(set)
+                    switch exercise {
+                    case .fill: fillCard(set.items[i])
+                    case .write: writeCard(set.items[i])
                     }
                 }
                 .scrollDismissesKeyboard(.interactively)
             }
+        } else {
+            ScrollView { chooser(set) }
         }
     }
 
@@ -140,12 +155,17 @@ struct PracticeView: View {
         .background(color.opacity(0.1), in: .rect(cornerRadius: 10))
     }
 
-    // MARK: summary
+    // MARK: chooser
 
-    private func summary(_ set: PracticeSet) -> some View {
+    private func chooser(_ set: PracticeSet) -> some View {
         VStack(alignment: .leading, spacing: 14) {
-            Label("Done for today", systemImage: "checkmark.seal.fill").font(.title2.bold()).foregroundStyle(.green)
-            Text("Words you got right come back later; misses come back tomorrow.").foregroundStyle(.secondary)
+            if PracticeExercise.fill.next(set.items) == nil && PracticeExercise.write.next(set.items) == nil {
+                Label("Done for today", systemImage: "checkmark.seal.fill").font(.title2.bold()).foregroundStyle(.green)
+            }
+            exerciseCard(.fill, "Fill in the word", "Recall it from a sentence", set.items)
+            exerciseCard(.write, "Use it in a sentence", "Write your own", set.items)
+            Text("TODAY'S WORDS").font(.caption.bold()).foregroundStyle(.secondary).padding(.top, 8)
+            Text("Words you got right come back later; misses come back tomorrow.").font(.callout).foregroundStyle(.secondary)
             ForEach(set.items) { item in
                 HStack(alignment: .firstTextBaseline) {
                     VStack(alignment: .leading, spacing: 2) {
@@ -163,7 +183,31 @@ struct PracticeView: View {
             }
         }
         .padding()
-        .onAppear { if !PracticeReminder.asked { PracticeReminder.asked = true; askReminder = true } }
+    }
+
+    private func exerciseCard(_ kind: PracticeExercise, _ title: String, _ subtitle: String,
+                              _ items: [PracticeItem]) -> some View {
+        let p = kind.progress(items)
+        let left = p.total - p.done
+        return Button { exercise = kind } label: {
+            HStack {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(title).font(.headline)
+                    Text(subtitle).font(.callout).foregroundStyle(.secondary)
+                }
+                Spacer()
+                if left == 0 {
+                    Label(p.total == 0 ? "None today" : "Done", systemImage: p.total == 0 ? "minus" : "checkmark")
+                        .font(.callout).foregroundStyle(p.total == 0 ? Color.secondary : .green)
+                } else {
+                    Text("\(left) of \(p.total) left").font(.callout).foregroundStyle(.secondary)
+                    Image(systemName: "chevron.right").foregroundStyle(.tertiary)
+                }
+            }
+            .padding().frame(maxWidth: .infinity, alignment: .leading)
+            .background(.quaternary.opacity(0.5), in: .rect(cornerRadius: 12))
+        }
+        .buttonStyle(.plain).disabled(left == 0)
     }
 
     private func outcome(_ item: PracticeItem) -> String {
@@ -226,7 +270,7 @@ struct PracticeView: View {
         loading = true; defer { loading = false }
         do {
             let s = try await RetAInClient.shared.practiceToday()
-            if s.day != set?.day { shown = nil; fillResult = nil; writeResult = nil; answer = "" }
+            if s.day != set?.day { exercise = nil; shown = nil; fillResult = nil; writeResult = nil; answer = "" }
             set = s; error = nil
         } catch { if set == nil { self.error = error.localizedDescription } }
     }
@@ -235,7 +279,7 @@ struct PracticeView: View {
         busy = true; defer { busy = false }
         do {
             let r = try await RetAInClient.shared.practiceFill(wordId: item.wordId, answer: answer)
-            fillResult = r; inputError = nil; shown = PracticeStep.next(set?.items ?? [])
+            fillResult = r; inputError = nil; shown = index(item)
             update(item.wordId) { $0.attempts.fill = .init(correct: r.correct ? 1 : 0, verdict: nil, reason: nil, fix: nil, answer: answer) }
         } catch { inputError = error.localizedDescription }
     }
@@ -244,15 +288,26 @@ struct PracticeView: View {
         busy = true; defer { busy = false }
         do {
             let r = try await RetAInClient.shared.practiceWrite(wordId: item.wordId, sentence: answer)
-            writeResult = r; inputError = nil; shown = PracticeStep.next(set?.items ?? [])
+            writeResult = r; inputError = nil; shown = index(item)
             update(item.wordId) { $0.attempts.write = .init(correct: nil, verdict: r.verdict, reason: r.reason, fix: r.fix, answer: answer) }
         } catch APIError.http(422, let message) { inputError = message }
         catch { inputError = error.localizedDescription }
     }
 
+    /// On to the next word in this exercise; when it's finished, back to the chooser
+    /// (the reminder is offered the first time either exercise is finished).
     private func advance() {
         fillResult = nil; writeResult = nil; answer = ""; inputError = nil; shown = nil
+        guard let exercise, exercise.next(set?.items ?? []) == nil else { return }
+        self.exercise = nil
+        if !PracticeReminder.asked { PracticeReminder.asked = true; askReminder = true }
     }
+
+    private func leave() {
+        typing = false; fillResult = nil; writeResult = nil; answer = ""; inputError = nil; shown = nil; exercise = nil
+    }
+
+    private func index(_ item: PracticeItem) -> Int? { set?.items.firstIndex { $0.wordId == item.wordId } }
 
     private func retain(_ item: PracticeItem) async {
         guard (try? await RetAInClient.shared.setWordStatus(item.wordId, "retained")) != nil else { return }
