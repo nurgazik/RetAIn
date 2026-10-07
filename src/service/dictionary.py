@@ -113,20 +113,22 @@ def lookup(word: str) -> dict | None:
     con = sqlite3.connect(f"file:{DICT_PATH}?mode=ro", uri=True)
     try:
         dump = con.execute("SELECT value FROM meta WHERE key='dump'").fetchone()[0]
-        headword, es = word, _entries(con, word)
+        headword, lemma, es = word, word, _entries(con, word)
         first = next((s for e in es if e["pos"] != "name" for s in e["senses"] if s.get("glosses")), {})
         target = next(iter(_redirect(first)), "").lower()
         own = _kept(es)  # a word with real meanings of its own stays itself (protracted, scathing)
         stays = len(own) >= 2 or any(s["pos"] in ("adj", "adv") for s in own)
         if target and target != word and not stays and _kept(_entries(con, target)):
             headword, es = target, _entries(con, target)
+            if first.get("form_of"):  # an inflection (ran → run), not a spelling variant (belabor → belabour)
+                lemma = target
         kept = _kept(es)
         if not kept:
             return None
         sounds = [x for e in es for x in e["sounds"]]
         ipa = ([x for x in sounds if US & set(x["tags"])][:1] + [x for x in sounds if UK & set(x["tags"])][:1]
                or sounds[:1])
-        return {"headword": headword, "senses": kept, "ipa": ipa, "dump": dump,
+        return {"headword": headword, "lemma": lemma, "senses": kept, "ipa": ipa, "dump": dump,
                 "source_url": f"https://en.wiktionary.org/wiki/{headword.replace(' ', '_')}"}
     finally:
         con.close()
@@ -178,6 +180,14 @@ def _insert_lexicon(con, headword: str, source: str, ipa: list, url: str | None,
                          for i, s in enumerate(senses, 1)])
     con.commit()
     return lid
+
+
+def lemma(word: str) -> str:
+    """The dictionary form a saved word is stored as (D58): inflections fold into their lemma
+    (bolstered → bolster, mice → mouse); spelling variants and words with meanings of their own
+    stay as typed (belabor, protracted)."""
+    found = lookup(word)
+    return found["lemma"] if found else word
 
 
 def build_card(con, word: str, env: dict) -> tuple:

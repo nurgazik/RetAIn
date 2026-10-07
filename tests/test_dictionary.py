@@ -22,6 +22,12 @@ FIXTURE = [  # Wiktextract-shaped entries
     {"word": "fraught", "lang_code": "en", "pos": "adj",
      "senses": [{"glosses": ["Laden with cargo."], "tags": ["obsolete"]},
                 {"glosses": ["Loaded with anxiety."], "tags": ["obsolete"]}]},
+    {"word": "bolster", "lang_code": "en", "pos": "verb", "senses": [{"glosses": ["To support or strengthen."]}]},
+    {"word": "bolstered", "lang_code": "en", "pos": "verb",
+     "senses": [{"glosses": ["past of bolster"], "tags": ["form-of", "past"], "form_of": [{"word": "bolster"}]}]},
+    {"word": "belabour", "lang_code": "en", "pos": "verb", "senses": [{"glosses": ["To explain at excessive length."]}]},
+    {"word": "belabor", "lang_code": "en", "pos": "verb",
+     "senses": [{"glosses": ["US spelling of belabour"], "tags": ["US", "alt-of"], "alt_of": [{"word": "belabour"}]}]},
     {"word": "gaol", "lang_code": "fr", "pos": "noun", "senses": [{"glosses": ["not English"]}]},
 ]
 
@@ -59,6 +65,19 @@ def test_lookup_rules(dictionary):
     assert D.lookup("protracted")["headword"] == "protracted"  # its own adjective wins
     assert len(D.lookup("fraught")["senses"]) == 2  # every sense obsolete-tagged: keep them all
     assert D.lookup("gaol") is None  # English entries only
+
+
+def test_saved_words_fold_inflections_only(dictionary):
+    import service.dictionary as D
+    assert [D.lemma(w) for w in ("bolstered", "ran")] == ["bolster", "run"]  # inflections fold
+    # (real Wiktionary also lists "bolstered" as an adjective, "padded", so there it stays itself, like protracted)
+    assert D.lookup("belabor")["headword"] == "belabour"  # the card is still the variant's target …
+    assert [D.lemma(w) for w in ("belabor", "protracted", "bolster", "zzqx")] == ["belabor", "protracted", "bolster", "zzqx"]
+
+
+def test_saving_an_inflection_stores_the_lemma(client, dictionary):
+    r = client.post("/v1/words", json={"word": "Bolstered"})
+    assert r.status_code == 201 and r.json()["word"] == "bolster"
 
 
 def test_wiktionary_word_gets_card_with_examples(client, dictionary):

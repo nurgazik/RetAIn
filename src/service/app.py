@@ -102,7 +102,7 @@ def list_words(user=Depends(auth.current_user)):
 
 @app.post("/v1/words", status_code=201)
 def add_word(body: WordIn, user=Depends(auth.current_user)):
-    word = body.word.strip().lower()
+    word = dictionary.lemma(body.word.strip().lower())
     definition, pos, lexicon_id = (body.definition or "").strip(), body.pos, None
     con = db.connect()
     try:

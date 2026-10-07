@@ -229,6 +229,17 @@ vacation coding ends). Home Mac: clone normally with personal credentials; recre
 `.env.local` (4 API keys — gitignored, never on GitHub) and `data/retain.db` refills
 itself via the fetchers.
 
+### 2026-10-06 — D58 steps (a) lookalike eval and (b) lemma on save
+
+- (a) Lookalike writer eval: 5 models on the 51 golden words, 394 lookalikes graded blind (Claude Code), Jev
+  scored in the blank (docs/model-bakeoff.md "Lookalike writer"). Ask for 5, code keeps 3 (real word, same part of
+  speech, not a form of the target, spelling similarity ≥ 0.4 — founder relaxed the best-fit 0.45). Jev ≥ 0.5
+  in the blank catches 16/18 lookalikes that fit. Recommendation pending founder: DeepSeek v4.1 Flash writes
+  them, Jev checks on Hint tap.
+- (b) A saved word is stored as its lemma when Wiktionary marks it an inflection ("form of": propensities →
+  propensity, mice → mouse); spelling variants stay (belabor). Words with their own adjective sense stay too
+  (protracted, scathing — and "bolstered", listed as an adjective meaning "padded"). 0 of 244 saved words change.
+
 ### 2026-10-05 — Full record of every judged sentence
 
 - Founder asked for everything about a sentence judgment to be saved; agreed after weighing it (tuning data,
