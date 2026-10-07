@@ -21,7 +21,7 @@ flowchart TD
     H --> H1["<b>JEV CHECK</b> · each stored lookalike in your blank:<br/>P(natural) ≥ 0.5 → it fits, dropped · ~0.2 s"]:::gate
     H1 --> H2([4 pills: the word + 3 lookalikes, shuffled])
     H2 -- "you tap one: same as typing it" --> Z
-    Y --> Z{"Code: does it match the blanked form?<br/>(exact, ignoring case)"}:::code
+    Y --> Z{"Code: is it the word, in any form?<br/>(the blanked form, the lemma, or an inflection of it)"}:::code
     Z -- yes --> OK([Correct])
     Z -- no --> NO(["Not quite: your word goes in the blank, red,<br/>tap it for its meaning (dictionary, no model) · try again"])
     NO --> Y

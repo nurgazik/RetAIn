@@ -229,6 +229,14 @@ vacation coding ends). Home Mac: clone normally with personal credentials; recre
 `.env.local` (4 API keys — gitignored, never on GitHub) and `data/retain.db` refills
 itself via the fetchers.
 
+### 2026-10-07 — Fill-in retries (founder feedback from the phone)
+
+- A wrong answer (typed or pill) no longer reveals the word: it goes into the blank in red, tappable for its own
+  dictionary meaning; the user tries until right; tried pills are struck out. Every try is a row; the schedule reads
+  the first try (founder agreed: wrong first → tomorrow); a Hint is not a try. Any inflection of the word counts.
+- Tests: service 77/77 (3 new); iOS practice 8/8; UI walk-through passes (wrong pill, wrong typed guess, finish).
+  Not yet seen: the meaning popover on tap (dev account's fill-ins were used up) — check on the phone.
+
 ### 2026-10-06 — D58 step (c): the fill-in Hint, built
 
 - Founder picked DeepSeek for lookalikes and the Jev check on Hint tap. Lookalikes are written in the daily prep
