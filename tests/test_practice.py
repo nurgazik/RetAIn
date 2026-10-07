@@ -8,22 +8,34 @@ import pytest
 @pytest.fixture()
 def stubs(client, monkeypatch):
     import service.practice as practice
-    state = {"p": 0.95, "llm": 0, "verdict": "wrong"}
+    state = {"p": 0.95, "llm": 0, "verdict": "wrong", "look": 0, "fits": set()}
 
-    def fake_model(system, user, env, purpose="generate"):
+    def fake_model(system, user, env, purpose="generate", primary=None):
+        def log(raw):  # as the real call logs it: this thread's row + the shared log
+            practice.G._LAST.row = (purpose, "stub", 500, 100, 900, 0.00007, None, raw, "p1")
+            practice.G.CALL_LOG.append(practice.G._LAST.row)
+            return raw, "stub"
+
         word = user.split("Target word: ", 1)[1].split(" —", 1)[0]
+        if purpose == "lookalikes":
+            state["look"] += 1
+            word = word.split(" (")[0]  # "Target word: bolster (verb) — …"
+            return log(json.dumps({"lookalikes": [c + word[1:] for c in "qzkjv"]}))  # look alike, not forms
         if purpose == "fill-sentence":
-            return json.dumps({"sentence": f"The new plan will {word} the team's confidence this year.",
-                               "answer": word}), "stub"
+            return log(json.dumps({"sentence": f"The new plan will {word} the team's confidence this year.",
+                                   "answer": word}))
         state["llm"] += 1
         raw = json.dumps({"verdict": state["verdict"], "reason": "r", "fix": "f"})
-        practice.G.CALL_LOG.append((purpose, "stub", 500, 100, 900, 0.00007, None, raw, "p1"))  # as the real call logs
-        return raw, "stub"
+        return log(raw)
 
     monkeypatch.setattr(practice.G, "call_model", fake_model)
-    monkeypatch.setattr(practice.typesafe, "p_natural",
-                        lambda w, d, s: (state["p"], ("judge-jev", "jev-1.13.0", 300, 0, 200, 0.0000126, None,
-                                                      json.dumps({"natural": state["p"]}), "q1")))
+    def fake_jev(w, d, s):
+        p = (0.9 if w in state["fits"] else 0.01) if d == "g" else state["p"]  # "g": a lookalike's gloss
+        return p, ("judge-jev", "jev-1.13.0", 300, 0, 200, 0.0000126, None, json.dumps({"natural": p}), "q1")
+    monkeypatch.setattr(practice.typesafe, "p_natural", fake_jev)
+    monkeypatch.setattr(practice.lookalikes, "dictionary_pos", lambda w: {"verb", "noun", "adj"})
+    monkeypatch.setattr(practice.lookalikes, "gloss", lambda w, pos: "g")
+    monkeypatch.setattr(practice.lookalikes.typesafe, "p_natural", fake_jev)
     return state
 
 
@@ -78,6 +90,44 @@ def test_a_judged_sentence_keeps_the_whole_record(client, stubs):
     assert [c["purpose"] for c in calls] == ["judge-jev", "feedback"]
     assert json.loads(calls[0]["response"]) == {"natural": 0.4} and calls[0]["prompt_sha"] == "q1"
     assert '"verdict": "wrong"' in calls[1]["response"]
+
+
+def test_hint_shows_the_word_among_lookalikes_that_dont_fit(client, stubs):
+    import service.db as db
+    s = today(client)
+    assert stubs["look"] == len(s["items"])  # written once per lemma during prep
+    item = s["items"][0]
+    w = item["word"]
+    stubs["fits"] = {"q" + w[1:]}  # Jev says this one reads naturally in the blank: dropped
+    opts = client.post("/v1/practice/hint", json={"word_id": item["word_id"]}).json()["options"]
+    assert sorted(opts) == sorted([w, "z" + w[1:], "k" + w[1:], "j" + w[1:]])
+    assert client.post("/v1/practice/hint", json={"word_id": item["word_id"]}).json()["options"] == opts  # same, free
+    assert today(client)["items"][0]["fill"]["hint"] == opts
+    r = client.post("/v1/practice/fill", json={"word_id": item["word_id"], "answer": w}).json()
+    assert r["correct"] is True  # a pill counts exactly like typing it
+    con = db.connect()
+    a = con.execute("SELECT hint FROM practice_attempts WHERE kind='fill' ORDER BY id DESC LIMIT 1").fetchone()
+    con.close()
+    assert json.loads(a["hint"]) == opts
+
+
+def test_lookalikes_are_shared_across_days_and_users(client, stubs):
+    import service.db as db
+    from service import lookalikes
+    s = today(client)
+    con = db.connect()
+    calls = lookalikes.ensure(con, s["items"][0]["word"], "verb", "d", {})
+    con.close()
+    assert calls == [] and stubs["look"] == len(s["items"])  # already stored: no new call
+
+
+def test_parallel_prep_records_each_call_once(client, stubs):
+    import service.db as db
+    today(client)  # five words prepared on four threads
+    con = db.connect()
+    rows = con.execute("SELECT purpose, count(*) FROM calls GROUP BY purpose").fetchall()
+    con.close()
+    assert dict(rows)["lookalikes"] == stubs["look"]
 
 
 def test_a_sentence_without_the_word_is_refused(client, stubs):

@@ -139,14 +139,15 @@ def lookup(word: str) -> dict | None:
 def _ask(system: str, user: str, env: dict) -> tuple:
     """One model call on the production chain → (parsed JSON or None, the call log rows)."""
     import generate as G
-    start = len(G.CALL_LOG)  # never clear: a transform on another thread shares this log
+    calls = []  # this call's own row, never a slice of the shared log (other threads write to it too)
     try:
         raw, _ = G.call_model(system, user, env, purpose="card")
+        calls.append(G.last_call())
         parsed = json.loads(re.sub(r"^```(json)?\s*|\s*```$", "", raw.strip(), flags=re.M).strip())
     except Exception as exc:  # the capture still succeeds; backfill fills the gap later
         print(f"[card] model call failed ({exc})")
         parsed = None
-    return parsed, G.CALL_LOG[start:]
+    return parsed, calls
 
 
 def write_examples(con, lexicon_id: int, headword: str, env: dict) -> list:

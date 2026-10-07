@@ -49,9 +49,17 @@ final class PracticeScreenTests: XCTestCase {
             while steps < 6, fill.waitForExistence(timeout: 5) {
                 steps += 1
                 shot("fill")
-                let field = app.textFields["Type the word"]
-                field.tap(); field.typeText("guess")
-                app.buttons["Check"].tap()
+                let pill = app.buttons["hint-option"].firstMatch
+                if steps == 1 {  // the first fill-in uses the Hint (D58): a pill counts like typing
+                    if !pill.exists { app.buttons["Hint"].tap() }
+                    XCTAssertTrue(pill.waitForExistence(timeout: 20), "hint pills didn't appear")
+                    shot("hint")
+                    pill.tap()
+                } else {
+                    let field = app.textFields["Type the word"]
+                    field.tap(); field.typeText("guess")
+                    app.buttons["Check"].tap()
+                }
                 XCTAssertTrue(app.buttons["Next"].waitForExistence(timeout: 20))
                 shot("fill-result")
                 app.buttons["Next"].tap()

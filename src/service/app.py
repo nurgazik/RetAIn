@@ -145,6 +145,10 @@ class FillIn(BaseModel):
     answer: str = Field(min_length=1, max_length=60)
 
 
+class HintIn(BaseModel):
+    word_id: int
+
+
 class WriteIn(BaseModel):
     word_id: int
     sentence: str = Field(min_length=3, max_length=400)
@@ -178,6 +182,21 @@ def practice_fill(body: FillIn, user=Depends(auth.current_user)):
         result = practice.check_fill(item, body.answer)
         practice.record(con, user, item, "fill", body.answer.strip(), result)
         return result
+    finally:
+        con.close()
+
+
+@app.post("/v1/practice/hint")
+def practice_hint(body: HintIn, user=Depends(auth.current_user)):
+    """The fill-in Hint (D58): the word among lookalikes, for the client to show as pills."""
+    con = db.connect()
+    try:
+        item = _practice_item(con, user, body.word_id)
+        if not item.get("fill"):
+            raise HTTPException(409, "no fill-in for this word today")
+        options, calls = practice.hint(con, user, body.word_id, engine.model_env())
+        db.record_calls(con, user["id"], None, calls, practice.prices(), day=user["day"])
+        return {"options": options}
     finally:
         con.close()
 

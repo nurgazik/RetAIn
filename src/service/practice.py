@@ -15,7 +15,7 @@ from datetime import date, timedelta
 
 import generate as G
 
-from . import db, typesafe
+from . import db, lookalikes, typesafe
 from .config import ROOT
 
 SET_SIZE = 5
@@ -67,13 +67,12 @@ def from_reads(con, user_id: str, word: str) -> dict | None:
 
 def write_sentence(word: str, definition: str, env: dict) -> tuple:
     """Model writes one fill-in sentence; Jev checks it's natural. → (dict | None, call rows)."""
-    start = len(G.CALL_LOG)
     calls = []
     try:
         raw, _ = G.call_model(FILL_PROMPT, f"Target word: {word} — {definition}", env, purpose="fill-sentence")
+        calls = [G.last_call()]
         d = json.loads(raw[raw.index("{"):raw.rindex("}") + 1])
         sentence, answer = d["sentence"].strip(), d["answer"].strip()
-        calls = G.CALL_LOG[start:]
         if not answer.lower().startswith(stem(word)) or not _blank(sentence, answer):
             return None, calls
         p, row = typesafe.p_natural(word, definition, sentence)
@@ -81,7 +80,7 @@ def write_sentence(word: str, definition: str, env: dict) -> tuple:
         return ({"sentence": sentence, "answer": answer, "p_natural": p} if p >= NATURAL_AT else None), calls
     except Exception as exc:
         print(f"[practice] fill sentence for {word!r} failed ({exc})")
-        return None, calls or G.CALL_LOG[start:]
+        return None, calls
 
 
 def model_sentence(con, word: str, definition: str, env: dict) -> tuple:
@@ -125,7 +124,10 @@ def build_set(con, user: dict, env: dict) -> dict:
         c = db.connect()
         try:
             own = from_reads(c, user["id"], w["word"])
-            return (own, []) if own else model_sentence(c, w["word"], w["definition"], env)
+            fill, calls = (own, []) if own else model_sentence(c, w["word"], w["definition"], env)
+            if fill:  # the Hint's lookalikes, written once per lemma (D58)
+                calls = calls + lookalikes.ensure(c, w["word"], w.get("pos"), w["definition"], env)
+            return fill, calls
         finally:
             c.close()
     with ThreadPoolExecutor(4) as pool:
@@ -133,7 +135,8 @@ def build_set(con, user: dict, env: dict) -> dict:
     items = []
     for w, (fill, c) in zip(words, fills):
         calls += c
-        items.append({"word_id": w["id"], "word": w["word"], "definition": w["definition"], "box": w["box"], "fill": fill})
+        items.append({"word_id": w["id"], "word": w["word"], "definition": w["definition"], "pos": w.get("pos"),
+                      "box": w["box"], "fill": fill})
     with db._lock:
         con.execute("INSERT OR IGNORE INTO practice_sets (user_id, day, items, created_at) VALUES (?,?,?,?)",
                     (user["id"], user["day"], json.dumps(items), db.now()))
@@ -159,6 +162,7 @@ def get_set(con, user_id: str, day: str) -> dict | None:
         i["status"] = statuses.get(i["word_id"], "learning")
         if i["fill"]:  # the client never needs the answer before it's tried
             i["fill"] = {"text": i["fill"]["text"], "source": i["fill"]["source"],
+                         **({"hint": i["fill"]["hint"]} if i["fill"].get("hint") else {}),
                          **({"answer": i["fill"]["answer"]} if "fill" in i["attempts"] else {})}
     return {"day": day, "items": items}
 
@@ -169,6 +173,28 @@ def item_of(con, user: dict, word_id: int) -> dict:
         if i["word_id"] == word_id:
             return i
     raise KeyError(word_id)
+
+
+def hint(con, user: dict, word_id: int, env: dict) -> tuple:
+    """The fill-in Hint (D58): the word among up to three lookalikes that don't fit this sentence.
+    Kept on today's set, so asking again shows the same options at no cost. → (options, call rows)."""
+    item = item_of(con, user, word_id)
+    if not item["fill"]:
+        raise KeyError(word_id)
+    if item["fill"].get("hint"):
+        return item["fill"]["hint"], []
+    calls = lookalikes.ensure(con, item["word"], item.get("pos"), item["definition"], env)
+    options, c = lookalikes.hint_options(item["word"], item.get("pos") or "", item["fill"]["text"],
+                                         lookalikes.stored(con, item["word"]))
+    with db._lock:
+        row = con.execute("SELECT items FROM practice_sets WHERE user_id=? AND day=?", (user["id"], user["day"])).fetchone()
+        items = json.loads(row["items"])
+        for i in items:
+            if i["word_id"] == word_id:
+                i["fill"]["hint"] = options
+        con.execute("UPDATE practice_sets SET items=? WHERE user_id=? AND day=?", (json.dumps(items), user["id"], user["day"]))
+        con.commit()
+    return options, calls + c
 
 
 # ---------------------------------------------------------------- answers
@@ -195,10 +221,9 @@ def judge_sentence(word: str, definition: str, sentence: str, env: dict) -> tupl
     except Exception as exc:
         print(f"[practice] Jev failed, LLM judges ({exc})")
         p = None
-    start = len(G.CALL_LOG)
     raw, _ = G.call_model(JUDGE_PROMPT, f"Target word: {word} — {definition}\nSentence: {sentence}", env,
                           purpose="feedback")
-    calls += G.CALL_LOG[start:]
+    calls.append(G.last_call())
     d, _ = json.JSONDecoder().raw_decode(raw[raw.index("{"):])
     verdict = d.get("verdict") if d.get("verdict") in ("natural", "could-be-better", "wrong") else "could-be-better"
     return {"verdict": verdict, "reason": d.get("reason"), "fix": d.get("fix") if verdict != "natural" else None,
@@ -212,11 +237,12 @@ def uses_word(sentence: str, word: str) -> bool:
 def record(con, user: dict, item: dict, kind: str, answer: str, result: dict) -> int:
     """Store the attempt (with Jev's score and who judged, for sentences) → its id."""
     with db._lock:
+        hinted = kind == "fill" and item["fill"].get("hint")
         cur = con.execute("INSERT INTO practice_attempts (user_id, word_id, day, kind, answer, correct, verdict, reason, "
-                          "fix, p_natural, judged_by, created_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)",
+                          "fix, p_natural, judged_by, hint, created_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)",
                           (user["id"], item["word_id"], user["day"], kind, answer, result.get("correct"),
                            result.get("verdict"), result.get("reason"), result.get("fix"), result.get("p_natural"),
-                           result.get("by"), db.now()))
+                           result.get("by"), json.dumps(hinted) if hinted else None, db.now()))
         con.commit()
     reschedule(con, user, item)
     return cur.lastrowid

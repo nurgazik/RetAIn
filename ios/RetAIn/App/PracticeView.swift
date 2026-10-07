@@ -38,6 +38,7 @@ struct PracticeView: View {
     @State private var fillResult: FillResult?
     @State private var writeResult: WriteResult?
     @State private var busy = false
+    @State private var hinting = false
     @State private var inputError: String?
     @State private var askReminder = false
     @FocusState private var typing: Bool
@@ -107,10 +108,37 @@ struct PracticeView: View {
                     .textFieldStyle(.roundedBorder).font(.title3)
                     .onSubmit { Task { await submitFill(item) } }
                 checkButton(disabled: answer.trimmingCharacters(in: .whitespaces).isEmpty) { await submitFill(item) }
+                if let options = item.fill?.hint { hintPills(item, options) }
+                else { hintButton(item) }
             }
             if let error = inputError { Text(error).font(.callout).foregroundStyle(.red) }
         }
         .padding()
+    }
+
+    /// D58: the word among lookalikes; tapping one is the same as typing it and tapping Check.
+    private func hintPills(_ item: PracticeItem, _ options: [String]) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("Which one fits?").font(.caption).foregroundStyle(.secondary)
+            LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 8) {
+                ForEach(options, id: \.self) { option in
+                    Button { answer = option; typing = false; Task { await submitFill(item) } } label: {
+                        Text(option).font(.system(.body, design: .serif)).lineLimit(1).minimumScaleFactor(0.7)
+                            .frame(maxWidth: .infinity).padding(.vertical, 10)
+                    }
+                    .buttonStyle(.bordered).buttonBorderShape(.capsule).disabled(busy)
+                    .accessibilityIdentifier("hint-option")
+                }
+            }
+        }
+    }
+
+    private func hintButton(_ item: PracticeItem) -> some View {
+        Button { Task { await askHint(item) } } label: {
+            HStack { if hinting { ProgressView().padding(.trailing, 4) }; Label("Hint", systemImage: "lightbulb") }
+                .frame(maxWidth: .infinity)
+        }
+        .buttonStyle(.bordered).controlSize(.large).disabled(hinting || busy)
     }
 
     // MARK: write a sentence
@@ -281,6 +309,15 @@ struct PracticeView: View {
             let r = try await RetAInClient.shared.practiceFill(wordId: item.wordId, answer: answer)
             fillResult = r; inputError = nil; shown = index(item)
             update(item.wordId) { $0.attempts.fill = .init(correct: r.correct ? 1 : 0, verdict: nil, reason: nil, fix: nil, answer: answer) }
+        } catch { inputError = error.localizedDescription }
+    }
+
+    private func askHint(_ item: PracticeItem) async {
+        hinting = true; defer { hinting = false }
+        do {
+            let r = try await RetAInClient.shared.practiceHint(wordId: item.wordId)
+            inputError = nil
+            update(item.wordId) { $0.fill?.hint = r.options }
         } catch { inputError = error.localizedDescription }
     }
 

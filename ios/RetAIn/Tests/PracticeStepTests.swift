@@ -46,5 +46,12 @@ final class PracticeStepTests: XCTestCase {
         let d = JSONDecoder(); d.keyDecodingStrategy = .convertFromSnakeCase
         let s = try d.decode(PracticeSet.self, from: Data(json.utf8))
         XCTAssertEqual(s.items.first?.fill?.source, "read"); XCTAssertNil(s.items.first?.attempts.fill)
+        XCTAssertNil(s.items.first?.fill?.hint)
+    }
+
+    func testDecodesAHintAlreadyAskedFor() throws {
+        let json = #"{"text":"It takes _____.","source":"model","hint":["acumen","album","cumin","acorn"]}"#
+        let d = JSONDecoder(); d.keyDecodingStrategy = .convertFromSnakeCase
+        XCTAssertEqual(try d.decode(PracticeItem.Fill.self, from: Data(json.utf8)).hint?.count, 4)
     }
 }

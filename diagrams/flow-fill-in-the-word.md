@@ -11,11 +11,16 @@ flowchart TD
         P2 -- no --> P4["<b>SENTENCE WRITER</b> · model writes text<br/>one natural sentence using the word"]:::writer
         P6 --> P5["Saved for reuse:<br/>up to 3 per word, shared"]:::code
         P4 --> P6["<b>JEV CHECK</b> · natural? P ≥ 0.9<br/>else one retry, else no fill-in today"]:::gate
+        P7["<b>LOOKALIKE WRITER</b> · DeepSeek · model writes text<br/>5 words that look like the lemma, mean something else<br/>only if this lemma has none stored yet (D58)"]:::writer --> P8["Code: real word? same part of speech?<br/>spelled alike (≥ 0.4)? not a form of it?<br/>stored per lemma, shared by everyone"]:::code
     end
 
     P3 --> X
     P5 --> X
     X([You see the sentence with a blank<br/>and the word's meaning as the cue]) --> Y([You type the word])
+    X --> H([Stuck? You tap Hint])
+    H --> H1["<b>JEV CHECK</b> · each stored lookalike in your blank:<br/>P(natural) ≥ 0.5 → it fits, dropped · ~0.2 s"]:::gate
+    H1 --> H2([4 pills: the word + 3 lookalikes, shuffled])
+    H2 -- "you tap one: same as typing it" --> Z
     Y --> Z{"Code: does it match the blanked form?<br/>(exact, ignoring case)"}:::code
     Z -- yes --> OK([Correct])
     Z -- no --> NO([Shown the answer])
@@ -30,7 +35,8 @@ flowchart TD
 **Legend:** blue = a model writes text · orange = a model answers yes/no · dashed grey = plain
 code, no model.
 
-**No model runs when you answer.** Models only appear in the prep, and only for words that have
+**Hint (D58):** a hinted answer counts exactly like a typed one; the options shown are stored on the
+attempt. **No model runs when you answer.** Models only appear in the prep, and only for words that have
 no sentence from your own reading yet.
 
 ## Tested by

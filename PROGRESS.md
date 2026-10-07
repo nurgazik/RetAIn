@@ -229,6 +229,19 @@ vacation coding ends). Home Mac: clone normally with personal credentials; recre
 `.env.local` (4 API keys — gitignored, never on GitHub) and `data/retain.db` refills
 itself via the fetchers.
 
+### 2026-10-06 — D58 step (c): the fill-in Hint, built
+
+- Founder picked DeepSeek for lookalikes and the Jev check on Hint tap. Lookalikes are written in the daily prep
+  only for lemmas without them (table `lookalikes`, shared); Hint (`POST /v1/practice/hint`) has Jev drop any that
+  read naturally in the user's blank (P ≥ 0.5) and keeps the options on today's set (asking again is free).
+  A pill submits like typing; the attempt stores the options shown (`practice_attempts.hint`).
+- Live on the dev account: 5 lemmas prepared (DeepSeek ~0.75 s, $0.0002 each), Hint 0.15–0.20 s
+  (e.g. acumen → album, cumin, acorn). Simulator walk-through passes with a pill tap.
+- Bug found and fixed: parallel prep copied other threads' rows from the shared call log, so practice costs were
+  recorded several times over (fill sentences and the judge had the same pattern). Each call now hands back its own
+  row (`G.last_call()`); regression test added. The engine's version is TD in the backlog.
+- Tests: service 75/75; iOS practice 7/7; UI walk-through passes.
+
 ### 2026-10-06 — D58 steps (a) lookalike eval and (b) lemma on save
 
 - (a) Lookalike writer eval: 5 models on the 51 golden words, 394 lookalikes graded blind (Claude Code), Jev

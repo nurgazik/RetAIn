@@ -44,7 +44,8 @@ def dictionary(client, tmp_path, monkeypatch):
 
     def fake_call_model(system, user, env, purpose="generate"):
         calls.append(user)
-        D_G.CALL_LOG.append(("card", "gemma", 10, 10, 5))
+        D_G._LAST.row = ("card", "gemma", 10, 10, 5)  # as the real call logs it
+        D_G.CALL_LOG.append(D_G._LAST.row)
         if system == D.EXAMPLES_SYSTEM:
             n = user.count("\n") - 1  # numbered meanings after "WORD:" and "MEANINGS:"
             return json.dumps({"examples": {str(i): [f"example {i}a", f"example {i}b"] for i in range(1, n + 1)}}), "gemma"

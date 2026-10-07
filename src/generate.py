@@ -14,6 +14,7 @@ import json
 import pathlib
 import re
 import sys
+import threading
 from datetime import datetime, timezone
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
@@ -572,20 +573,29 @@ def unmark_sentences(body: str, words: list) -> str:
 
 CALL_LOG = []  # (purpose, model, tokens_in, tokens_out, ms, billed_usd|None, reasoning_tokens,
 #               response text, prompt_sha, host) per call; the service drains it
+_LAST = threading.local()  # this thread's last call row: callers on parallel threads take their own row,
+                           # never a slice of CALL_LOG (which holds every thread's calls)
 _POOL = None
+
+
+def last_call() -> tuple | None:
+    """The row of the last call_model made on this thread."""
+    return getattr(_LAST, "row", None)
 
 
 def _run(spec: dict, system: str, user: str, env: dict) -> dict:
     return spec["call"](spec["model"], system, user, env[spec["key"]], spec.get("params"))
 
 
-def call_model(system: str, user: str, env: dict, purpose: str = "generate") -> tuple:
+def call_model(system: str, user: str, env: dict, purpose: str = "generate", primary: dict = None) -> tuple:
     """Primary model, hedged with the fallback (D5, 2026-09-28): an error switches at once; a
     primary still running after HEDGE_AFTER seconds races the fallback, first answer wins.
-    Returns (text, model_name). FALLBACK = None (evals) makes a primary failure raise instead."""
+    Returns (text, model_name). FALLBACK = None (evals) makes a primary failure raise instead.
+    `primary` swaps the first model for one step (lookalikes: DeepSeek, D58)."""
     import time as _t
     from concurrent.futures import FIRST_COMPLETED, ThreadPoolExecutor, wait
     global _POOL
+    PRIMARY = primary or globals()["PRIMARY"]
     _t0 = _t.time()
     if not FALLBACK:
         r, spec = _run(PRIMARY, system, user, env), PRIMARY
@@ -607,10 +617,11 @@ def call_model(system: str, user: str, env: dict, purpose: str = "generate") -> 
                         r, spec = f.result(), PRIMARY if f is first else FALLBACK
             if r is None:
                 second.result()  # both failed: raise the fallback's error
-    CALL_LOG.append((purpose, spec["model"], r.get("tokens_in", 0), r.get("tokens_out", 0),
-                     int((_t.time() - _t0) * 1000), r.get("cost"), r.get("tokens_reasoning", 0), r["text"],
-                     hashlib.sha1(system.encode()).hexdigest()[:12],  # which system prompt produced it
-                     r.get("host") or ("google" if spec["call"] is call_gemini else None)))
+    _LAST.row = (purpose, spec["model"], r.get("tokens_in", 0), r.get("tokens_out", 0),
+                 int((_t.time() - _t0) * 1000), r.get("cost"), r.get("tokens_reasoning", 0), r["text"],
+                 hashlib.sha1(system.encode()).hexdigest()[:12],  # which system prompt produced it
+                 r.get("host") or ("google" if spec["call"] is call_gemini else None))
+    CALL_LOG.append(_LAST.row)
     return r["text"], spec["model"]
 
 

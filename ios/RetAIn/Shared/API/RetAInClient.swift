@@ -68,6 +68,9 @@ final class RetAInClient {
     func practiceFill(wordId: Int, answer: String) async throws -> FillResult {
         try await send(request("v1/practice/fill", method: "POST", body: ["word_id": wordId, "answer": answer]), as: FillResult.self)
     }
+    func practiceHint(wordId: Int) async throws -> HintResult {
+        try await send(request("v1/practice/hint", method: "POST", body: ["word_id": wordId]), as: HintResult.self)
+    }
     func practiceWrite(wordId: Int, sentence: String) async throws -> WriteResult {
         try await send(request("v1/practice/write", method: "POST", body: ["word_id": wordId, "sentence": sentence]), as: WriteResult.self)
     }
