@@ -77,7 +77,8 @@ and most notes die on "needs exactly one marked word".
 
 **2026-09-26:** founder signed in with Apple on the real build (account
 u_152716…, nurgazy7@gmail.com); first transform on the real account ran; account seeded
-with the 50 words from data/words.json (+ his own "adversity"). `data/service.db` was
+with the 50 words from data/words.json (+ his own "adversity"). **2026-10-07: trimmed to his
+own 15 captures** (log entry that day). `data/service.db` was
 tracked in git by mistake — now untracked and ignored (history still contains earlier
 copies; founder decided 2026-09-26 not to purge).
 
@@ -228,6 +229,17 @@ all needed for TestFlight and none waits on a decision.**
 vacation coding ends). Home Mac: clone normally with personal credentials; recreate
 `.env.local` (4 API keys — gitignored, never on GitHub) and `data/retain.db` refills
 itself via the fetchers.
+
+### 2026-10-07 — Founder's account trimmed to his own captures
+
+- Founder asked to keep only the words he captured in the app. The `words` table has no origin column; `added`
+  separated them: 41 bare-date rows (words.json seed), 193 added 2026-09-26 21:50–21:54 UTC (Claude-recommended,
+  founder-filtered bulk insert), 15 app captures. Two rules (keep list; timestamp) agreed on the same 234 rows.
+- Deleted in one checked transaction: 234 words, their 3 practice attempts (galvanize ×2, squander), and today's
+  practice set (4 of 5 items were removed words; rebuilds on next open). Dev account (235), words.json, shared word
+  cards and piece history untouched. Account now 15 words.
+- Backup: `data/service.db.bak-2026-10-07` (new gitignore rule `data/service.db.bak-*`).
+- Proposed, not built: a `words.source` column (seed | suggested | captured) so origin no longer rests on timestamps.
 
 ### 2026-10-07 — Fill-in retries (founder feedback from the phone)
 
