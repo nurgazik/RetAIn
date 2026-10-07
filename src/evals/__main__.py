@@ -35,6 +35,14 @@ Fill-in sentence writer (D55; prompts/exercises/fill-sentence.md):
   .venv/bin/python src/evals fill import <folder> <grader>
   .venv/bin/python src/evals fill report
 
+Lookalike writer for the fill-in hint (D58; prompts/exercises/lookalikes.md):
+  .venv/bin/python src/evals look run <name>        three lookalikes per golden word + dictionary check
+  .venv/bin/python src/evals look export <run> [run ...]   blind packet (similar / different / fits the blank)
+  .venv/bin/python src/evals look import <folder> <grader>
+  .venv/bin/python src/evals look report
+  .venv/bin/python src/evals look jev <run> [run ...]      Jev score of each lookalike in the blank
+  .venv/bin/python src/evals look jev-report               does Jev catch the ones that fit?
+
 New model, end to end: add → run → grade → report.
 """
 import json
@@ -44,7 +52,7 @@ import sys
 SRC = pathlib.Path(__file__).resolve().parent.parent
 sys.path[0] = str(SRC)  # import siblings as evals.*, never shadow src/ modules
 
-from evals import dataset, fillin, grade, judge, label, report, results, run, sentences  # noqa: E402
+from evals import dataset, fillin, grade, judge, label, lookalike, report, results, run, sentences  # noqa: E402
 
 
 def main(argv: list) -> None:
@@ -103,6 +111,18 @@ def main(argv: list) -> None:
         fillin.import_grades(args[1], args[2])
     elif cmd == "fill" and args[:1] == ["report"]:
         print("\n".join(fillin.report()))
+    elif cmd == "look" and args[:1] == ["run"]:
+        lookalike.run(args[1])
+    elif cmd == "look" and args[:1] == ["export"]:
+        lookalike.export([int(a) for a in args[1:]])
+    elif cmd == "look" and args[:1] == ["import"]:
+        lookalike.import_grades(args[1], args[2])
+    elif cmd == "look" and args[:1] == ["jev"]:
+        lookalike.jev([int(a) for a in args[1:]])
+    elif cmd == "look" and args[:1] == ["jev-report"]:
+        print("\n".join(lookalike.jev_report()))
+    elif cmd == "look" and args[:1] == ["report"]:
+        print("\n".join(lookalike.report()))
     else:
         print(__doc__)
 

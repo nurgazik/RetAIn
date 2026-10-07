@@ -35,6 +35,7 @@ choice or score step also gets a Jev run (D54).
 | — | share-an-article → fact checker | **missing** |
 | — | save-a-word → example writer, "real word?" check | **missing** |
 | [eval-fill-sentence.md](eval-fill-sentence.md) | fill-in-the-word → sentence writer | built 2026-10-04 (D55) |
+| [eval-lookalikes.md](eval-lookalikes.md) | fill-in-the-word → hint lookalike writer | run 2026-10-06 (D58) |
 
 ## Infrastructure — under every flow
 

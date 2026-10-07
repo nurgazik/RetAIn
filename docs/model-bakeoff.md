@@ -381,6 +381,33 @@ right, is the fix natural, does the fix keep the writer's meaning. "Fully right"
   sending ~59% on: Gemma ≈ $62/mo, deepseek ≈ $71/mo, flash-lite ≈ $212/mo. deepseek is no longer the
   default.
 
+### Lookalike writer for the fill-in hint (D58) — first eval, 2026-10-06
+
+51 golden words; the model writes 5 lookalikes per word (production prompt `prompts/exercises/lookalikes.md`),
+code keeps the first 3 that are real Wiktionary words of the same part of speech and not forms of the
+target (`service/lookalikes.check`). Kept lookalikes were put in each word's fill-in sentence (fill eval
+run 1) and graded blind by Claude Code (one rater): looks similar · very different meaning · could fill
+the blank. Then Jev scored each lookalike in the blank. Total cost of the eval ≈ $0.10.
+
+| Model | Words with 3 kept | Graded | Fit the blank | 3 good (similar, different, not fitting) | s/word | $/word |
+|---|---|---|---|---|---|---|
+| gemma-4-26b (production engine) | 35/51 | 121 | **2** | **29/51** | ~25 | $0.00058 |
+| gemini-3.1-flash-lite | 38/51 | 132 | 6 | 26/51 | ~1.5 | $0.00047 |
+| deepseek-v4.1-flash | **46/51** | 141 | 10 | 26/51 | **~1** | **$0.00003** |
+
+(qwen3.8-flash: 404 on OpenRouter, no result.)
+
+- **A first prompt failed:** asking for exactly 3 left 7–16/51 usable (models echo the target, add relatives,
+  wrong part of speech). Asking for 5 and filtering in code is the fix.
+- **Lookalikes that fit the blank are mostly synonyms the model slipped in** (12 of 18: acute for astute,
+  amiable for affable, proclivity for propensity), plus real confusable pairs (founder/flounder).
+- **Jev catches them:** dropping a lookalike when Jev's P(natural) in the blank is ≥ 0.5 catches 16/18 that fit
+  and wrongly drops 22/376 good ones (6%); at ≥ 0.1 it catches 18/18 but drops 27%. The two it misses at 0.5
+  are both "acute" (P 0.12–0.13). Cost: $0.00002 per lookalike.
+- Coverage after the Jev filter (≥ 0.5) is understated here (~29/51): the eval only scored the first 3 kept,
+  while production can check all 5 candidates and retry.
+- Gemma's 25 s per word is it reasoning out loud after the answer; it rules Gemma out anywhere a user waits.
+
 ### Fill-in sentence writer (D55) — first eval, 2026-10-04
 
 51 golden words; one sentence each, production prompt. Graded blind by Claude Code (one rater).
