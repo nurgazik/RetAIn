@@ -3,6 +3,7 @@
 A model writes five words that look like the lemma but mean something very different; code keeps the
 first three that are real dictionary words of the same part of speech and not forms of the target. Shared by
 the service and the evals, so an eval tests the check that ships."""
+import difflib
 import json
 import re
 import sqlite3
@@ -15,6 +16,12 @@ PROMPT = (ROOT / "prompts" / "exercises" / "lookalikes.md").read_text()
 DICT_PATH = ROOT / "data" / "dictionary" / "wiktionary.db"
 COUNT = 3
 POS = {"adjective": "adj", "adverb": "adv"}  # our labels → Wiktionary's
+SIMILAR_AT = 0.4  # spelling similarity (difflib ratio, 0–1); the lookalike eval's best match to the grader was
+                  # 0.45, relaxed a little by the founder (2026-10-06): keeps 365/375 similar, drops 5/19 not
+
+
+def similarity(a: str, b: str) -> float:
+    return difflib.SequenceMatcher(None, a, b).ratio()
 
 
 def user_message(word: str, pos: str, definition: str) -> str:
@@ -34,8 +41,8 @@ def dictionary_pos(word: str) -> set:
 
 def check(raw: str, word: str, pos: str) -> tuple:
     """Model output → (kept lookalikes, problems). A lookalike is dropped if it isn't a single word,
-    repeats, starts with the target's stem (a form or relative: galvanic, squanderer), or isn't a
-    dictionary word of the same part of speech. Reads the last JSON object (models sometimes add a
+    repeats, starts with the target's stem (a form or relative: galvanic, squanderer), is spelled too
+    unlike the target (benchmark → embankment), or isn't a dictionary word of the same part of speech. Reads the last JSON object (models sometimes add a
     second try after the first)."""
     objs = [m for m in re.findall(r"\{[^{}]*\}", raw) if '"lookalikes"' in m]
     d = json.loads(objs[-1])
@@ -49,6 +56,8 @@ def check(raw: str, word: str, pos: str) -> tuple:
             problems.append(f"{x}: repeat")
         elif x.startswith(practice.stem(word)):
             problems.append(f"{x}: a form of the target")
+        elif similarity(word, x) < SIMILAR_AT:
+            problems.append(f"{x}: doesn't look like the target")
         elif want and want not in dictionary_pos(x):
             problems.append(f"{x}: not a dictionary {pos}")
         else:

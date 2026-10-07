@@ -407,6 +407,9 @@ the blank. Then Jev scored each lookalike in the blank. Total cost of the eval �
 - Coverage after the Jev filter (≥ 0.5) is understated here (~29/51): the eval only scored the first 3 kept,
   while production can check all 5 candidates and retry.
 - Gemma's 25 s per word is it reasoning out loud after the answer; it rules Gemma out anywhere a user waits.
+- **Looks similar, made a code rule (2026-10-06):** spelling similarity (Python difflib ratio) ≥ 0.4. Against the
+  grader's calls: 0.45 matches best (keeps 357/375 similar, drops 11/19 not); founder relaxed it a little to 0.4
+  (keeps 365/375, drops 5/19). The grader also counted sound-alikes (eschew/issue) that spelling can't see.
 
 ### Fill-in sentence writer (D55) — first eval, 2026-10-04
 
