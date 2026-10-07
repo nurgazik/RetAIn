@@ -54,11 +54,28 @@ final class PracticeScreenTests: XCTestCase {
                     if !pill.exists { app.buttons["Hint"].tap() }
                     XCTAssertTrue(pill.waitForExistence(timeout: 20), "hint pills didn't appear")
                     shot("hint")
-                    pill.tap()
-                } else {
+                    var i = 0
+                    while !app.buttons["Next"].exists, i < 4 {  // wrong pills stay on the card: try the next
+                        let options = app.buttons.matching(identifier: "hint-option")
+                        let open = (0..<options.count).map { options.element(boundBy: $0) }.first { $0.isEnabled }
+                        open?.tap(); i += 1
+                        if i == 1, !app.buttons["Next"].waitForExistence(timeout: 10) { shot("wrong-pill") }
+                    }
+                } else {  // a wrong guess keeps the card (D58); then a pill to finish the word
                     let field = app.textFields["Type the word"]
                     field.tap(); field.typeText("guess")
                     app.buttons["Check"].tap()
+                    XCTAssertTrue(app.staticTexts["Not quite: try again. Tap the red word to see what it means."].waitForExistence(timeout: 20))
+                    if steps == 2 { shot("wrong-try") }
+                    if !pill.exists { app.buttons["Hint"].tap() }
+                    XCTAssertTrue(pill.waitForExistence(timeout: 20))
+                    var i = 0
+                    while !app.buttons["Next"].exists, i < 4 {
+                        let options = app.buttons.matching(identifier: "hint-option")
+                        let open = (0..<options.count).map { options.element(boundBy: $0) }.first { $0.isEnabled }
+                        open?.tap(); i += 1
+                        _ = app.buttons["Next"].waitForExistence(timeout: 10)
+                    }
                 }
                 XCTAssertTrue(app.buttons["Next"].waitForExistence(timeout: 20))
                 shot("fill-result")

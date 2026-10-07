@@ -15,7 +15,7 @@ from datetime import date, timedelta
 
 import generate as G
 
-from . import db, lookalikes, typesafe
+from . import db, dictionary, lookalikes, typesafe
 from .config import ROOT
 
 SET_SIZE = 5
@@ -150,19 +150,28 @@ def get_set(con, user_id: str, day: str) -> dict | None:
     if not row:
         return None
     items = json.loads(row["items"])
-    done = {}
+    done, fills = {}, {}
     for a in con.execute("SELECT word_id, kind, correct, verdict, reason, fix, answer FROM practice_attempts "
                          "WHERE user_id=? AND day=? ORDER BY id", (user_id, day)):
-        done.setdefault(a["word_id"], {})[a["kind"]] = dict(a)
+        if a["kind"] == "fill":
+            fills.setdefault(a["word_id"], []).append(dict(a))
+        else:
+            done.setdefault(a["word_id"], {})[a["kind"]] = dict(a)
+    for wid, tries in fills.items():  # D58: retries until right; done once right, ✓ only if right first time
+        solved = next((t for t in tries if t["correct"]), None)
+        if solved:
+            done.setdefault(wid, {})["fill"] = {**solved, "correct": tries[0]["correct"]}
     statuses = {r["id"]: r["status"] for r in con.execute(
         f"SELECT id, status FROM words WHERE id IN ({','.join('?' * len(items)) or 'NULL'})",
         [i["word_id"] for i in items])}
     for i in items:
         i["attempts"] = done.get(i["word_id"], {})
         i["status"] = statuses.get(i["word_id"], "learning")
-        if i["fill"]:  # the client never needs the answer before it's tried
+        if i["fill"]:  # the client never needs the answer before it's solved
+            wrong = [t["answer"].lower() for t in fills.get(i["word_id"], []) if not t["correct"]]
             i["fill"] = {"text": i["fill"]["text"], "source": i["fill"]["source"],
                          **({"hint": i["fill"]["hint"]} if i["fill"].get("hint") else {}),
+                         "wrong": [{"answer": w, "meaning": meaning(w, i.get("pos"))} for w in dict.fromkeys(wrong)],
                          **({"answer": i["fill"]["answer"]} if "fill" in i["attempts"] else {})}
     return {"day": day, "items": items}
 
@@ -199,14 +208,21 @@ def hint(con, user: dict, word_id: int, env: dict) -> tuple:
 
 # ---------------------------------------------------------------- answers
 
+def meaning(word: str, pos: str | None) -> str | None:
+    """A wrong answer's dictionary meaning, for tap-to-see (local lookup, no model)."""
+    return lookalikes.gloss(word, pos or "") or None
+
+
 def check_fill(item: dict, answer: str) -> dict:
-    """Code only: the blanked form is right; the word's base form counts too, with the form shown."""
+    """Code only: the blanked form is right; so is any form of the word (D58: its lemma, or an inflection
+    that folds into it), with the form shown. A wrong answer doesn't reveal the word (try again, D58):
+    it comes back with its own meaning when the dictionary has it."""
     given, expected = answer.strip().lower(), item["fill"]["answer"].lower()
     if given == expected:
         return {"correct": True, "expected": item["fill"]["answer"], "note": None}
-    if given == item["word"].lower():
+    if given == item["word"].lower() or dictionary.lemma(given) == item["word"].lower():
         return {"correct": True, "expected": item["fill"]["answer"], "note": f"Right word — here it's “{item['fill']['answer']}”."}
-    return {"correct": False, "expected": item["fill"]["answer"], "note": None}
+    return {"correct": False, "answer": given, "meaning": meaning(given, item.get("pos"))}
 
 
 def judge_sentence(word: str, definition: str, sentence: str, env: dict) -> tuple:
@@ -251,10 +267,12 @@ def record(con, user: dict, item: dict, kind: str, answer: str, result: dict) ->
 def reschedule(con, user: dict, item: dict) -> None:
     """After every attempt, from all of today's attempts on the word (D57: either exercise counts on
     its own): a miss → box 0, due tomorrow; a "could be better" → same box; otherwise up one box.
-    The base is the box when today's set was built, so two clean exercises are still one step."""
-    tries = {a["kind"]: a for a in con.execute(
-        "SELECT kind, correct, verdict FROM practice_attempts WHERE user_id=? AND word_id=? AND day=?",
-        (user["id"], item["word_id"], user["day"]))}
+    The base is the box when today's set was built, so two clean exercises are still one step.
+    A fill-in is judged on its first try (D58): wrong first, right later is still a miss."""
+    tries = {}
+    for a in con.execute("SELECT kind, correct, verdict FROM practice_attempts WHERE user_id=? AND word_id=? AND day=? "
+                         "ORDER BY id", (user["id"], item["word_id"], user["day"])):
+        tries.setdefault(a["kind"], a)
     fill, write = tries.get("fill"), tries.get("write")
     box = item["box"]
     if (fill and not fill["correct"]) or (write and write["verdict"] == "wrong"):

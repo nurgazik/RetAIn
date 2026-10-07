@@ -180,7 +180,7 @@ def practice_fill(body: FillIn, user=Depends(auth.current_user)):
         if not item.get("fill"):
             raise HTTPException(409, "no fill-in for this word today")
         result = practice.check_fill(item, body.answer)
-        practice.record(con, user, item, "fill", body.answer.strip(), result)
+        practice.record(con, user, item, "fill", body.answer.strip(), result)  # every try is a row (D58)
         return result
     finally:
         con.close()

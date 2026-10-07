@@ -52,15 +52,38 @@ def test_set_is_built_once_per_day_with_answers_hidden(client, stubs):
     assert today(client)["items"] == s["items"]  # same set on the second open
 
 
-def test_fill_check_accepts_the_blanked_form_and_the_base_word(client, stubs):
+def test_fill_retries_until_right_without_revealing_the_word(client, stubs):
     item = today(client)["items"][0]
-    wrong = client.post("/v1/practice/fill", json={"word_id": item["word_id"], "answer": "zzz"}).json()
-    assert wrong["correct"] is False and wrong["expected"].lower() == item["word"]
-    item2 = today(client)["items"][1]
-    ok = client.post("/v1/practice/fill", json={"word_id": item2["word_id"], "answer": item2["word"].upper()}).json()
-    assert ok["correct"] is True
+    wrong = client.post("/v1/practice/fill", json={"word_id": item["word_id"], "answer": "Zzz"}).json()
+    assert wrong == {"correct": False, "answer": "zzz", "meaning": "g"}  # its own meaning, not the word
     after = today(client)["items"][0]
-    assert after["fill"]["answer"] and after["attempts"]["fill"]["correct"] == 0  # revealed once tried
+    assert "answer" not in after["fill"] and "fill" not in after["attempts"]  # not done, not revealed
+    assert after["fill"]["wrong"] == [{"answer": "zzz", "meaning": "g"}]
+    ok = client.post("/v1/practice/fill", json={"word_id": item["word_id"], "answer": item["word"].upper()}).json()
+    assert ok["correct"] is True
+    done = today(client)["items"][0]
+    assert done["fill"]["answer"] and done["attempts"]["fill"]["correct"] == 0  # solved, but not first time
+
+
+def test_fill_judged_on_the_first_try(client, stubs):
+    from service.practice import add_days
+    s = today(client)
+    late, first = s["items"][0], s["items"][1]
+    client.post("/v1/practice/fill", json={"word_id": late["word_id"], "answer": "nope"})
+    client.post("/v1/practice/fill", json={"word_id": late["word_id"], "answer": late["word"]})
+    client.post("/v1/practice/hint", json={"word_id": first["word_id"]})  # a hint isn't a try
+    client.post("/v1/practice/fill", json={"word_id": first["word_id"], "answer": first["word"]})
+    rows = boxes([late["word_id"], first["word_id"]])
+    assert rows[late["word_id"]] == (0, add_days(s["day"], 1))
+    assert rows[first["word_id"]] == (1, add_days(s["day"], 3))
+
+
+def test_any_form_of_the_word_counts(client, stubs, monkeypatch):
+    import service.practice as practice
+    item = today(client)["items"][0]
+    monkeypatch.setattr(practice.dictionary, "lemma", lambda w: item["word"] if w == item["word"] + "ed" else w)
+    r = client.post("/v1/practice/fill", json={"word_id": item["word_id"], "answer": item["word"] + "ed"}).json()
+    assert r["correct"] is True and r["note"]
 
 
 def test_confident_jev_gives_natural_without_an_llm_call(client, stubs):

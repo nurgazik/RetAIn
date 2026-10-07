@@ -104,12 +104,17 @@ struct PracticeItem: Codable, Identifiable, Hashable {
     struct Fill: Codable, Hashable {
         let text: String; let source: String; let answer: String?
         var hint: [String]? = nil   // the Hint's options once asked for (D58): the word + lookalikes
+        var wrong: [Wrong]? = nil   // today's wrong tries, each with its own meaning (tap to see)
     }
+    struct Wrong: Codable, Hashable, Identifiable { let answer: String; let meaning: String?; var id: String { answer } }
     struct Attempts: Codable, Hashable { var fill: Attempt?; var write: Attempt? }
     struct Attempt: Codable, Hashable {
         let correct: Int?; let verdict: String?; let reason: String?; let fix: String?; let answer: String?
     }
 }
-struct FillResult: Codable, Hashable { let correct: Bool; let expected: String; let note: String? }
+/// Right: expected (+ note when another form was typed). Wrong: the answer and its meaning; the word stays hidden (D58).
+struct FillResult: Codable, Hashable {
+    let correct: Bool; let expected: String?; let note: String?; let answer: String?; let meaning: String?
+}
 struct HintResult: Codable, Hashable { let options: [String] }
 struct WriteResult: Codable, Hashable { let verdict: String; let reason: String?; let fix: String? }

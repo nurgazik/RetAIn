@@ -39,6 +39,7 @@ struct PracticeView: View {
     @State private var writeResult: WriteResult?
     @State private var busy = false
     @State private var hinting = false
+    @State private var meaningShown: PracticeItem.Wrong?
     @State private var inputError: String?
     @State private var askReminder = false
     @FocusState private var typing: Bool
@@ -95,13 +96,26 @@ struct PracticeView: View {
     private func fillCard(_ item: PracticeItem) -> some View {
         VStack(alignment: .leading, spacing: 16) {
             label("Fill in the word", item.fill?.source == "read" ? "From one of your reads" : nil)
-            Text(blanked(item.fill?.text ?? "", answer: fillResult.map { $0.expected }))
+            let lastWrong = item.fill?.wrong?.last
+            Text(blanked(item.fill?.text ?? "", answer: fillResult?.expected, wrong: fillResult == nil ? lastWrong?.answer : nil))
                 .font(.system(.title3, design: .serif)).lineSpacing(4)
+                .environment(\.openURL, OpenURLAction { _ in meaningShown = lastWrong; return .handled })
+                .popover(item: $meaningShown) { w in
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text(w.answer).font(.system(.title3, design: .serif)).bold()
+                        Text(w.meaning ?? "No dictionary meaning for this word.").font(.callout)
+                    }
+                    .padding().frame(maxWidth: 320, alignment: .leading)
+                    .presentationCompactAdaptation(.popover)
+                }
             Text("Meaning: \(item.definition)").font(.callout).foregroundStyle(.secondary)
             if let r = fillResult {
-                resultBanner(ok: r.correct, title: r.correct ? "Correct" : "The word was “\(r.expected)”", detail: r.note)
+                resultBanner(ok: true, title: "Correct", detail: r.note)
                 nextButton()
             } else {
+                if lastWrong != nil {
+                    Text("Not quite: try again. Tap the red word to see what it means.").font(.callout).foregroundStyle(.red)
+                }
                 TextField("Type the word", text: $answer)
                     .focused($typing)
                     .textInputAutocapitalization(.never).autocorrectionDisabled()
@@ -122,11 +136,12 @@ struct PracticeView: View {
             Text("Which one fits?").font(.caption).foregroundStyle(.secondary)
             LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 8) {
                 ForEach(options, id: \.self) { option in
+                    let tried = item.fill?.wrong?.contains { $0.answer == option.lowercased() } ?? false
                     Button { answer = option; typing = false; Task { await submitFill(item) } } label: {
                         Text(option).font(.system(.body, design: .serif)).lineLimit(1).minimumScaleFactor(0.7)
-                            .frame(maxWidth: .infinity).padding(.vertical, 10)
+                            .strikethrough(tried).frame(maxWidth: .infinity).padding(.vertical, 10)
                     }
-                    .buttonStyle(.bordered).buttonBorderShape(.capsule).disabled(busy)
+                    .buttonStyle(.bordered).buttonBorderShape(.capsule).disabled(busy || tried)
                     .accessibilityIdentifier("hint-option")
                 }
             }
@@ -279,13 +294,19 @@ struct PracticeView: View {
     }
 
     /// The sentence with a visible blank, or with the answer filled in (bold) once it's known.
-    private func blanked(_ text: String, answer: String?) -> AttributedString {
+    /// The sentence with a visible blank; the answer once known (bold); or the last wrong try in red,
+    /// a link that opens its meaning (D58).
+    private func blanked(_ text: String, answer: String?, wrong: String? = nil) -> AttributedString {
         let parts = text.components(separatedBy: "_____")
         var out = AttributedString(parts.first ?? "")
         if parts.count > 1 {
-            var gap = AttributedString(answer ?? "\u{2007}\u{2007}\u{2007}\u{2007}\u{2007}\u{2007}\u{2007}\u{2007}")
+            var gap = AttributedString(answer ?? wrong ?? "\u{2007}\u{2007}\u{2007}\u{2007}\u{2007}\u{2007}\u{2007}\u{2007}")
             gap.underlineStyle = .single
             if answer != nil { gap.inlinePresentationIntent = .stronglyEmphasized }
+            if answer == nil, wrong != nil {
+                gap.foregroundColor = .red
+                gap.link = URL(string: "retain-meaning:wrong")
+            }
             out += gap + AttributedString(parts.dropFirst().joined(separator: "_____"))
         }
         return out
@@ -307,8 +328,17 @@ struct PracticeView: View {
         busy = true; defer { busy = false }
         do {
             let r = try await RetAInClient.shared.practiceFill(wordId: item.wordId, answer: answer)
-            fillResult = r; inputError = nil; shown = index(item)
-            update(item.wordId) { $0.attempts.fill = .init(correct: r.correct ? 1 : 0, verdict: nil, reason: nil, fix: nil, answer: answer) }
+            inputError = nil; shown = index(item)
+            if r.correct {  // done; ✓ in the summary only if right first time (D58)
+                fillResult = r
+                let firstTry = item.fill?.wrong?.isEmpty ?? true
+                update(item.wordId) { $0.attempts.fill = .init(correct: firstTry ? 1 : 0, verdict: nil, reason: nil, fix: nil, answer: answer) }
+            } else {  // try again: the word stays hidden; the wrong one goes in the blank
+                let w = PracticeItem.Wrong(answer: r.answer ?? answer.lowercased(), meaning: r.meaning)
+                let tried = (item.fill?.wrong ?? []).filter { $0.answer != w.answer } + [w]
+                update(item.wordId) { $0.fill?.wrong = tried }
+                answer = ""
+            }
         } catch { inputError = error.localizedDescription }
     }
 

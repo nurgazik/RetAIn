@@ -23,8 +23,10 @@ flowchart TD
     H2 -- "you tap one: same as typing it" --> Z
     Y --> Z{"Code: does it match the blanked form?<br/>(exact, ignoring case)"}:::code
     Z -- yes --> OK([Correct])
-    Z -- no --> NO([Shown the answer])
-    OK --> S["Code: record the attempt,<br/>schedule the word's next date"]:::code
+    Z -- no --> NO(["Not quite: your word goes in the blank, red,<br/>tap it for its meaning (dictionary, no model) · try again"])
+    NO --> Y
+    NO --> H
+    OK --> S["Code: record every try; schedule from the FIRST try:<br/>right first → up a gap · wrong first → tomorrow"]:::code
     NO --> S
 
     classDef writer stroke:#2b6cb0,stroke-width:3px
