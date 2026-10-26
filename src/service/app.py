@@ -80,7 +80,9 @@ class WordIn(BaseModel):
 
 
 class WordPatch(BaseModel):
-    status: str = Field(pattern="^(learning|retained|archived)$")
+    """Send only what changes. `note` is the user's own (D59): blank clears it; never sent to a model."""
+    status: str | None = Field(None, pattern="^(learning|retained|archived)$")
+    note: str | None = Field(None, max_length=1000)
 
 
 def with_cards(con, rows: list, counts: dict = None) -> list:
@@ -129,7 +131,13 @@ def add_word(body: WordIn, user=Depends(auth.current_user)):
 def patch_word(word_id: int, body: WordPatch, user=Depends(auth.current_user)):
     con = db.connect()
     try:
-        cur = con.execute("UPDATE words SET status=? WHERE id=? AND user_id=?", (body.status, word_id, user["id"]))
+        sent = {k: getattr(body, k) for k in body.model_fields_set}
+        if not sent or sent.get("status", "") is None:
+            raise HTTPException(422, "send a status or a note")
+        if "note" in sent:
+            sent["note"] = (sent["note"] or "").strip() or None
+        cur = con.execute(f"UPDATE words SET {', '.join(f'{k}=?' for k in sent)} WHERE id=? AND user_id=?",
+                          (*sent.values(), word_id, user["id"]))
         con.commit()
         if cur.rowcount == 0:
             raise HTTPException(404, "no such word")

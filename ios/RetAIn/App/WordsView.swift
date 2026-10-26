@@ -30,6 +30,7 @@ struct WordsView: View {
                                         Text(w.word).font(.body.weight(.medium))
                                         if let n = w.servings, n > 0 { Text("· \(n)").foregroundStyle(.secondary).font(.caption) }
                                         if w.isUnverified { Text("Unverified").font(.caption2).foregroundStyle(.orange) }
+                                        if w.note?.isEmpty == false { Image(systemName: "note.text").font(.caption).foregroundStyle(.secondary).accessibilityLabel("Has a note") }
                                     }
                                     Text(w.firstDefinition).font(.caption).foregroundStyle(.secondary).lineLimit(1)
                                 }
@@ -46,7 +47,8 @@ struct WordsView: View {
             }
             .navigationTitle("Words")
             .navigationDestination(for: Word.self) { w in
-                WordCardView(word: w) { status in Task { await set(w, status); path.removeAll() } }
+                WordCardView(word: w, onStatus: { status in Task { await set(w, status); path.removeAll() } },
+                             onNote: { text in let saved = try await RetAInClient.shared.setNote(w.id, text); await load(); return saved })
             }
             .onChange(of: openWordId, initial: true) { _, _ in openPending() }
             .onChange(of: words) { _, _ in openPending() }

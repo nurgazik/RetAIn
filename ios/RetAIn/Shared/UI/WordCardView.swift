@@ -2,17 +2,33 @@ import AVFoundation
 import SwiftUI
 
 /// A word's card (D48): meanings in Wiktionary's order with the model's examples, the IPA and
-/// a speak button, badges for AI-written and unverified words, credits. Used by the word list,
-/// the capture screen and the reader's bottom sheet.
+/// a speak button, badges for AI-written and unverified words, the user's note (D59), credits.
+/// Used by the word list, the capture screen and the reader's bottom sheet.
 struct WordCardView: View {
     let word: Word
     /// Status buttons ("Got it — mark retained", "Archive"); nil hides them (capture screen).
-    var onStatus: ((String) -> Void)? = nil
+    var onStatus: ((String) -> Void)?
+    /// Saves the note and returns the saved word; nil makes the note read-only.
+    var onNote: ((String) async throws -> Word)?
+
+    @State private var note: String?   // as last saved from this card
+    @State private var draft = ""
+    @State private var editing = false
+    @State private var saving = false
+    @State private var noteError: String?
+    @FocusState private var focused: Bool
+    static let noteLimit = 1000   // the service's limit
+
+    init(word: Word, onStatus: ((String) -> Void)? = nil, onNote: ((String) async throws -> Word)? = nil) {
+        self.word = word; self.onStatus = onStatus; self.onNote = onNote
+        _note = State(initialValue: word.note)
+    }
 
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 14) {
                 header
+                noteBlock
                 if word.isUnverified {
                     Label("Not found in the dictionary. Check the spelling, or archive it.", systemImage: "questionmark.circle")
                         .font(.callout).foregroundStyle(.secondary)
@@ -50,6 +66,47 @@ struct WordCardView: View {
                 if word.isUnverified { badge("Unverified") }
             }
         }
+    }
+
+    /// The user's note, first under the word: it's theirs, so it outranks the dictionary.
+    @ViewBuilder private var noteBlock: some View {
+        if editing {
+            VStack(alignment: .leading, spacing: 8) {
+                TextField("A translation, an example of your own, anything", text: $draft, axis: .vertical)
+                    .lineLimit(3...10).textFieldStyle(.roundedBorder).focused($focused)
+                    .onChange(of: draft) { _, d in if d.count > Self.noteLimit { draft = String(d.prefix(Self.noteLimit)) } }
+                    .accessibilityIdentifier("note-field")
+                HStack {
+                    Button("Save") { Task { await save() } }.buttonStyle(.borderedProminent).disabled(saving)
+                        .accessibilityIdentifier("note-save")
+                    Button("Cancel") { editing = false; noteError = nil }.buttonStyle(.bordered).disabled(saving)
+                    if saving { ProgressView() }
+                }
+                if let noteError { Text(noteError).font(.caption).foregroundStyle(.red) }
+            }
+            .onAppear { focused = true }
+        } else if let note, !note.isEmpty {
+            VStack(alignment: .leading, spacing: 4) {
+                HStack {
+                    Label("Your note", systemImage: "note.text").font(.caption.smallCaps()).foregroundStyle(.secondary)
+                    Spacer()
+                    if onNote != nil { Button("Edit") { draft = note; editing = true }.font(.caption).buttonStyle(.borderless) }
+                }
+                Text(note).font(.body).textSelection(.enabled).accessibilityIdentifier("note-text")
+            }
+            .padding(12).frame(maxWidth: .infinity, alignment: .leading)
+            .background(.yellow.opacity(0.15), in: RoundedRectangle(cornerRadius: 10))
+        } else if onNote != nil {
+            Button { draft = ""; editing = true } label: { Label("Add a note", systemImage: "square.and.pencil") }
+                .buttonStyle(.bordered).accessibilityIdentifier("note-add")
+        }
+    }
+
+    private func save() async {
+        guard let onNote else { return }
+        saving = true; defer { saving = false }
+        do { note = try await onNote(draft).note; editing = false; noteError = nil }
+        catch { noteError = "Couldn't save the note. \(error.localizedDescription)" }
     }
 
     private func sense(_ n: Int, _ s: Card.Sense) -> some View {

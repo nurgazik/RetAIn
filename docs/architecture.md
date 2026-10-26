@@ -104,7 +104,8 @@ GET  /v1/transform/{piece_id}/events   (server-sent events: received → generat
                                         checking → repairing → done + piece JSON)
 GET  /v1/pieces, GET /v1/pieces/{id}          My Reads
 POST /v1/pieces/{id}/taps {word}               tap = "didn't remember"
-GET/POST/PATCH /v1/words                       list, capture (+ word-card enrichment), lifecycle
+GET/POST/PATCH /v1/words                       list, capture (+ word-card enrichment), lifecycle;
+                                               PATCH takes status and/or the user's note (D59)
 ```
 
 The "working the magic" moment is the events stream: the sheet shows each phase as it
@@ -118,7 +119,7 @@ happens, and the piece arrives only after QC, the fact judge and any repair fini
 | Hosting, option A | **The Mac mini, exposed with Tailscale Funnel** — a public HTTPS URL on the ts.net domain, free, no other hosting bill. The Mac is already the always-on appliance; the launchd agent already restarts the server. | Free, available today, and HTTPS from the start (which also ends the "Limit IP Address Tracking" problem). Enough for the founder plus ~5 TestFlight readers. Risks: home network, one machine, no isolation. | Common for solo MVPs; not for a public launch. |
 | Hosting, option B | **Fly.io, one shared-CPU machine with a persistent volume** (≈ $3–5/month). | Proper host with HTTPS, secrets, logs, restart on crash; same Docker image later scales. | Yes. **Costs money: needs your ok.** |
 | Recommendation | **A now (M1–M9), B before anyone outside TestFlight.** The code is identical; only the deploy target changes. | | |
-| Database | **SQLite on the single machine**, new tables: `users`, `words` (per user, status + servings), `pieces` (per user, body, offered/placed), `events` (impressions/taps), `calls` (every model call: purpose, tokens, USD). Nightly file backup (Litestream or a cron copy). Move to Postgres only when there is a second machine. | We already run SQLite; one writer, small data. | Yes for single-node MVPs. |
+| Database | **SQLite on the single machine**, new tables: `users`, `words` (per user, status + servings + the user's own `note` (D59): private, never sent to a model), `pieces` (per user, body, offered/placed), `events` (impressions/taps), `calls` (every model call: purpose, tokens, USD). Nightly file backup (Litestream or a cron copy). Move to Postgres only when there is a second machine. | We already run SQLite; one writer, small data. | Yes for single-node MVPs. |
 | Auth | **Sign in with Apple** → server verifies Apple's identity token once → issues its own session token (JWT, long-lived, revocable). App and extensions share it through the app-group keychain. | Required by App Store rules when any third-party sign-in exists; gives a stable user id with no passwords. | Yes. |
 | Streaming | **Server-sent events** for phases; piece JSON at the end. | Simpler than WebSockets, works through any proxy, trivially consumed by `URLSession`. | Yes. |
 | Cost control | Per-user daily transform cap in config (e.g. 30) + the `calls` table from day one. | Every transform costs ~$0.003; a cap protects against runaway cost before monetization (P2) exists. | Yes. |

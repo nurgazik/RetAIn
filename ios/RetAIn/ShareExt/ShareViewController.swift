@@ -66,7 +66,7 @@ struct CaptureView: View {
     var body: some View {
         NavigationStack {
             Group {
-                if let w = result { WordCardView(word: w) }
+                if let w = result { WordCardView(word: w, onNote: { try await RetAInClient.shared.setNote(w.id, $0) }) }
                 else if let e = error { Text(e).foregroundStyle(.secondary).padding() }
                 else { ProgressView("Adding “\(word)”…") }
             }

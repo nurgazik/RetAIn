@@ -19,6 +19,19 @@ final class RetAInClientTests: XCTestCase {
         XCTAssertEqual(words.filter { $0.status == "learning" }.count, me.learningWords)
     }
 
+    /// D59: set and clear a note, then put back whatever note the word had (a real account).
+    func testNoteRoundTrips() async throws {
+        let words = try await RetAInClient.shared.words()
+        let w = try XCTUnwrap(words.first)
+        let set = try await RetAInClient.shared.setNote(w.id, "  перевод — test note  ")
+        XCTAssertEqual(set.note, "перевод — test note")
+        let listed = try await RetAInClient.shared.words().first { $0.id == w.id }
+        XCTAssertEqual(listed?.note, "перевод — test note")
+        let cleared = try await RetAInClient.shared.setNote(w.id, "")
+        XCTAssertNil(cleared.note)
+        _ = try await RetAInClient.shared.setNote(w.id, w.note ?? "")
+    }
+
     func testTransformStreamsPhasesThenPiece() async throws {
         let accepted = try await RetAInClient.shared.transform(text: Sample.text, title: "Test", url: nil, source: "unit-test")
         var phases: [String] = []

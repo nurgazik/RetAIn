@@ -58,6 +58,10 @@ final class RetAInClient {
     func setWordStatus(_ id: Int, _ status: String) async throws -> Word {
         try await send(request("v1/words/\(id)", method: "PATCH", body: ["status": status]), as: Word.self)
     }
+    /// The user's note (D59); blank clears it.
+    func setNote(_ id: Int, _ note: String) async throws -> Word {
+        try await send(request("v1/words/\(id)", method: "PATCH", body: ["note": note]), as: Word.self)
+    }
 
     // MARK: practice (D56)
     /// Today's set; the first call of the day builds it (a few seconds when a sentence must be written).

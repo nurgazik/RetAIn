@@ -111,6 +111,7 @@ struct PracticeView: View {
             Text("Meaning: \(item.definition)").font(.callout).foregroundStyle(.secondary)
             if let r = fillResult {
                 resultBanner(ok: true, title: "Correct", detail: r.note)
+                yourNote(item)   // only once solved: the note may hold the word itself
                 nextButton()
             } else {
                 if lastWrong != nil {
@@ -128,6 +129,16 @@ struct PracticeView: View {
             if let error = inputError { Text(error).font(.callout).foregroundStyle(.red) }
         }
         .padding()
+    }
+
+    /// The user's own note on the word (D59), as on its card.
+    @ViewBuilder private func yourNote(_ item: PracticeItem) -> some View {
+        if let note = item.note, !note.isEmpty {
+            Label(note, systemImage: "note.text").font(.callout)
+                .padding(10).frame(maxWidth: .infinity, alignment: .leading)
+                .background(.yellow.opacity(0.15), in: RoundedRectangle(cornerRadius: 8))
+                .accessibilityIdentifier("practice-note")
+        }
     }
 
     /// D58: the word among lookalikes; tapping one is the same as typing it and tapping Check.
@@ -163,6 +174,7 @@ struct PracticeView: View {
             label("Use it in a sentence", nil)
             Text(item.word).font(.system(.largeTitle, design: .serif)).bold().accessibilityIdentifier("practice-word")
             Text(item.definition).font(.callout).foregroundStyle(.secondary)
+            yourNote(item)
             if let r = writeResult {
                 Text(answer).font(.system(.body, design: .serif)).padding(10)
                     .frame(maxWidth: .infinity, alignment: .leading)

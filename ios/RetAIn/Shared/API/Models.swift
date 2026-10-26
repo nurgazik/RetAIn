@@ -15,6 +15,8 @@ struct Word: Codable, Identifiable, Hashable {
     // widget's cached words.json from older builds still decodes.
     var card: Card? = nil
     var unverified: Bool? = nil
+    /// The user's own note (D59): a translation, an example, anything. Never sent to a model.
+    var note: String? = nil
 
     /// The widget's line and the list's subtitle: the card's first meaning, else the stored one.
     var firstDefinition: String { card?.senses.first?.gloss ?? definition }
@@ -100,6 +102,7 @@ struct PracticeItem: Codable, Identifiable, Hashable {
     var fill: Fill?
     var attempts: Attempts
     var status: String
+    var note: String? = nil   // the user's own note (D59), read live from the word
     var id: Int { wordId }
     struct Fill: Codable, Hashable {
         let text: String; let source: String; let answer: String?

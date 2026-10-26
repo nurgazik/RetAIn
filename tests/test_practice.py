@@ -235,3 +235,27 @@ def test_retained_words_leave_practice(client, stubs):
     client.patch(f"/v1/words/{first['id']}", json={"status": "retained"})
     assert first["id"] not in [w["id"] for w in practice.pick_words(con, me["user_id"], me["day"])]
     con.close()
+
+
+def test_the_note_shows_live_and_never_reaches_a_model(client, stubs, monkeypatch):
+    import service.practice as practice
+    secret = "MY-PRIVATE-NOTE"
+    for w in client.get("/v1/words").json()["words"]:
+        client.patch(f"/v1/words/{w['id']}", json={"note": f"{secret} {w['word']}"})
+    seen = []  # every prompt any model or Jev gets
+    model, jev = practice.G.call_model, practice.typesafe.p_natural
+    def spy_model(system, user, env, **kw):
+        seen.append(system + user); return model(system, user, env, **kw)
+    def spy_jev(w, d, s):
+        seen.append(w + d + s); return jev(w, d, s)
+    monkeypatch.setattr(practice.G, "call_model", spy_model)
+    monkeypatch.setattr(practice.typesafe, "p_natural", spy_jev)
+    monkeypatch.setattr(practice.lookalikes.typesafe, "p_natural", spy_jev)
+    stubs["p"] = 0.4  # the sentence goes on to the LLM too
+    item = today(client)["items"][0]
+    assert item["note"] == f"{secret} {item['word']}"
+    client.post(f"/v1/practice/hint", json={"word_id": item["word_id"]})
+    client.post("/v1/practice/write", json={"word_id": item["word_id"], "sentence": f"They {item['word']} it badly."})
+    assert seen and not any(secret in p for p in seen)
+    client.patch(f"/v1/words/{item['word_id']}", json={"note": "changed today"})
+    assert today(client)["items"][0]["note"] == "changed today"  # not frozen in the day's set

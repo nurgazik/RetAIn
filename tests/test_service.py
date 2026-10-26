@@ -23,6 +23,28 @@ def test_word_lifecycle(client):
     assert client.patch(f"/v1/words/{w['id']}", json={"status": "bogus"}).status_code == 422
 
 
+def test_note_is_set_cleared_and_kept_when_the_word_is_saved_again(client):
+    w = client.post("/v1/words", json={"word": "galvanize", "definition": "x"}).json()
+    assert w["note"] is None
+    r = client.patch(f"/v1/words/{w['id']}", json={"note": "  мобилизовать — like my coach before finals \n"})
+    assert r.status_code == 200 and r.json()["note"] == "мобилизовать — like my coach before finals"
+    assert r.json()["status"] == "learning"  # a note-only edit leaves the status alone
+    client.patch(f"/v1/words/{w['id']}", json={"status": "archived"})
+    again = client.post("/v1/words", json={"word": "Galvanize"}).json()  # saved again
+    assert again["id"] == w["id"] and again["status"] == "learning"
+    assert again["note"] == "мобилизовать — like my coach before finals"
+    assert next(x for x in client.get("/v1/words").json()["words"] if x["id"] == w["id"])["note"] == again["note"]
+    assert client.patch(f"/v1/words/{w['id']}", json={"note": "   "}).json()["note"] is None
+
+
+def test_word_patch_needs_something_valid(client):
+    w = client.post("/v1/words", json={"word": "galvanize", "definition": "x"}).json()
+    assert client.patch(f"/v1/words/{w['id']}", json={}).status_code == 422
+    assert client.patch(f"/v1/words/{w['id']}", json={"status": None}).status_code == 422
+    assert client.patch(f"/v1/words/{w['id']}", json={"note": "x" * 1001}).status_code == 422
+    assert client.patch("/v1/words/999999", json={"note": "x"}).status_code == 404
+
+
 def test_transform_lifecycle_and_events(client):
     assert client.post("/v1/transform", json={"text": "too short"}).status_code == 422
     r = client.post("/v1/transform", json={"text": TEXT, "title": "T", "source": "test", "meta": {"types": ["x"]}})
@@ -136,6 +158,17 @@ def test_older_rows_get_their_day_on_startup(client):
     db.init()
     con = db.connect()
     assert con.execute("SELECT day FROM events WHERE piece_id='p_x'").fetchone()[0] == "2026-09-28"
+    con.close()
+
+
+def test_an_older_db_gains_the_note_column_on_startup(client):
+    import service.db as db
+    con = db.connect()
+    con.execute("ALTER TABLE words DROP COLUMN note")
+    con.commit(); con.close()
+    db.init()
+    con = db.connect()
+    assert "note" in [r[1] for r in con.execute("PRAGMA table_info(words)")]
     con.close()
 
 

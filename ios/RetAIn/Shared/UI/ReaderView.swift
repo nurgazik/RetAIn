@@ -26,7 +26,7 @@ struct ReaderView: View {
             }
         }
         .sheet(item: $shown) { w in
-            WordCardView(word: w) { status in
+            WordCardView(word: w, onStatus: { status in
                 Task {
                     if let updated = try? await RetAInClient.shared.setWordStatus(w.id, status),
                        let i = words.firstIndex(where: { $0.id == w.id }) {
@@ -34,7 +34,11 @@ struct ReaderView: View {
                     }
                     shown = nil
                 }
-            }
+            }, onNote: { text in
+                let saved = try await RetAInClient.shared.setNote(w.id, text)
+                if let i = words.firstIndex(where: { $0.id == w.id }) { words[i].note = saved.note }  // next tap shows it
+                return saved
+            })
             .presentationDetents([.medium, .large])  // bottom half; drag up for long cards
             .presentationDragIndicator(.visible)
         }

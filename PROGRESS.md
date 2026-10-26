@@ -22,6 +22,8 @@ usage). Code schedules the words; the list stays unlimited; the user marks retai
 scan done (docs/poc2-transform.md §10): AI-graded sentences already ship elsewhere (VORCA,
 ReadUnbound), so the combination with the transform is the differentiator.
 **Next up: TD-20 (sentence-judge eval) → UX-16 (exercise screens).** Founder to-do: try ReadUnbound.
+**2026-10-26 (D59): a personal note on each saved word** — add/edit on the word card (list, capture screen, reader sheet),
+shown in practice, never sent to a model. Needs a fresh install from Xcode to see it on the phone.
 **2026-10-05 (D57): Practice opens on a chooser** (fill-in or sentences, any order, either alone); the schedule moves a word
 on either exercise. Needs a fresh install from Xcode to see it on the phone.
 **2026-10-04 (D56, UX-16): daily practice BUILT** — new **Practice** tab: 5 words/day, fill-in (from your reads or
@@ -229,6 +231,21 @@ all needed for TestFlight and none waits on a decision.**
 vacation coding ends). Home Mac: clone normally with personal credentials; recreate
 `.env.local` (4 API keys — gitignored, never on GitHub) and `data/retain.db` refills
 itself via the fetchers.
+
+### 2026-10-26 — The user's note on a saved word (D59)
+
+- Founder asked for a free-text note per saved word (a translation, an example that resonates; "the note is
+  important"). Plan approved with the assistant's picks: note added after saving, shown in practice, not in the widget.
+- Service: `words.note` column (startup migration); `PATCH /v1/words/{id}` takes `status` and/or `note` (≤ 1,000 chars,
+  blank clears, a note-only edit leaves the status alone); re-saving a word keeps its note; the practice set reads the
+  note live, so an edit shows the same day.
+- App: "Your note" block first under the word on the card, editable in the word list, the capture screen and the reader
+  sheet; note icon on the list row; on the sentence card, and on the fill-in only once solved.
+- Privacy: the note reaches no model. The rewrite engine keeps only word → definition (generate.py:708); a new test spies
+  on every practice prompt (fill writer, lookalikes, hint, Jev, judge) and finds no note.
+- Tests: service 81/81 (4 new); iOS unit 45/46 + 1 skipped — the one failure is an existing date bug in the reader header,
+  unrelated (TD-24); new UI test adds, shows and clears a note (screenshots in /tmp/retain-notes/).
+  Not yet seen: the note in practice on screen, the capture-screen and reader-sheet editors — check on the phone.
 
 ### 2026-10-07 — Founder's account trimmed to his own captures
 

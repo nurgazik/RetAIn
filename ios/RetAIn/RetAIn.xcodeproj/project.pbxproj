@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		0049CC32258152B7D7718EB9 /* SafariActionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = EC2284CBBFDB316905ADFE18 /* SafariActionTests.swift */; };
+		022A500221881208BDE58EC5 /* WordNoteScreenTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 298F565A72357320D03411B0 /* WordNoteScreenTests.swift */; };
 		028348EC305509D58E9FCCBB /* SafariPageReader.swift in Sources */ = {isa = PBXBuildFile; fileRef = D195EDAB7D89B0CFA8C9CB3E /* SafariPageReader.swift */; };
 		097AEEE792FA1F33A0F56BE0 /* PlainTextReader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3119962DDACEB36DE6A99A58 /* PlainTextReader.swift */; };
 		0ABF5FC779EC5A24E7F11342 /* Models.swift in Sources */ = {isa = PBXBuildFile; fileRef = 08606ADADCC454623CF9B809 /* Models.swift */; };
@@ -178,6 +179,7 @@
 		1DC5A72E818D1C8038029AD0 /* WordCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WordCardView.swift; sourceTree = "<group>"; };
 		2443A9FB575D3EE1B3DB6C87 /* PracticeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PracticeView.swift; sourceTree = "<group>"; };
 		293E390A139672E14211590E /* RetAInShare.appex */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = "wrapper.app-extension"; path = RetAInShare.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		298F565A72357320D03411B0 /* WordNoteScreenTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WordNoteScreenTests.swift; sourceTree = "<group>"; };
 		2D286AEEB8FABB1977DFEA0B /* RetAInPage.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = RetAInPage.js; sourceTree = "<group>"; };
 		2D3A65785807160CAEF10C1E /* RetAInWidget.appex */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = "wrapper.app-extension"; path = RetAInWidget.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		3119962DDACEB36DE6A99A58 /* PlainTextReader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlainTextReader.swift; sourceTree = "<group>"; };
@@ -232,6 +234,7 @@
 			children = (
 				A4AEC0117D5FE4580BDA0B12 /* PracticeScreenTests.swift */,
 				EC2284CBBFDB316905ADFE18 /* SafariActionTests.swift */,
+				298F565A72357320D03411B0 /* WordNoteScreenTests.swift */,
 			);
 			path = UITests;
 			sourceTree = "<group>";
@@ -732,6 +735,7 @@
 			files = (
 				E0E1E697C645628DF68D5595 /* PracticeScreenTests.swift in Sources */,
 				0049CC32258152B7D7718EB9 /* SafariActionTests.swift in Sources */,
+				022A500221881208BDE58EC5 /* WordNoteScreenTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -27,6 +27,7 @@ final class WordCardTests: XCTestCase {
         let json = #"[{"id": 1, "word": "bolster", "definition": "to support", "status": "learning", "added": "2026-09-01"}]"#
         let w = try JSONDecoder().decode([Word].self, from: Data(json.utf8))[0]
         XCTAssertNil(w.card)
+        XCTAssertNil(w.note)   // D59: caches from before notes
         XCTAssertEqual(w.firstDefinition, "to support")
         XCTAssertFalse(w.isUnverified)
     }

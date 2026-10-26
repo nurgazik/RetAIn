@@ -26,6 +26,7 @@ CREATE TABLE IF NOT EXISTS words (
     status      TEXT NOT NULL DEFAULT 'learning',   -- learning | retained | archived (D26)
     added       TEXT NOT NULL,
     day         TEXT NOT NULL DEFAULT '',   -- the user's day it was added (D51)
+    note        TEXT,                       -- the user's own note (D59); never sent to a model
     UNIQUE (user_id, word)
 );
 -- Word cards (D48): shared by every user, no user data. One row per headword (the dictionary
@@ -244,6 +245,7 @@ def init() -> None:
                  "ALTER TABLE practice_attempts ADD COLUMN judged_by TEXT",
                  "ALTER TABLE calls ADD COLUMN attempt_id INTEGER",
                  "ALTER TABLE practice_attempts ADD COLUMN hint TEXT",           # fill hint (D58)
+                 "ALTER TABLE words ADD COLUMN note TEXT",                       # the user's note (D59)
                  *(f"ALTER TABLE {t} ADD COLUMN day TEXT NOT NULL DEFAULT ''" for t in ("pieces", "calls", "events", "words"))):
         try:  # migrations for DBs created before these columns
             con.execute(stmt)

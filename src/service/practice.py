@@ -161,12 +161,13 @@ def get_set(con, user_id: str, day: str) -> dict | None:
         solved = next((t for t in tries if t["correct"]), None)
         if solved:
             done.setdefault(wid, {})["fill"] = {**solved, "correct": tries[0]["correct"]}
-    statuses = {r["id"]: r["status"] for r in con.execute(
-        f"SELECT id, status FROM words WHERE id IN ({','.join('?' * len(items)) or 'NULL'})",
+    live = {r["id"]: r for r in con.execute(  # read live, not from the day's snapshot: edits show at once
+        f"SELECT id, status, note FROM words WHERE id IN ({','.join('?' * len(items)) or 'NULL'})",
         [i["word_id"] for i in items])}
     for i in items:
         i["attempts"] = done.get(i["word_id"], {})
-        i["status"] = statuses.get(i["word_id"], "learning")
+        w = live.get(i["word_id"])
+        i["status"], i["note"] = (w["status"], w["note"]) if w else ("learning", None)
         if i["fill"]:  # the client never needs the answer before it's solved
             wrong = [t["answer"].lower() for t in fills.get(i["word_id"], []) if not t["correct"]]
             i["fill"] = {"text": i["fill"]["text"], "source": i["fill"]["source"],
