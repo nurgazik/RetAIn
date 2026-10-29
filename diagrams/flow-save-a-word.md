@@ -1,6 +1,6 @@
 # User flow: save a word → its word card
 
-Decisions: PRD D48 (2026-09-27); Siri entry point D50 (2026-09-28); the user's note D59 (2026-10-26); rarity D61 (2026-10-29). Research and spike numbers: `docs/content-sources.md`,
+Decisions: PRD D48 (2026-09-27); Siri entry point D50 (2026-09-28); the user's note D59 (2026-10-26); rarity D61 (2026-10-29); delete D62 (2026-10-29). Research and spike numbers: `docs/content-sources.md`,
 "Dictionary sources for word cards".
 
 ```mermaid
@@ -43,6 +43,7 @@ a Jev candidate, D54).
 - **At most one model call per new word, zero for a word already in the shared list.**
 - **Rarity is data, not a model.** Every card gets a band (Common … Very rare) from wordfreq's
   frequency of the word and its inflections, so a rare find like "agelast" says so at once.
+- **Saving a deleted word again starts fresh** (D62): learning, no old note, a new schedule.
 - **The note is the user's, and stays theirs.** It lives on their own word row, never on the
   shared card, and no model ever sees it. Saving the word again keeps it.
 - **Unverified words stay private.** They never enter the shared list, so one user's typo

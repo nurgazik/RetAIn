@@ -22,6 +22,8 @@ usage). Code schedules the words; the list stays unlimited; the user marks retai
 scan done (docs/poc2-transform.md §10): AI-graded sentences already ship elsewhere (VORCA,
 ReadUnbound), so the combination with the transform is the differentiator.
 **Next up: TD-20 (sentence-judge eval) → UX-16 (exercise screens).** Founder to-do: try ReadUnbound.
+**2026-10-29 (D62): Delete replaces Archive** — swipe or card button; the word disappears for the user (soft delete
+on the server); saving it again starts fresh. The founder's 5 archived words are now deleted.
 **2026-10-29 (D61): how common a word is** — every card shows five dots + "Uncommon · about once every 10–100 books"
 (wordfreq, word family, no model); dots on the word list. Needs a fresh install from Xcode.
 **2026-10-28 (D60): practice without a cap** — today's set (due + new) then review ahead, rounds of 5 with a checkpoint;
@@ -236,6 +238,18 @@ all needed for TestFlight and none waits on a decision.**
 vacation coding ends). Home Mac: clone normally with personal credentials; recreate
 `.env.local` (4 API keys — gitignored, never on GitHub) and `data/retain.db` refills
 itself via the fetchers.
+
+### 2026-10-29 — Delete replaces Archive (D62)
+
+- Founder: users delete words instead of archiving; deleted words aren't visible; soft delete is fine. Agreed:
+  Delete replaces Archive entirely; a deleted word saved again starts fresh (no note, new schedule).
+- Server: `status='deleted'` (chosen over a `deleted_at` column: everything else already filters on learning),
+  `DELETE /v1/words/{id}`, list hides deleted, PATCH can't touch them, re-save resets note/box/due/added/day,
+  today's practice drops a deleted word, "archived" → deleted at startup and from old app builds. Founder's
+  account: agelast, походка, obscolesence, obsolesence, impervias → deleted (verified); 25 learning, 1 retained.
+- App: red Delete swipe (list), Delete button on the card; Archive gone; list shows learning + retained only.
+- Tests: service 97/97 (5 new + 1 practice); iOS unit 48/50 + 1 skipped + known TD-24; UI walk-through passes
+  (add → swipe delete → gone → add again → delete from card). Dev account: "perspicacious" left deleted by the test.
 
 ### 2026-10-29 — Rarity on every word card (D61)
 

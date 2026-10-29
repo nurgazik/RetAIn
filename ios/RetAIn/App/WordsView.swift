@@ -37,9 +37,9 @@ struct WordsView: View {
                                 }
                             }
                             .swipeActions(edge: .trailing) {
+                                Button("Delete", role: .destructive) { Task { await set(w, "deleted") } }
                                 if w.status != "retained" { Button("Retained") { Task { await set(w, "retained") } }.tint(.green) }
                                 if w.status != "learning" { Button("Learning") { Task { await set(w, "learning") } }.tint(.orange) }
-                                if w.status != "archived" { Button("Archive") { Task { await set(w, "archived") } }.tint(.gray) }
                             }
                         }
                     }
@@ -60,7 +60,7 @@ struct WordsView: View {
     }
 
     private var groups: [(String, [Word])] {
-        ["learning", "retained", "archived"].compactMap { s in
+        ["learning", "retained"].compactMap { s in  // deleted words never come back from the server (D62)
             let l = words.filter { $0.status == s }; return l.isEmpty ? nil : (s, l)
         }
     }
@@ -81,6 +81,10 @@ struct WordsView: View {
         do { _ = try await RetAInClient.shared.addWord(w); newWord = ""; await load() } catch { self.error = error.localizedDescription }
     }
     private func set(_ w: Word, _ status: String) async {
-        do { _ = try await RetAInClient.shared.setWordStatus(w.id, status); await load() } catch { self.error = error.localizedDescription }
+        do {
+            if status == "deleted" { _ = try await RetAInClient.shared.deleteWord(w.id) }
+            else { _ = try await RetAInClient.shared.setWordStatus(w.id, status) }
+            await load()
+        } catch { self.error = error.localizedDescription }
     }
 }

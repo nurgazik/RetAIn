@@ -23,7 +23,7 @@ CREATE TABLE IF NOT EXISTS words (
     word        TEXT NOT NULL,
     pos         TEXT,
     definition  TEXT NOT NULL,
-    status      TEXT NOT NULL DEFAULT 'learning',   -- learning | retained | archived (D26)
+    status      TEXT NOT NULL DEFAULT 'learning',   -- learning | retained | deleted (D26, D62: deleted = soft delete, hidden)
     added       TEXT NOT NULL,
     day         TEXT NOT NULL DEFAULT '',   -- the user's day it was added (D51)
     note        TEXT,                       -- the user's own note (D59); never sent to a model
@@ -263,6 +263,7 @@ def init() -> None:
     for t in ("pieces", "calls", "events", "words"):  # after the migrations: old DBs lack `day` until then
         con.execute(f"CREATE INDEX IF NOT EXISTS idx_{t}_day ON {t} (user_id, day)")
     _backfill_days(con)
+    con.execute("UPDATE words SET status='deleted' WHERE status='archived'")  # D62: Delete replaced Archive
     con.commit()
     con.close()
 

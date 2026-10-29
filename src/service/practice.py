@@ -198,6 +198,7 @@ def get_set(con, user_id: str, day: str) -> dict | None:
     live = {r["id"]: r for r in con.execute(  # read live, not from the day's snapshot: edits show at once
         f"SELECT id, status, note FROM words WHERE id IN ({','.join('?' * len(items)) or 'NULL'})",
         [i["word_id"] for i in items])}
+    items = [i for i in items if not (live.get(i["word_id"]) and live[i["word_id"]]["status"] == "deleted")]  # D62
     for i in items:
         i["attempts"] = done.get(i["word_id"], {})
         i.setdefault("part", "today")  # sets from before D60

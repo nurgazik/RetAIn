@@ -29,12 +29,57 @@ def test_note_is_set_cleared_and_kept_when_the_word_is_saved_again(client):
     r = client.patch(f"/v1/words/{w['id']}", json={"note": "  мобилизовать — like my coach before finals \n"})
     assert r.status_code == 200 and r.json()["note"] == "мобилизовать — like my coach before finals"
     assert r.json()["status"] == "learning"  # a note-only edit leaves the status alone
-    client.patch(f"/v1/words/{w['id']}", json={"status": "archived"})
-    again = client.post("/v1/words", json={"word": "Galvanize"}).json()  # saved again
+    client.patch(f"/v1/words/{w['id']}", json={"status": "retained"})
+    again = client.post("/v1/words", json={"word": "Galvanize"}).json()  # saved again (not deleted: D62)
     assert again["id"] == w["id"] and again["status"] == "learning"
     assert again["note"] == "мобилизовать — like my coach before finals"
     assert next(x for x in client.get("/v1/words").json()["words"] if x["id"] == w["id"])["note"] == again["note"]
     assert client.patch(f"/v1/words/{w['id']}", json={"note": "   "}).json()["note"] is None
+
+
+def test_delete_hides_the_word_everywhere_and_keeps_its_history(client):
+    import service.db as db
+    w = client.post("/v1/words", json={"word": "galvanize", "definition": "x"}).json()
+    learning = client.get("/v1/me").json()["learning_words"]
+    r = client.delete(f"/v1/words/{w['id']}")
+    assert r.status_code == 200 and r.json()["status"] == "deleted"
+    assert w["id"] not in [x["id"] for x in client.get("/v1/words").json()["words"]]
+    assert client.get("/v1/me").json()["learning_words"] == learning - 1
+    assert client.delete(f"/v1/words/{w['id']}").status_code == 404           # already gone
+    assert client.patch(f"/v1/words/{w['id']}", json={"note": "x"}).status_code == 404
+    assert client.delete("/v1/words/999999").status_code == 404
+    con = db.connect()
+    assert con.execute("SELECT status FROM words WHERE id=?", (w["id"],)).fetchone()[0] == "deleted"  # soft
+    con.close()
+
+
+def test_a_deleted_word_saved_again_starts_fresh(client):
+    import service.db as db
+    w = client.post("/v1/words", json={"word": "galvanize", "definition": "x"}).json()
+    client.patch(f"/v1/words/{w['id']}", json={"note": "old note"})
+    con = db.connect()
+    con.execute("UPDATE words SET box=3, due_day='2026-12-01', added='2026-01-01' WHERE id=?", (w["id"],)); con.commit()
+    client.delete(f"/v1/words/{w['id']}")
+    again = client.post("/v1/words", json={"word": "galvanize"}).json()
+    assert again["id"] == w["id"] and again["status"] == "learning" and again["note"] is None
+    row = con.execute("SELECT box, due_day, added FROM words WHERE id=?", (w["id"],)).fetchone()
+    assert (row["box"], row["due_day"]) == (0, None) and row["added"] != "2026-01-01"
+    con.close()
+
+
+def test_archive_from_an_older_app_build_deletes(client):
+    w = client.post("/v1/words", json={"word": "galvanize", "definition": "x"}).json()
+    assert client.patch(f"/v1/words/{w['id']}", json={"status": "archived"}).json()["status"] == "deleted"
+    assert w["id"] not in [x["id"] for x in client.get("/v1/words").json()["words"]]
+
+
+def test_archived_words_become_deleted_on_startup(client):
+    import service.db as db
+    w = client.post("/v1/words", json={"word": "galvanize", "definition": "x"}).json()
+    con = db.connect()
+    con.execute("UPDATE words SET status='archived' WHERE id=?", (w["id"],)); con.commit(); con.close()
+    db.init()
+    assert w["id"] not in [x["id"] for x in client.get("/v1/words").json()["words"]]
 
 
 def test_word_patch_needs_something_valid(client):

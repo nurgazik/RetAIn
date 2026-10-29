@@ -84,7 +84,7 @@ class WordIn(BaseModel):
 
 class WordPatch(BaseModel):
     """Send only what changes. `note` is the user's own (D59): blank clears it; never sent to a model."""
-    status: str | None = Field(None, pattern="^(learning|retained|archived)$")
+    status: str | None = Field(None, pattern="^(learning|retained|archived)$")  # archived: builds before D62
     note: str | None = Field(None, max_length=1000)
 
 
@@ -99,7 +99,8 @@ def with_cards(con, rows: list, counts: dict = None) -> list:
 def list_words(user=Depends(auth.current_user)):
     con = db.connect()
     try:
-        rows = [dict(r) for r in con.execute("SELECT * FROM words WHERE user_id=? ORDER BY id", (user["id"],))]
+        rows = [dict(r) for r in con.execute("SELECT * FROM words WHERE user_id=? AND status!='deleted' ORDER BY id",
+                                             (user["id"],))]
         return {"words": with_cards(con, rows, db.serving_counts(con, user["id"]))}
     finally:
         con.close()
@@ -119,9 +120,15 @@ def add_word(body: WordIn, user=Depends(auth.current_user)):
             db.record_calls(con, user["id"], None, calls, engine.PRICES, day=user["day"])
             if lexicon_id and not pos:
                 pos = dictionary.cards(con, {lexicon_id})[lexicon_id]["senses"][0]["pos"]
+        # saved again: back to learning; a deleted word starts fresh (D62: no old note, schedule or date)
         con.execute("INSERT INTO words (user_id, word, pos, definition, status, added, lexicon_id, day) "
                     "VALUES (?,?,?,?,?,?,?,?) ON CONFLICT(user_id, word) DO UPDATE SET status='learning', "
-                    "pos=excluded.pos, definition=excluded.definition, lexicon_id=excluded.lexicon_id",
+                    "pos=excluded.pos, definition=excluded.definition, lexicon_id=excluded.lexicon_id, "
+                    "note=CASE WHEN words.status='deleted' THEN NULL ELSE words.note END, "
+                    "box=CASE WHEN words.status='deleted' THEN 0 ELSE words.box END, "
+                    "due_day=CASE WHEN words.status='deleted' THEN NULL ELSE words.due_day END, "
+                    "added=CASE WHEN words.status='deleted' THEN excluded.added ELSE words.added END, "
+                    "day=CASE WHEN words.status='deleted' THEN excluded.day ELSE words.day END",
                     (user["id"], word, pos, definition, "learning", db.now(), lexicon_id, user["day"]))
         con.commit()
         row = dict(con.execute("SELECT * FROM words WHERE user_id=? AND word=?", (user["id"], word)).fetchone())
@@ -139,8 +146,26 @@ def patch_word(word_id: int, body: WordPatch, user=Depends(auth.current_user)):
             raise HTTPException(422, "send a status or a note")
         if "note" in sent:
             sent["note"] = (sent["note"] or "").strip() or None
-        cur = con.execute(f"UPDATE words SET {', '.join(f'{k}=?' for k in sent)} WHERE id=? AND user_id=?",
-                          (*sent.values(), word_id, user["id"]))
+        if sent.get("status") == "archived":  # an app build from before D62: Archive meant what Delete means now
+            sent["status"] = "deleted"
+        cur = con.execute(f"UPDATE words SET {', '.join(f'{k}=?' for k in sent)} WHERE id=? AND user_id=? "
+                          "AND status!='deleted'", (*sent.values(), word_id, user["id"]))
+        con.commit()
+        if cur.rowcount == 0:
+            raise HTTPException(404, "no such word")
+        return with_cards(con, [dict(con.execute("SELECT * FROM words WHERE id=?", (word_id,)).fetchone())])[0]
+    finally:
+        con.close()
+
+
+@app.delete("/v1/words/{word_id}")
+def delete_word(word_id: int, user=Depends(auth.current_user)):
+    """D62: a soft delete. The word disappears for the user (list, practice, rewrites, widget); its
+    history stays. Saving it again starts fresh."""
+    con = db.connect()
+    try:
+        cur = con.execute("UPDATE words SET status='deleted' WHERE id=? AND user_id=? AND status!='deleted'",
+                          (word_id, user["id"]))
         con.commit()
         if cur.rowcount == 0:
             raise HTTPException(404, "no such word")

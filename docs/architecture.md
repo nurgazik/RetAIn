@@ -105,7 +105,8 @@ GET  /v1/transform/{piece_id}/events   (server-sent events: received → generat
 GET  /v1/pieces, GET /v1/pieces/{id}          My Reads
 POST /v1/pieces/{id}/taps {word}               tap = "didn't remember"
 GET/POST/PATCH /v1/words                       list, capture (+ word-card enrichment), lifecycle;
-                                               PATCH takes status and/or the user's note (D59)
+                                               PATCH takes status and/or the user's note (D59);
+DELETE /v1/words/{id}                          soft delete (D62): status 'deleted', hidden everywhere
 ```
 
 The "working the magic" moment is the events stream: the sheet shows each phase as it

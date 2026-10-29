@@ -58,6 +58,10 @@ final class RetAInClient {
     func setWordStatus(_ id: Int, _ status: String) async throws -> Word {
         try await send(request("v1/words/\(id)", method: "PATCH", body: ["status": status]), as: Word.self)
     }
+    /// D62: a soft delete; the word disappears from the list. Saving it again starts fresh.
+    func deleteWord(_ id: Int) async throws -> Word {
+        try await send(request("v1/words/\(id)", method: "DELETE"), as: Word.self)
+    }
     /// The user's note (D59); blank clears it.
     func setNote(_ id: Int, _ note: String) async throws -> Word {
         try await send(request("v1/words/\(id)", method: "PATCH", body: ["note": note]), as: Word.self)

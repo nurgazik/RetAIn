@@ -6,7 +6,7 @@ import SwiftUI
 /// Used by the word list, the capture screen and the reader's bottom sheet.
 struct WordCardView: View {
     let word: Word
-    /// Status buttons ("Got it — mark retained", "Archive"); nil hides them (capture screen).
+    /// Status buttons ("Got it — mark retained", "Delete" → "deleted", D62); nil hides them (capture screen).
     var onStatus: ((String) -> Void)?
     /// Saves the note and returns the saved word; nil makes the note read-only.
     var onNote: ((String) async throws -> Word)?
@@ -136,10 +136,12 @@ struct WordCardView: View {
 
     @ViewBuilder private var actions: some View {
         if let onStatus {
-            if word.isUnverified, word.status != "archived" {
-                Button("Archive") { onStatus("archived") }.buttonStyle(.bordered)
-            } else if word.status == "learning" {
-                Button("Got it — mark retained") { onStatus("retained") }.buttonStyle(.borderedProminent)
+            HStack {
+                if !word.isUnverified, word.status == "learning" {
+                    Button("Got it — mark retained") { onStatus("retained") }.buttonStyle(.borderedProminent)
+                }
+                Button("Delete", role: .destructive) { onStatus("deleted") }.buttonStyle(.bordered)
+                    .accessibilityIdentifier("delete-word")
             }
         }
     }

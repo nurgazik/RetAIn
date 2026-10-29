@@ -28,8 +28,10 @@ struct ReaderView: View {
         .sheet(item: $shown) { w in
             WordCardView(word: w, onStatus: { status in
                 Task {
-                    if let updated = try? await RetAInClient.shared.setWordStatus(w.id, status),
-                       let i = words.firstIndex(where: { $0.id == w.id }) {
+                    if status == "deleted" {  // D62: gone from the user's words; its highlight stays in this read
+                        if (try? await RetAInClient.shared.deleteWord(w.id)) != nil { words.removeAll { $0.id == w.id } }
+                    } else if let updated = try? await RetAInClient.shared.setWordStatus(w.id, status),
+                              let i = words.firstIndex(where: { $0.id == w.id }) {
                         words[i].status = updated.status
                     }
                     shown = nil

@@ -356,3 +356,9 @@ def test_the_next_round_is_written_in_the_background(client, stubs):
     client.post("/v1/practice/round", json={"part": "today"})
     assert written() == 10  # round two came straight from the bank
     con.close()
+
+
+def test_a_deleted_word_leaves_todays_practice(client, stubs):
+    first = today(client)["items"][0]
+    client.delete(f"/v1/words/{first['word_id']}")
+    assert first["word_id"] not in [i["word_id"] for i in today(client)["items"]]

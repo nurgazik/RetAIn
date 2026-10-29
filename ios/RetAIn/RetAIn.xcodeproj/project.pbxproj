@@ -83,6 +83,7 @@
 		B3DB93C9354FF188F902F765 /* ReadsStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = C31DA02FC3DE821DB8C935EB /* ReadsStore.swift */; };
 		B64BE8C3FA03C3C3D293126A /* RetAInClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 075C0D559D6C67C564CE18E8 /* RetAInClient.swift */; };
 		B7DE57AFCCCD9BF46D4DB0B9 /* TodaysWordsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E9C7FF1286324FD35EA49335 /* TodaysWordsView.swift */; };
+		BA089F9A6A6945251C6FDFDA /* DeleteWordScreenTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E0E48237D0A6D41A66811D72 /* DeleteWordScreenTests.swift */; };
 		BCB2654CAD971C4918EEA518 /* ShareInput.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4E9A5365D42B838132B93A9 /* ShareInput.swift */; };
 		BFF772794ABF8100713F25F1 /* SignInView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B23933E956B42C4E8017AEC5 /* SignInView.swift */; };
 		C037C0A46762BB0E9EE020C1 /* ShareViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5469DA26719F2A9BF63488DA /* ShareViewController.swift */; };
@@ -218,6 +219,7 @@
 		D195EDAB7D89B0CFA8C9CB3E /* SafariPageReader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SafariPageReader.swift; sourceTree = "<group>"; };
 		DB2FD1996BFFC3729A1494B7 /* RedditReader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RedditReader.swift; sourceTree = "<group>"; };
 		DD974EFE030D5357F6ECA002 /* PageLoader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PageLoader.swift; sourceTree = "<group>"; };
+		E0E48237D0A6D41A66811D72 /* DeleteWordScreenTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeleteWordScreenTests.swift; sourceTree = "<group>"; };
 		E4E9A5365D42B838132B93A9 /* ShareInput.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareInput.swift; sourceTree = "<group>"; };
 		E9C7FF1286324FD35EA49335 /* TodaysWordsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TodaysWordsView.swift; sourceTree = "<group>"; };
 		EB3E1630F675371BCC769CED /* RetAInTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = RetAInTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -232,6 +234,7 @@
 		122C6E921F631D62289180BE /* UITests */ = {
 			isa = PBXGroup;
 			children = (
+				E0E48237D0A6D41A66811D72 /* DeleteWordScreenTests.swift */,
 				A4AEC0117D5FE4580BDA0B12 /* PracticeScreenTests.swift */,
 				EC2284CBBFDB316905ADFE18 /* SafariActionTests.swift */,
 				298F565A72357320D03411B0 /* WordNoteScreenTests.swift */,
@@ -733,6 +736,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				BA089F9A6A6945251C6FDFDA /* DeleteWordScreenTests.swift in Sources */,
 				E0E1E697C645628DF68D5595 /* PracticeScreenTests.swift in Sources */,
 				0049CC32258152B7D7718EB9 /* SafariActionTests.swift in Sources */,
 				022A500221881208BDE58EC5 /* WordNoteScreenTests.swift in Sources */,
