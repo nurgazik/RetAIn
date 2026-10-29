@@ -28,8 +28,21 @@ final class WordCardTests: XCTestCase {
         let w = try JSONDecoder().decode([Word].self, from: Data(json.utf8))[0]
         XCTAssertNil(w.card)
         XCTAssertNil(w.note)   // D59: caches from before notes
+        XCTAssertNil(w.rarity) // D61: and before rarity
         XCTAssertEqual(w.firstDefinition, "to support")
         XCTAssertFalse(w.isUnverified)
+    }
+
+    /// D61: the server's band → dots, label and "how often" line; a card cached before D61 has none.
+    func testRarityBands() throws {
+        let d = JSONDecoder(); d.keyDecodingStrategy = .convertFromSnakeCase
+        let card = #"{"headword":"exigency","source":"wiktionary","ipa":[],"senses":[],"rarity":{"zipf":2.3,"band":"uncommon"}}"#
+        let r = try XCTUnwrap(try d.decode(Card.self, from: Data(card.utf8)).rarity)
+        XCTAssertEqual(r.dots, "●●●○○"); XCTAssertEqual(r.label, "Uncommon")
+        XCTAssertEqual(r.often, "about once every 10–100 books")
+        XCTAssertEqual(Rarity(zipf: 0, band: "very-rare").dots, "●○○○○")
+        XCTAssertEqual(Rarity(zipf: 5, band: "common").dots, "●●●●●")
+        XCTAssertNil(try d.decode(Card.self, from: Data(#"{"headword":"x","source":"model","ipa":[],"senses":[]}"#.utf8)).rarity)
     }
 
     func testReaderMatchesPrintedFormToTheWord() {

@@ -20,6 +20,7 @@ struct Word: Codable, Identifiable, Hashable {
 
     /// The widget's line and the list's subtitle: the card's first meaning, else the stored one.
     var firstDefinition: String { card?.senses.first?.gloss ?? definition }
+    var rarity: Rarity? { card?.rarity }
     var isUnverified: Bool { unverified ?? false }
 }
 
@@ -30,8 +31,30 @@ struct Card: Codable, Hashable {
     let ipa: [Pronunciation]
     let sourceUrl: String?
     let senses: [Sense]
+    var rarity: Rarity? = nil     // D61; nil on cards cached before it
     struct Pronunciation: Codable, Hashable { let ipa: String; let tags: [String] }
     struct Sense: Codable, Hashable { let pos: String?; let gloss: String; let tags: [String]; let examples: [String] }
+}
+
+/// How common a word is (D61): wordfreq's Zipf score of the word family (src/service/rarity.py),
+/// in five bands. More filled dots = more common, as in Collins' frequency bands.
+struct Rarity: Codable, Hashable {
+    let zipf: Double
+    let band: String              // common | advanced | uncommon | rare | very-rare
+
+    private var info: (label: String, level: Int, often: String) {
+        switch band {
+        case "common": ("Common", 5, "about once a book or more")
+        case "advanced": ("Advanced", 4, "about once every 1–10 books")
+        case "uncommon": ("Uncommon", 3, "about once every 10–100 books")
+        case "rare": ("Rare", 2, "about once every 100–1,000 books")
+        default: ("Very rare", 1, "less than once in 1,000 books")
+        }
+    }
+    var label: String { info.label }
+    /// "You'd meet it …", on an ~90,000-word book.
+    var often: String { info.often }
+    var dots: String { String(repeating: "●", count: info.level) + String(repeating: "○", count: 5 - info.level) }
 }
 
 struct Piece: Codable, Identifiable, Hashable {

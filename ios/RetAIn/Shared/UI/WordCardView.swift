@@ -65,6 +65,14 @@ struct WordCardView: View {
                 if word.card?.source == "model" { badge("Written by AI") }
                 if word.isUnverified { badge("Unverified") }
             }
+            if let r = word.rarity {  // D61: how often you'd meet it
+                HStack(spacing: 6) {
+                    Text(r.dots).font(.caption).foregroundStyle(.tint)
+                    Text("\(r.label) · \(r.often)").font(.caption).foregroundStyle(.secondary)
+                }
+                .accessibilityElement(children: .combine).accessibilityLabel("\(r.label): you'd meet it \(r.often)")
+                .accessibilityIdentifier("rarity")
+            }
         }
     }
 
@@ -143,6 +151,9 @@ struct WordCardView: View {
                     Link("Source: Wiktionary (CC BY-SA 4.0)", destination: url)
                 }
                 if card.senses.contains(where: { !$0.examples.isEmpty }) { Text("Examples written by AI") }
+                if card.rarity != nil, let url = URL(string: "https://github.com/rspeer/wordfreq") {
+                    Link("How common: wordfreq (CC BY-SA 4.0)", destination: url)
+                }
             }
             .font(.caption2).foregroundStyle(.secondary).padding(.top, 6)
         }

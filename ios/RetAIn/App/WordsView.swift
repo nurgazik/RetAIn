@@ -28,6 +28,7 @@ struct WordsView: View {
                                 VStack(alignment: .leading) {
                                     HStack {
                                         Text(w.word).font(.body.weight(.medium))
+                                        if let r = w.rarity { Text(r.dots).font(.caption2).foregroundStyle(.secondary).accessibilityLabel(r.label) }
                                         if let n = w.servings, n > 0 { Text("· \(n)").foregroundStyle(.secondary).font(.caption) }
                                         if w.isUnverified { Text("Unverified").font(.caption2).foregroundStyle(.orange) }
                                         if w.note?.isEmpty == false { Image(systemName: "note.text").font(.caption).foregroundStyle(.secondary).accessibilityLabel("Has a note") }

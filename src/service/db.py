@@ -38,7 +38,8 @@ CREATE TABLE IF NOT EXISTS lexicon (
     ipa         TEXT,                -- JSON [{"ipa", "tags"}], at most two
     source_url  TEXT,                -- the wiktionary.org entry (CC BY-SA attribution)
     dump        TEXT,                -- which Wiktionary download it came from
-    created_at  TEXT NOT NULL
+    created_at  TEXT NOT NULL,
+    zipf        REAL                 -- how common the word family is (D61): log10 per billion words, wordfreq
 );
 CREATE TABLE IF NOT EXISTS senses (
     id          INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -253,6 +254,7 @@ def init() -> None:
                  "ALTER TABLE calls ADD COLUMN attempt_id INTEGER",
                  "ALTER TABLE practice_attempts ADD COLUMN hint TEXT",           # fill hint (D58)
                  "ALTER TABLE words ADD COLUMN note TEXT",                       # the user's note (D59)
+                 "ALTER TABLE lexicon ADD COLUMN zipf REAL",                     # rarity (D61)
                  *(f"ALTER TABLE {t} ADD COLUMN day TEXT NOT NULL DEFAULT ''" for t in ("pieces", "calls", "events", "words"))):
         try:  # migrations for DBs created before these columns
             con.execute(stmt)

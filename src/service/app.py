@@ -8,13 +8,16 @@ from fastapi import Depends, FastAPI, HTTPException
 from fastapi.sse import EventSourceResponse, ServerSentEvent
 from pydantic import BaseModel, Field
 
-from . import auth, db, dictionary, engine, practice
+from . import auth, db, dictionary, engine, practice, rarity
 from .config import DAILY_CAP, MAX_CHARS, MIN_WORDS
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     db.init()
+    con = db.connect()  # cards from before D61 get their rarity (local data, no model)
+    rarity.backfill(con)
+    con.close()
     # Recovery: a piece caught mid-generation by a restart is re-queued (generation is idempotent).
     con = db.connect()
     try:

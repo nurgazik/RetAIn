@@ -22,6 +22,8 @@ usage). Code schedules the words; the list stays unlimited; the user marks retai
 scan done (docs/poc2-transform.md §10): AI-graded sentences already ship elsewhere (VORCA,
 ReadUnbound), so the combination with the transform is the differentiator.
 **Next up: TD-20 (sentence-judge eval) → UX-16 (exercise screens).** Founder to-do: try ReadUnbound.
+**2026-10-29 (D61): how common a word is** — every card shows five dots + "Uncommon · about once every 10–100 books"
+(wordfreq, word family, no model); dots on the word list. Needs a fresh install from Xcode.
 **2026-10-28 (D60): practice without a cap** — today's set (due + new) then review ahead, rounds of 5 with a checkpoint;
 fill-ins always model-written from a shared bank, never the same sentence twice; review ahead never promotes a word.
 Needs a fresh install from Xcode. **Next: gamification** (later, separate track: research first).
@@ -234,6 +236,20 @@ all needed for TestFlight and none waits on a decision.**
 vacation coding ends). Home Mac: clone normally with personal credentials; recreate
 `.env.local` (4 API keys — gitignored, never on GitHub) and `data/retain.db` refills
 itself via the fetchers.
+
+### 2026-10-29 — Rarity on every word card (D61)
+
+- Founder: a "rarity coefficient" so a super-rare find (agelast) can be archived. Agreed after pushback: frequency
+  data, not a model; bands, not a raw 0–1 number. New dependency approved: wordfreq 3.1.1 (docs read: Apache-2.0
+  code, CC BY-SA 4.0 data, frozen ~2021; works on Python 3.14).
+- Measured on 265 saved words before building: founder 30 → Common 1 · Advanced 8 · Uncommon 11 · Rare 4 · Very
+  rare 2 (+4 typos, unverified); dev 235 → 1 · 139 · 94 · 1 · 0. Wiktionary rare tags rejected (flagged "fraught").
+- Built: `src/service/rarity.py`, `dictionary.inflections` (suffix rules confirmed by Wiktionary's form-of links),
+  `lexicon.zipf` scored on card creation and at service start (all 257 live cards scored), card `rarity {zipf, band}`;
+  app: dots + band + "about once every N books" on the card, dots on the list row, wordfreq credit.
+- Tests: service 92/92 (5 new); iOS unit 48/50 + 1 skipped + the known TD-24 failure; simulator screenshots of the
+  card and list. Not yet on the phone. Fill-in keyboard issue on the phone: not reproducible in the simulator with the
+  on-screen keyboard (probe 2026-10-29); founder to check a connected Bluetooth keyboard / other fields.
 
 ### 2026-10-28 — Practice without a cap: today's set, review ahead, sentence bank (D60)
 

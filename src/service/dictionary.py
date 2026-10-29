@@ -170,9 +170,11 @@ def write_examples(con, lexicon_id: int, headword: str, env: dict) -> list:
 
 def _insert_lexicon(con, headword: str, source: str, ipa: list, url: str | None, dump: str | None,
                     senses: list) -> int:
-    """Create the shared card; if another request created it first, use theirs."""
-    cur = con.execute("INSERT OR IGNORE INTO lexicon (headword, source, ipa, source_url, dump, created_at) "
-                      "VALUES (?,?,?,?,?,?)", (headword, source, json.dumps(ipa), url, dump, db.now()))
+    """Create the shared card (with its rarity, D61); if another request created it first, use theirs."""
+    from . import rarity
+    cur = con.execute("INSERT OR IGNORE INTO lexicon (headword, source, ipa, source_url, dump, created_at, zipf) "
+                      "VALUES (?,?,?,?,?,?,?)", (headword, source, json.dumps(ipa), url, dump, db.now(),
+                                                 rarity.zipf(headword)))
     lid = con.execute("SELECT id FROM lexicon WHERE headword=?", (headword,)).fetchone()[0]
     if cur.rowcount:
         con.executemany("INSERT INTO senses (lexicon_id, ord, pos, gloss, tags, examples) VALUES (?,?,?,?,?,?)",
@@ -181,6 +183,30 @@ def _insert_lexicon(con, headword: str, source: str, ipa: list, url: str | None,
                          for i, s in enumerate(senses, 1)])
     con.commit()
     return lid
+
+
+def inflections(word: str) -> list:
+    """Spellings Wiktionary lists as inflections of `word` (bolster → bolstered, bolstering, bolsters):
+    English suffix rules propose them, the reference file confirms them. A form with meanings of its
+    own still counts (real Wiktionary has "bolstered" as an adjective too). For rarity (D61)."""
+    w = word.lower()
+    if not DICT_PATH.exists() or " " in w:
+        return []
+    stems = {w}
+    if w.endswith("e"):
+        stems.add(w[:-1])                                        # stoke → stoking
+    if len(w) > 2 and w.endswith("y") and w[-2] not in "aeiou":
+        stems.add(w[:-1] + "i")                                  # exigency → exigencies
+    if len(w) > 2 and w[-1] not in "aeiouwxy" and w[-2] in "aeiou" and w[-3] not in "aeiou":
+        stems.add(w + w[-1])                                     # stop → stopped
+    cands = sorted({s + suffix for s in stems for suffix in ("s", "es", "d", "ed", "ing", "er", "est")} - {w})
+    con = sqlite3.connect(f"file:{DICT_PATH}?mode=ro", uri=True)
+    try:
+        rows = con.execute(f"SELECT word, data FROM entries WHERE word IN ({','.join('?' * len(cands))})", cands)
+        return sorted({c for c, data in rows
+                       if any(w in [f.lower() for f in s.get("form_of", [])] for s in json.loads(data)["senses"])})
+    finally:
+        con.close()
 
 
 def lemma(word: str) -> str:
@@ -219,12 +245,14 @@ def first_gloss(con, lexicon_id: int) -> str:
 
 def cards(con, lexicon_ids: set) -> dict:
     """{lexicon_id: card} for the API, in two queries."""
+    from . import rarity
     ids = [i for i in lexicon_ids if i]
     if not ids:
         return {}
     marks = ",".join("?" * len(ids))
     out = {r["id"]: {"headword": r["headword"], "source": r["source"], "ipa": json.loads(r["ipa"] or "[]"),
-                     "source_url": r["source_url"], "senses": []}
+                     "source_url": r["source_url"], "senses": [],
+                     "rarity": {"zipf": r["zipf"], "band": rarity.band(r["zipf"])} if r["zipf"] is not None else None}
            for r in con.execute(f"SELECT * FROM lexicon WHERE id IN ({marks})", ids)}
     for s in con.execute(f"SELECT * FROM senses WHERE lexicon_id IN ({marks}) ORDER BY lexicon_id, ord", ids):
         out[s["lexicon_id"]]["senses"].append({"pos": s["pos"], "gloss": s["gloss"],

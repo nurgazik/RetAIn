@@ -1,6 +1,6 @@
 # User flow: save a word → its word card
 
-Decisions: PRD D48 (2026-09-27); Siri entry point D50 (2026-09-28); the user's note D59 (2026-10-26). Research and spike numbers: `docs/content-sources.md`,
+Decisions: PRD D48 (2026-09-27); Siri entry point D50 (2026-09-28); the user's note D59 (2026-10-26); rarity D61 (2026-10-29). Research and spike numbers: `docs/content-sources.md`,
 "Dictionary sources for word cards".
 
 ```mermaid
@@ -16,8 +16,9 @@ flowchart TD
     C -- not found --> F{"Model: is this a<br/>real English word?"}
     F -- yes --> G["<b>Model writes everything</b><br/>meaning(s) · part of speech · examples<br/>badge: written by AI"]
     F -- no --> H["Save the word only<br/>flag: UNVERIFIED<br/>(user checks later; not used in rewrites)"]
-    E --> S[("Shared list<br/>next user gets it free")]
-    G --> S
+    E --> R["Code: how common is it?<br/>wordfreq score of the word family → 5 bands<br/>(no model)"]
+    G --> R
+    R --> S[("Shared list<br/>next user gets it free")]
     S --> U[("User's word list")]
     H --> U
     U --> N["Card shown: <b>Add a note</b><br/>(optional, the user's own text;<br/>PATCH /v1/words/{id})"]
@@ -40,6 +41,8 @@ a Jev candidate, D54).
 - **Siri's spelling check is the unverified flag.** A misheard word usually isn't in the
   dictionary, so Siri says "check the spelling" and shows what it saved.
 - **At most one model call per new word, zero for a word already in the shared list.**
+- **Rarity is data, not a model.** Every card gets a band (Common … Very rare) from wordfreq's
+  frequency of the word and its inflections, so a rare find like "agelast" says so at once.
 - **The note is the user's, and stays theirs.** It lives on their own word row, never on the
   shared card, and no model ever sees it. Saving the word again keeps it.
 - **Unverified words stay private.** They never enter the shared list, so one user's typo

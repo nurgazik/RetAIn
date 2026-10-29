@@ -120,3 +120,45 @@ def test_model_failure_still_saves_the_word(client, dictionary, monkeypatch):
     monkeypatch.setattr(G, "call_model", broken)
     w = client.post("/v1/words", json={"word": "linchpin"}).json()
     assert w["card"]["senses"][0]["examples"] == []  # filled by the next backfill
+
+
+# ---------------------------------------------------------------- rarity (D61)
+
+def test_inflections_come_from_wiktionary_not_guesses(dictionary):
+    import service.dictionary as D
+    assert D.inflections("bolster") == ["bolstered"]   # "bolsters" etc. aren't in the fixture: not counted
+    assert D.inflections("protract") == ["protracted"]  # counted though it has an adjective sense of its own
+    assert D.inflections("come to terms") == []
+
+
+def test_rarity_counts_the_word_family(dictionary):
+    from wordfreq import zipf_frequency
+    from service import rarity
+    assert rarity.zipf("bolster") > zipf_frequency("bolster", "en")  # + bolstered
+    assert rarity.zipf("zzqxv") == 0.0
+
+
+def test_rarity_bands():
+    from service.rarity import band
+    assert [band(z) for z in (5.6, 4.0, 3.99, 3.0, 2.0, 1.99, 1.0, 0.99, 0.0)] == [
+        "common", "common", "advanced", "advanced", "uncommon", "rare", "rare", "very-rare", "very-rare"]
+
+
+def test_every_card_carries_its_rarity(client, dictionary):
+    w = client.post("/v1/words", json={"word": "linchpin"}).json()
+    assert w["card"]["rarity"]["band"] in ("advanced", "uncommon") and w["card"]["rarity"]["zipf"] > 2
+    rizz = client.post("/v1/words", json={"word": "rizz"}).json()  # a model-written card is scored too
+    assert rizz["card"]["rarity"] is not None
+    bad = client.post("/v1/words", json={"word": "zzqx"}).json()   # unverified: no card, no rarity
+    assert bad["card"] is None
+
+
+def test_cards_from_before_rarity_are_scored_on_startup(client, dictionary):
+    import service.db as db
+    from service import rarity
+    client.post("/v1/words", json={"word": "linchpin"})
+    con = db.connect()
+    con.execute("UPDATE lexicon SET zipf=NULL"); con.commit()
+    assert rarity.backfill(con) >= 1 and rarity.backfill(con) == 0  # idempotent
+    assert con.execute("SELECT zipf FROM lexicon WHERE headword='linchpin'").fetchone()[0] > 2
+    con.close()
