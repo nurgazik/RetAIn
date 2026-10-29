@@ -22,6 +22,9 @@ usage). Code schedules the words; the list stays unlimited; the user marks retai
 scan done (docs/poc2-transform.md §10): AI-graded sentences already ship elsewhere (VORCA,
 ReadUnbound), so the combination with the transform is the differentiator.
 **Next up: TD-20 (sentence-judge eval) → UX-16 (exercise screens).** Founder to-do: try ReadUnbound.
+**2026-10-28 (D60): practice without a cap** — today's set (due + new) then review ahead, rounds of 5 with a checkpoint;
+fill-ins always model-written from a shared bank, never the same sentence twice; review ahead never promotes a word.
+Needs a fresh install from Xcode. **Next: gamification** (later, separate track: research first).
 **2026-10-26 (D59): a personal note on each saved word** — add/edit on the word card (list, capture screen, reader sheet),
 shown in practice, never sent to a model. Needs a fresh install from Xcode to see it on the phone.
 **2026-10-05 (D57): Practice opens on a chooser** (fill-in or sentences, any order, either alone); the schedule moves a word
@@ -231,6 +234,26 @@ all needed for TestFlight and none waits on a decision.**
 vacation coding ends). Home Mac: clone normally with personal credentials; recreate
 `.env.local` (4 API keys — gitignored, never on GitHub) and `data/retain.db` refills
 itself via the fetchers.
+
+### 2026-10-28 — Practice without a cap: today's set, review ahead, sentence bank (D60)
+
+- Founder: always model-written fill-ins; no 5-a-day cap but prioritised by spaced repetition; reuse unseen sentences
+  so each word shows up in varied sentences with fewer model calls; the list separates "today's set" from "review
+  ahead". Pushback agreed: review ahead must not promote a word (early recall is easy recall); a miss still counts.
+  Founder accepted the new-word snowball risk (no new-word limit). Gamification deferred.
+- Evidence used: founder's fill-ins Oct 5–16 (n = 30): 10 from reads (repeat the newest), 19 model, 1 none.
+  Cost per model sentence ~$0.00006 (n = 60 calls), so the bank is mainly about speed.
+- Service: `practice.queue` (today: due → new; ahead: soonest first), `add_round` (5 words) + background `warm`
+  for the round after, `POST /v1/practice/round {part}`, `remaining` counts on the set, `part` on items;
+  `from_reads` and the 3-per-word cap removed; new table `sentence_views` (answered = seen); review-ahead rule in
+  `reschedule`.
+- App: chooser with TODAY'S SET (words practised / total + bar) and REVIEW AHEAD (after today's set is done);
+  round checkpoint; "Review ahead" label on cards; "From one of your reads" label removed.
+- Tests: service 87/87 (7 new, 1 removed with `from_reads`); iOS unit 47/49 + 1 skipped + the known TD-24 date
+  failure; UI walk-through passes through a checkpoint into round two. Live dev account: round one 1.3 s, round two
+  0.05 s. Not yet seen on screen: review ahead (the dev account has 225 words left in today's set).
+- Founder asked why 235 words: those are the dev account's seeded words (simulator/tests). His account has 30 words,
+  all captured in the app (25 learning, 1 retained, 4 archived).
 
 ### 2026-10-26 — The user's note on a saved word (D59)
 

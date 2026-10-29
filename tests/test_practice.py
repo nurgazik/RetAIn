@@ -8,7 +8,7 @@ import pytest
 @pytest.fixture()
 def stubs(client, monkeypatch):
     import service.practice as practice
-    state = {"p": 0.95, "llm": 0, "verdict": "wrong", "look": 0, "fits": set()}
+    state = {"p": 0.95, "llm": 0, "verdict": "wrong", "look": 0, "fits": set(), "spawned": []}
 
     def fake_model(system, user, env, purpose="generate", primary=None):
         def log(raw):  # as the real call logs it: this thread's row + the shared log
@@ -36,6 +36,7 @@ def stubs(client, monkeypatch):
     monkeypatch.setattr(practice.lookalikes, "dictionary_pos", lambda w: {"verb", "noun", "adj"})
     monkeypatch.setattr(practice.lookalikes, "gloss", lambda w, pos: "g")
     monkeypatch.setattr(practice.lookalikes.typesafe, "p_natural", fake_jev)
+    monkeypatch.setattr(practice, "spawn", lambda fn, *a: state["spawned"].append((fn, a)))  # run on demand
     return state
 
 
@@ -47,7 +48,9 @@ def today(client):
 
 def test_set_is_built_once_per_day_with_answers_hidden(client, stubs):
     s = today(client)
-    assert len(s["items"]) == 5
+    assert len(s["items"]) == 5 and {i["part"] for i in s["items"]} == {"today"}
+    learning = sum(w["status"] == "learning" for w in client.get("/v1/words").json()["words"])
+    assert s["remaining"] == {"today": learning - 5, "ahead": 0}  # every word is new: all in today's set
     assert all(i["fill"] and "_____" in i["fill"]["text"] and "answer" not in i["fill"] for i in s["items"])
     assert today(client)["items"] == s["items"]  # same set on the second open
 
@@ -210,30 +213,14 @@ def test_could_be_better_holds_the_gap(client, stubs):
     assert boxes([item["word_id"]])[item["word_id"]] == (0, add_days(today(client)["day"], 1))
 
 
-def test_own_reading_sentence_is_preferred(client, stubs):
-    import service.db as db
-    import service.practice as practice
-    uid = client.get("/v1/me").json()["user_id"]
-    con = db.connect()
-    word = practice.pick_words(con, uid, client.get("/v1/me").json()["day"])[0]["word"]
-    con.execute("INSERT INTO pieces (id, user_id, created_at, day, source, source_text, status, body_html) "
-                "VALUES ('p1', ?, '2026-10-01', '2026-10-01', 'test', 'x', 'done', ?)",
-                (uid, f"<p>Officials hoped the grant would <mark data-def='x'>{word}</mark> the local economy quickly.</p>"))
-    con.commit()
-    got = practice.from_reads(con, uid, word)
-    con.close()
-    assert got == {"text": "Officials hoped the grant would _____ the local economy quickly.", "answer": word,
-                   "source": "read"}
-
-
 def test_retained_words_leave_practice(client, stubs):
     import service.db as db
     import service.practice as practice
     me = client.get("/v1/me").json()
     con = db.connect()
-    first = practice.pick_words(con, me["user_id"], me["day"])[0]
+    first = practice.queue(con, me["user_id"], me["day"])[0]
     client.patch(f"/v1/words/{first['id']}", json={"status": "retained"})
-    assert first["id"] not in [w["id"] for w in practice.pick_words(con, me["user_id"], me["day"])]
+    assert first["id"] not in [w["id"] for w in practice.queue(con, me["user_id"], me["day"])]
     con.close()
 
 
@@ -259,3 +246,113 @@ def test_the_note_shows_live_and_never_reaches_a_model(client, stubs, monkeypatc
     assert seen and not any(secret in p for p in seen)
     client.patch(f"/v1/words/{item['word_id']}", json={"note": "changed today"})
     assert today(client)["items"][0]["note"] == "changed today"  # not frozen in the day's set
+
+
+# ---------------------------------------------------------------- D60: rounds, review ahead, the sentence bank
+
+def set_due(days: dict):
+    """{word_id: due_day or None} straight into the words table."""
+    import service.db as db
+    con = db.connect()
+    for wid, due in days.items():
+        con.execute("UPDATE words SET due_day=?, box=? WHERE id=?", (due, 0 if due is None else 2, wid))
+    con.commit(); con.close()
+
+
+def test_queue_order_due_then_new_then_ahead_soonest_first(client, stubs):
+    import service.db as db
+    from service.practice import add_days, queue
+    me = client.get("/v1/me").json()
+    day = me["day"]
+    ids = [w["id"] for w in client.get("/v1/words").json()["words"] if w["status"] == "learning"]
+    set_due({wid: add_days(day, 9) for wid in ids})  # everything ahead…
+    a, b, c, d, e = ids[:5]
+    set_due({a: add_days(day, -1), b: add_days(day, -4), c: None, d: add_days(day, 2), e: day})
+    con = db.connect()
+    assert [w["id"] for w in queue(con, me["user_id"], day, "today")] == [b, a, e, c]  # most overdue first, new last
+    assert [w["id"] for w in queue(con, me["user_id"], day, "ahead")][:1] == [d]       # soonest first
+    con.close()
+
+
+def test_rounds_add_the_next_words_until_todays_set_is_done(client, stubs):
+    first = today(client)
+    left = first["remaining"]["today"]
+    r = client.post("/v1/practice/round", json={"part": "today"}).json()
+    assert len(r["items"]) == 10 and r["remaining"]["today"] == left - 5
+    assert len({i["word_id"] for i in r["items"]}) == 10  # no word twice in a day
+    assert client.post("/v1/practice/round", json={"part": "bogus"}).status_code == 422
+
+
+def test_a_word_saved_mid_day_joins_todays_set(client, stubs):
+    left = today(client)["remaining"]["today"]
+    client.post("/v1/words", json={"word": "perspicacious", "definition": "Having keen insight."})
+    assert today(client)["remaining"]["today"] == left + 1
+
+
+def test_review_ahead_never_moves_a_word_up_but_a_miss_brings_it_back(client, stubs):
+    from service.practice import add_days
+    day = client.get("/v1/me").json()["day"]
+    ids = [w["id"] for w in client.get("/v1/words").json()["words"] if w["status"] == "learning"]
+    set_due({wid: add_days(day, 5) for wid in ids})  # nothing due, nothing new
+    s = today(client)
+    assert s["items"] == [] and s["remaining"] == {"today": 0, "ahead": len(ids)}
+    s = client.post("/v1/practice/round", json={"part": "ahead"}).json()
+    assert len(s["items"]) == 5 and {i["part"] for i in s["items"]} == {"ahead"}
+    right, wrote, missed = s["items"][:3]
+    client.post("/v1/practice/fill", json={"word_id": right["word_id"], "answer": right["word"]})
+    client.post("/v1/practice/write", json={"word_id": wrote["word_id"], "sentence": f"We {wrote['word']} it."})
+    client.post("/v1/practice/fill", json={"word_id": missed["word_id"], "answer": "nope"})
+    rows = boxes([right["word_id"], wrote["word_id"], missed["word_id"]])
+    assert rows[right["word_id"]] == (2, add_days(day, 5)) and rows[wrote["word_id"]] == (2, add_days(day, 5))
+    assert rows[missed["word_id"]] == (0, add_days(day, 1))
+
+
+def bank(word):
+    import service.db as db
+    con = db.connect()
+    n = con.execute("SELECT COUNT(*) FROM practice_sentences WHERE word=?", (word,)).fetchone()[0]
+    con.close()
+    return n
+
+
+def test_the_bank_serves_unseen_sentences_and_writes_only_when_all_are_seen(client, stubs):
+    import service.db as db
+    import service.practice as practice
+    me = client.get("/v1/me").json()["user_id"]
+    con = db.connect()
+    other = db.upsert_user(con, "other", "o@x")[0]["id"]; con.commit()
+    first, _ = practice.model_sentence(con, me, "bolster", "to support", {})
+    assert bank("bolster") == 1
+    again, _ = practice.model_sentence(con, me, "bolster", "to support", {})
+    assert again["sentence_id"] == first["sentence_id"] and bank("bolster") == 1  # not answered: still unseen
+    con.execute("INSERT INTO sentence_views VALUES (?, ?, '2026-10-01')", (me, first["sentence_id"])); con.commit()
+    fresh, _ = practice.model_sentence(con, me, "bolster", "to support", {})
+    assert fresh["sentence_id"] != first["sentence_id"] and bank("bolster") == 2  # all seen → one new one
+    theirs, _ = practice.model_sentence(con, other, "bolster", "to support", {})
+    assert theirs["sentence_id"] == first["sentence_id"] and bank("bolster") == 2  # shared: no write for them
+    con.close()
+
+
+def test_answering_a_fill_in_marks_its_sentence_seen(client, stubs):
+    import service.db as db
+    item = today(client)["items"][0]
+    client.post("/v1/practice/fill", json={"word_id": item["word_id"], "answer": "nope"})
+    client.post("/v1/practice/fill", json={"word_id": item["word_id"], "answer": item["word"]})
+    con = db.connect()
+    seen = con.execute("SELECT COUNT(*) FROM sentence_views").fetchone()[0]
+    con.close()
+    assert seen == 1 and "sentence_id" not in item["fill"]  # once, however many tries; the id stays server-side
+
+
+def test_the_next_round_is_written_in_the_background(client, stubs):
+    import service.db as db
+    today(client)
+    con = db.connect()
+    written = lambda: con.execute("SELECT COUNT(*) FROM practice_sentences").fetchone()[0]
+    assert written() == 5
+    fn, args = stubs["spawned"].pop()
+    fn(*args)  # the warm-up the server would run on a thread
+    assert written() == 10
+    client.post("/v1/practice/round", json={"part": "today"})
+    assert written() == 10  # round two came straight from the bank
+    con.close()

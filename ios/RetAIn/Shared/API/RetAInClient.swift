@@ -69,6 +69,11 @@ final class RetAInClient {
         var req = try request("v1/practice/today"); req.timeoutInterval = 90
         return try await send(req, as: PracticeSet.self)
     }
+    /// The next round of today's set or of review ahead (D60) → the whole set.
+    func practiceRound(_ part: String) async throws -> PracticeSet {
+        var req = try request("v1/practice/round", method: "POST", body: ["part": part]); req.timeoutInterval = 90
+        return try await send(req, as: PracticeSet.self)
+    }
     func practiceFill(wordId: Int, answer: String) async throws -> FillResult {
         try await send(request("v1/practice/fill", method: "POST", body: ["word_id": wordId, "answer": answer]), as: FillResult.self)
     }

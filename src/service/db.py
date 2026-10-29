@@ -96,7 +96,7 @@ CREATE TABLE IF NOT EXISTS diagnostics (
 CREATE TABLE IF NOT EXISTS practice_sets (
     user_id     TEXT NOT NULL REFERENCES users(id),
     day         TEXT NOT NULL,
-    items       TEXT NOT NULL,      -- JSON: word_id, word, definition, box, fill {text, answer, source}
+    items       TEXT NOT NULL,      -- JSON: word_id, word, definition, box, part (today|ahead, D60), fill {text, answer, source, sentence_id}
     created_at  TEXT NOT NULL,
     PRIMARY KEY (user_id, day)
 );
@@ -130,6 +130,13 @@ CREATE TABLE IF NOT EXISTS practice_sentences (
     answer      TEXT NOT NULL,      -- the word as it appears in the sentence
     p_natural   REAL,               -- Jev's check when written
     created_at  TEXT NOT NULL
+);
+-- which bank sentences each user has answered (D60), so nobody sees the same fill-in twice
+CREATE TABLE IF NOT EXISTS sentence_views (
+    user_id     TEXT NOT NULL REFERENCES users(id),
+    sentence_id INTEGER NOT NULL REFERENCES practice_sentences(id),
+    day         TEXT NOT NULL,
+    PRIMARY KEY (user_id, sentence_id)
 );
 CREATE TABLE IF NOT EXISTS calls (
     id         INTEGER PRIMARY KEY AUTOINCREMENT,

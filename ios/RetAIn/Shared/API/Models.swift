@@ -93,7 +93,20 @@ enum WordLink {
 }
 
 // MARK: daily practice (D56) — src/service/practice.py is the contract
-struct PracticeSet: Codable { let day: String; var items: [PracticeItem] }
+struct PracticeSet: Codable {
+    let day: String
+    var items: [PracticeItem]
+    /// Words not yet in a round, per part ("today", "ahead"; D60). Absent from older servers.
+    var remaining: [String: Int]? = nil
+
+    func left(_ part: String) -> Int { remaining?[part] ?? 0 }
+    /// Words practised (either exercise, or retained) / every word in this part of the day.
+    func wordProgress(_ part: String) -> (done: Int, total: Int) {
+        let mine = items.filter { $0.section == part }
+        return (mine.filter(\.practised).count, mine.count + left(part))
+    }
+    func isDone(_ part: String) -> Bool { let p = wordProgress(part); return p.done == p.total }
+}
 struct PracticeItem: Codable, Identifiable, Hashable {
     let wordId: Int
     let word: String
@@ -103,7 +116,10 @@ struct PracticeItem: Codable, Identifiable, Hashable {
     var attempts: Attempts
     var status: String
     var note: String? = nil   // the user's own note (D59), read live from the word
+    var part: String? = nil   // today | ahead (D60); nil from older servers = today
     var id: Int { wordId }
+    var section: String { part ?? "today" }
+    var practised: Bool { attempts.fill != nil || attempts.write != nil || status == "retained" }
     struct Fill: Codable, Hashable {
         let text: String; let source: String; let answer: String?
         var hint: [String]? = nil   // the Hint's options once asked for (D58): the word + lookalikes

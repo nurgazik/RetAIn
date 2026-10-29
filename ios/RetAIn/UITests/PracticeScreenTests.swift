@@ -2,7 +2,8 @@ import XCTest
 
 /// Walks one practice session on the simulator (signed in with the dev token by the unit tests,
 /// against the local service) and saves a screenshot per screen to /tmp/retain-practice/.
-/// Starts with sentences, leaves part-way, then does the fill-ins (D57: any order, either one).
+/// Starts with sentences, leaves part-way, then does the fill-ins (D57: any order, either one), then
+/// the checkpoint between rounds and one card of the next round (D60).
 final class PracticeScreenTests: XCTestCase {
     private let out = URL(fileURLWithPath: "/tmp/retain-practice")
 
@@ -46,7 +47,7 @@ final class PracticeScreenTests: XCTestCase {
             fillCard.tap()
             let fill = app.staticTexts["FILL IN THE WORD"]
             var steps = 0
-            while steps < 6, fill.waitForExistence(timeout: 5) {
+            while steps < 15, fill.waitForExistence(timeout: 5) {
                 steps += 1
                 shot("fill")
                 let pill = app.buttons["hint-option"].firstMatch
@@ -83,7 +84,14 @@ final class PracticeScreenTests: XCTestCase {
                 if app.alerts.firstMatch.waitForExistence(timeout: 2) { shot("reminder-offer"); app.alerts.buttons["Not now"].tap() }
             }
         }
-        XCTAssertTrue(writeCard.waitForExistence(timeout: 5), "back on the chooser once fill-ins are done")
+        if app.buttons["next-round"].waitForExistence(timeout: 5) {  // D60: a checkpoint between rounds
+            shot("checkpoint")
+            app.buttons["next-round"].tap()
+            XCTAssertTrue(app.staticTexts["FILL IN THE WORD"].waitForExistence(timeout: 30), "next round didn't start")
+            shot("next-round")
+            app.buttons["Exercises"].tap()
+        }
+        XCTAssertTrue(writeCard.waitForExistence(timeout: 5), "back on the chooser")
         shot("chooser-end")
     }
 }

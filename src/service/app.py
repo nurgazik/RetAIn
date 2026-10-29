@@ -162,13 +162,27 @@ class WriteIn(BaseModel):
     sentence: str = Field(min_length=3, max_length=400)
 
 
+class RoundIn(BaseModel):
+    part: str = Field(pattern="^(today|ahead)$")
+
+
 @app.get("/v1/practice/today")
 def practice_today(user=Depends(auth.current_user)):
-    """Today's set; built on the first call of the user's day (may take a few seconds when a
-    fill-in sentence has to be written)."""
+    """Today's set so far + how many words are left in each part (D60); the first call of the user's
+    day prepares round one (a few seconds when fill-in sentences have to be written)."""
     con = db.connect()
     try:
-        return practice.get_set(con, user["id"], user["day"]) or practice.build_set(con, user, engine.model_env())
+        return practice.today_set(con, user, engine.model_env())
+    finally:
+        con.close()
+
+
+@app.post("/v1/practice/round")
+def practice_round(body: RoundIn, user=Depends(auth.current_user)):
+    """The next round of today's set or of review ahead (D60) → the whole set."""
+    con = db.connect()
+    try:
+        return practice.add_round(con, user, body.part, engine.model_env())
     finally:
         con.close()
 

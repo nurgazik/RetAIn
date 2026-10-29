@@ -1,15 +1,16 @@
 # User flow: fill in the word (daily exercise)
 
-**Status: built 2026-10-04** (PRD D56; any order since D57: the user picks this exercise on the Practice chooser, and may skip it; backlog UX-16): `src/service/practice.py`, `ios/RetAIn/App/PracticeView.swift`.
+**Status: built 2026-10-04** (PRD D56; any order since D57: the user picks this exercise on the Practice chooser, and may skip it; **rounds, review ahead and the sentence bank since D60**, 2026-10-28; backlog UX-16): `src/service/practice.py`, `ios/RetAIn/App/PracticeView.swift`.
 
 ```mermaid
 flowchart TD
-    subgraph PREP["Daily prep — on your first open of the day (your day starts 4 am, D51)"]
+    subgraph PREP["Rounds of 5 words (D60) — round one on your first open of the day (your day starts 4 am, D51);<br/>the next on Next round; the round after is written in the background so it's ready"]
         direction TB
-        P1["Code: pick today's due words<br/>(scheduler; ~5 to start)"]:::code --> P2{"Code: was this word placed<br/>in one of your past articles?"}:::code
-        P2 -- yes --> P3["Use that sentence,<br/>blank out the word"]:::code
-        P2 -- no --> P4["<b>SENTENCE WRITER</b> · model writes text<br/>one natural sentence using the word"]:::writer
-        P6 --> P5["Saved for reuse:<br/>up to 3 per word, shared"]:::code
+        P0["Code: the queue, no cap<br/><b>today's set</b> = due (most overdue first) + never practised (oldest first)<br/><b>review ahead</b> = not due yet (soonest first), after today's set is done"]:::code --> P1
+        P1["Code: the next 5 words"]:::code --> P2{"Code: a sentence in the bank for this word<br/>that you haven't answered yet?"}:::code
+        P2 -- yes --> P3["Use it (oldest first),<br/>blank out the word"]:::code
+        P2 -- "no: you've answered them all" --> P4["<b>SENTENCE WRITER</b> · model writes text<br/>one natural sentence using the word"]:::writer
+        P6 --> P5["Added to the bank:<br/>shared by everyone, no cap, no user data"]:::code
         P4 --> P6["<b>JEV CHECK</b> · natural? P ≥ 0.9<br/>else one retry, else no fill-in today"]:::gate
         P7["<b>LOOKALIKE WRITER</b> · DeepSeek · model writes text<br/>5 words that look like the lemma, mean something else<br/>only if this lemma has none stored yet (D58)"]:::writer --> P8["Code: real word? same part of speech?<br/>spelled alike (≥ 0.4)? not a form of it?<br/>stored per lemma, shared by everyone"]:::code
     end
@@ -26,7 +27,7 @@ flowchart TD
     Z -- no --> NO(["Not quite: your word goes in the blank, red,<br/>tap it for its meaning (dictionary, no model) · try again"])
     NO --> Y
     NO --> H
-    OK --> S["Code: record every try; schedule from the FIRST try:<br/>right first → up a gap · wrong first → tomorrow"]:::code
+    OK --> S["Code: record every try; the sentence is now seen (never shown to you again);<br/>schedule from the FIRST try · today's set: right first → up a gap, wrong first → tomorrow<br/>review ahead: wrong first → tomorrow, right → no change"]:::code
     NO --> S
 
     classDef writer stroke:#2b6cb0,stroke-width:3px
@@ -38,8 +39,8 @@ flowchart TD
 code, no model.
 
 **Hint (D58):** a hinted answer counts exactly like a typed one; the options shown are stored on the
-attempt. **No model runs when you answer.** Models only appear in the prep, and only for words that have
-no sentence from your own reading yet.
+attempt. **No model runs when you answer.** Models only appear in the prep, and only when you've answered every
+sentence the bank has for that word (~$0.00006 a sentence: Gemma + Jev).
 
 ## Tested by
 
@@ -54,3 +55,14 @@ no sentence from your own reading yet.
 - **Word forms:** the blanked form is right, and so is the base word (shown the form used).
 - **One try**, then the answer; a miss sends the word back to tomorrow. No hints beyond the meaning.
 - **Prep runs on the first open of the day** (1.6 s measured with four sentences to write).
+
+## Decided (D60, 2026-10-28)
+
+- **Every fill-in sentence is model-written** (Gemma, Jev-checked). Sentences from your own reads are gone:
+  they repeated (always the newest) and came from the rewrite engine, whose checker passes ~12% wrong usages.
+- **No daily cap.** Today's set (due + never practised) first, review ahead after it; rounds of 5 with a
+  checkpoint (Next round / Back to exercises).
+- **Review ahead never moves a word up** (early recall is easy recall); a miss still sends it back to tomorrow.
+- **The sentence bank:** shared by all users, grows without a cap; `sentence_views` records which ones each
+  user has answered; a sentence prepared but never answered stays unseen and is used next time.
+- Measured on the dev account 2026-10-28: round one 1.3 s; round two 0.05 s (written in the background).

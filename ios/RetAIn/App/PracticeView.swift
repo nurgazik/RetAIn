@@ -1,8 +1,9 @@
 import SwiftUI
 
-/// Daily practice (D53, D56, D57; diagrams/flow-fill-in-the-word.md, flow-write-a-sentence.md).
+/// Daily practice (D53, D56, D57, D60; diagrams/flow-fill-in-the-word.md, flow-write-a-sentence.md).
 /// Opens on a chooser: the user picks fill-in or sentences, in any order, and may skip either (D57).
-/// Today's words and their results sit under the two choices, with Mark retained per word.
+/// Two parts (D60): today's set (due + new words) and, once it's done, review ahead. Words come in
+/// rounds of five with a checkpoint between them; no cap. Words so far sit below, with Mark retained.
 enum PracticeExercise: Equatable {
     case fill, write
 
@@ -18,13 +19,16 @@ enum PracticeExercise: Equatable {
         self == .fill ? item.attempts.fill != nil : item.attempts.write != nil
     }
 
-    /// The next word to do in this exercise, if any.
-    func next(_ items: [PracticeItem]) -> Int? { items.firstIndex(where: pending) }
+    /// The next word to do in this exercise and part of the day, if any.
+    func next(_ items: [PracticeItem], in part: String = "today") -> Int? {
+        items.firstIndex { $0.section == part && pending($0) }
+    }
 
-    /// Done / total for this exercise; words retained before they were tried drop out.
-    func progress(_ items: [PracticeItem]) -> (done: Int, total: Int) {
-        let counted = items.filter { pending($0) || done($0) }
-        return (counted.filter(done).count, counted.count)
+    /// Done / total for this exercise in a part; words retained before they were tried drop out;
+    /// words not yet in a round (`remaining`) count as still to do.
+    func progress(_ items: [PracticeItem], in part: String = "today", remaining: Int = 0) -> (done: Int, total: Int) {
+        let counted = items.filter { $0.section == part && (pending($0) || done($0)) }
+        return (counted.filter(done).count, counted.count + remaining)
     }
 }
 
@@ -33,6 +37,8 @@ struct PracticeView: View {
     @State private var error: String?
     @State private var loading = false
     @State private var exercise: PracticeExercise?   // nil: the chooser
+    @State private var part = "today"                // today | ahead (D60)
+    @State private var preparing = false             // a round is being prepared
     @State private var shown: Int?                   // the word on screen (stays while a result is shown)
     @State private var answer = ""
     @State private var fillResult: FillResult?
@@ -70,11 +76,13 @@ struct PracticeView: View {
     }
 
     @ViewBuilder private func content(_ set: PracticeSet) -> some View {
-        if set.items.isEmpty {
+        if set.items.isEmpty && set.left("today") + set.left("ahead") == 0 {
             ContentUnavailableView("Nothing to practise", systemImage: "checkmark.seal",
                                    description: Text("Add words in the Words tab, or come back when some are due."))
-        } else if let exercise, let i = shown ?? exercise.next(set.items) {
-            let p = exercise.progress(set.items)
+        } else if let exercise, shown == nil, exercise.next(set.items, in: part) == nil, set.left(part) > 0 {
+            checkpoint(set)
+        } else if let exercise, let i = shown ?? exercise.next(set.items, in: part) {
+            let p = exercise.progress(set.items, in: part, remaining: set.left(part))
             VStack(spacing: 0) {
                 ProgressView(value: Double(p.done), total: Double(max(p.total, 1)))
                     .padding(.horizontal).padding(.top, 4)
@@ -95,7 +103,7 @@ struct PracticeView: View {
 
     private func fillCard(_ item: PracticeItem) -> some View {
         VStack(alignment: .leading, spacing: 16) {
-            label("Fill in the word", item.fill?.source == "read" ? "From one of your reads" : nil)
+            label("Fill in the word", item.section == "ahead" ? "Review ahead" : nil)
             let lastWrong = item.fill?.wrong?.last
             Text(blanked(item.fill?.text ?? "", answer: fillResult?.expected, wrong: fillResult == nil ? lastWrong?.answer : nil))
                 .font(.system(.title3, design: .serif)).lineSpacing(4)
@@ -171,7 +179,7 @@ struct PracticeView: View {
 
     private func writeCard(_ item: PracticeItem) -> some View {
         VStack(alignment: .leading, spacing: 16) {
-            label("Use it in a sentence", nil)
+            label("Use it in a sentence", item.section == "ahead" ? "Review ahead" : nil)
             Text(item.word).font(.system(.largeTitle, design: .serif)).bold().accessibilityIdentifier("practice-word")
             Text(item.definition).font(.callout).foregroundStyle(.secondary)
             yourNote(item)
@@ -213,14 +221,32 @@ struct PracticeView: View {
     // MARK: chooser
 
     private func chooser(_ set: PracticeSet) -> some View {
-        VStack(alignment: .leading, spacing: 14) {
-            if PracticeExercise.fill.next(set.items) == nil && PracticeExercise.write.next(set.items) == nil {
-                Label("Done for today", systemImage: "checkmark.seal.fill").font(.title2.bold()).foregroundStyle(.green)
+        let today = set.wordProgress("today"), ahead = set.wordProgress("ahead")
+        return VStack(alignment: .leading, spacing: 14) {
+            Text("TODAY'S SET").font(.caption.bold()).foregroundStyle(.secondary)
+            if today.total == 0 {
+                Label("Nothing due today", systemImage: "checkmark.seal").font(.title3.bold()).foregroundStyle(.secondary)
+            } else if set.isDone("today") {
+                Label("Today's set done · \(today.total) word\(today.total == 1 ? "" : "s")", systemImage: "checkmark.seal.fill")
+                    .font(.title3.bold()).foregroundStyle(.green)
+            } else {
+                Text("\(today.done) of \(today.total) words practised").font(.callout).foregroundStyle(.secondary)
+                ProgressView(value: Double(today.done), total: Double(today.total)).accessibilityIdentifier("today-progress")
+                exerciseCard(.fill, "today", "Fill in the word", "Recall it from a sentence", set)
+                exerciseCard(.write, "today", "Use it in a sentence", "Write your own", set)
             }
-            exerciseCard(.fill, "Fill in the word", "Recall it from a sentence", set.items)
-            exerciseCard(.write, "Use it in a sentence", "Write your own", set.items)
-            Text("TODAY'S WORDS").font(.caption.bold()).foregroundStyle(.secondary).padding(.top, 8)
-            Text("Words you got right come back later; misses come back tomorrow.").font(.callout).foregroundStyle(.secondary)
+            if set.isDone("today"), ahead.total > 0 {
+                Text("REVIEW AHEAD").font(.caption.bold()).foregroundStyle(.secondary).padding(.top, 8)
+                Text("\(ahead.total - ahead.done) word\(ahead.total - ahead.done == 1 ? "" : "s") not due yet. Practice here won't move a word up; a miss brings it back tomorrow.")
+                    .font(.callout).foregroundStyle(.secondary)
+                exerciseCard(.fill, "ahead", "Fill in the word", "Recall it from a sentence", set)
+                exerciseCard(.write, "ahead", "Use it in a sentence", "Write your own", set)
+            }
+            if let error = inputError { Text(error).font(.callout).foregroundStyle(.red) }
+            if !set.items.isEmpty {
+                Text("WORDS SO FAR TODAY").font(.caption.bold()).foregroundStyle(.secondary).padding(.top, 8)
+                Text("Words you got right come back later; misses come back tomorrow.").font(.callout).foregroundStyle(.secondary)
+            }
             ForEach(set.items) { item in
                 HStack(alignment: .firstTextBaseline) {
                     VStack(alignment: .leading, spacing: 2) {
@@ -240,18 +266,38 @@ struct PracticeView: View {
         .padding()
     }
 
-    private func exerciseCard(_ kind: PracticeExercise, _ title: String, _ subtitle: String,
-                              _ items: [PracticeItem]) -> some View {
-        let p = kind.progress(items)
+    /// Between rounds (D60): the next five, or back to the exercises.
+    private func checkpoint(_ set: PracticeSet) -> some View {
+        let left = set.left(part)
+        return VStack(spacing: 16) {
+            Label("Round done", systemImage: "flag.checkered").font(.title2.bold())
+            Text(part == "today" ? "\(left) more in today's set" : "\(left) more to review ahead")
+                .font(.callout).foregroundStyle(.secondary)
+            Button { Task { await nextRound() } } label: {
+                HStack { if preparing { ProgressView().padding(.trailing, 4) }; Text("Next round") }.frame(maxWidth: .infinity)
+            }
+            .buttonStyle(.borderedProminent).controlSize(.large).disabled(preparing).accessibilityIdentifier("next-round")
+            Button { leave() } label: { Text("Back to exercises").frame(maxWidth: .infinity) }
+                .buttonStyle(.bordered).controlSize(.large)
+            if let error = inputError { Text(error).font(.callout).foregroundStyle(.red) }
+        }
+        .padding().frame(maxHeight: .infinity)
+    }
+
+    private func exerciseCard(_ kind: PracticeExercise, _ part: String, _ title: String, _ subtitle: String,
+                              _ set: PracticeSet) -> some View {
+        let p = kind.progress(set.items, in: part, remaining: set.left(part))
         let left = p.total - p.done
-        return Button { exercise = kind } label: {
+        return Button { Task { await start(kind, part) } } label: {
             HStack {
                 VStack(alignment: .leading, spacing: 4) {
                     Text(title).font(.headline)
                     Text(subtitle).font(.callout).foregroundStyle(.secondary)
                 }
                 Spacer()
-                if left == 0 {
+                if preparing && self.part == part {
+                    ProgressView()
+                } else if left == 0 {
                     Label(p.total == 0 ? "None today" : "Done", systemImage: p.total == 0 ? "minus" : "checkmark")
                         .font(.callout).foregroundStyle(p.total == 0 ? Color.secondary : .green)
                 } else {
@@ -262,7 +308,7 @@ struct PracticeView: View {
             .padding().frame(maxWidth: .infinity, alignment: .leading)
             .background(.quaternary.opacity(0.5), in: .rect(cornerRadius: 12))
         }
-        .buttonStyle(.plain).disabled(left == 0)
+        .buttonStyle(.plain).disabled(left == 0 || preparing)
     }
 
     private func outcome(_ item: PracticeItem) -> String {
@@ -271,6 +317,7 @@ struct PracticeView: View {
         if let w = item.attempts.write {
             parts.append(["natural": "sentence ✓", "wrong": "sentence ✗"][w.verdict ?? ""] ?? "sentence: could be better")
         }
+        if item.section == "ahead" { parts.append("review ahead") }
         return parts.joined(separator: " · ")
     }
 
@@ -331,7 +378,7 @@ struct PracticeView: View {
         loading = true; defer { loading = false }
         do {
             let s = try await RetAInClient.shared.practiceToday()
-            if s.day != set?.day { exercise = nil; shown = nil; fillResult = nil; writeResult = nil; answer = "" }
+            if s.day != set?.day { exercise = nil; part = "today"; shown = nil; fillResult = nil; writeResult = nil; answer = "" }
             set = s; error = nil
         } catch { if set == nil { self.error = error.localizedDescription } }
     }
@@ -373,13 +420,29 @@ struct PracticeView: View {
         catch { inputError = error.localizedDescription }
     }
 
-    /// On to the next word in this exercise; when it's finished, back to the chooser
-    /// (the reminder is offered the first time either exercise is finished).
+    /// On to the next word in this exercise; at the end of a round with more to come, the checkpoint;
+    /// when the part is finished, back to the chooser (the reminder is offered the first time).
     private func advance() {
         fillResult = nil; writeResult = nil; answer = ""; inputError = nil; shown = nil
-        guard let exercise, exercise.next(set?.items ?? []) == nil else { return }
+        guard let exercise, exercise.next(set?.items ?? [], in: part) == nil else { return }
+        if (set?.left(part) ?? 0) > 0 { return }  // the checkpoint shows
         self.exercise = nil
         if !PracticeReminder.asked { PracticeReminder.asked = true; askReminder = true }
+    }
+
+    /// Into an exercise; with nothing ready in that part, its next round is prepared first.
+    private func start(_ kind: PracticeExercise, _ part: String) async {
+        self.part = part; inputError = nil
+        if kind.next(set?.items ?? [], in: part) == nil, (set?.left(part) ?? 0) > 0 {
+            guard await nextRound() else { return }
+        }
+        exercise = kind
+    }
+
+    @discardableResult private func nextRound() async -> Bool {
+        preparing = true; defer { preparing = false }
+        do { set = try await RetAInClient.shared.practiceRound(part); inputError = nil; return true }
+        catch { inputError = error.localizedDescription; return false }
     }
 
     private func leave() {
