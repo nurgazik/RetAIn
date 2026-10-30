@@ -22,6 +22,8 @@ usage). Code schedules the words; the list stays unlimited; the user marks retai
 scan done (docs/poc2-transform.md §10): AI-graded sentences already ship elsewhere (VORCA,
 ReadUnbound), so the combination with the transform is the differentiator.
 **Next up: TD-20 (sentence-judge eval) → UX-16 (exercise screens).** Founder to-do: try ReadUnbound.
+**2026-10-30 (D64): RetAInize tab removed** — reading starts from the other app's share sheet or the Safari action;
+the app opens on Practice. Needs a fresh install from Xcode.
 **2026-10-30 (D63): search my words** — search bar on Words: word, meanings and notes; forms and misspellings found;
 "Add" from search. Needs a fresh install from Xcode.
 **2026-10-29 (D62): Delete replaces Archive** — swipe or card button; the word disappears for the user (soft delete
@@ -240,6 +242,16 @@ all needed for TestFlight and none waits on a decision.**
 vacation coding ends). Home Mac: clone normally with personal credentials; recreate
 `.env.local` (4 API keys — gitignored, never on GitHub) and `data/retain.db` refills
 itself via the fetchers.
+
+### 2026-10-30 — RetAInize tab removed (D64)
+
+- Founder: drop the copy-paste tab; users RetAInize inside the other app. Removed `TransformView.swift`; app opens
+  on Practice (four tabs). Dependency found and fixed: the paused Reddit/Facebook message (D52) pointed at the paste
+  tab — now "Select the post's text, then share the selection to RetAIn". My Reads empty text updated; the test
+  sample article moved into `RetAInClientTests`.
+- Founder's question answered from data: 24 learning words, today's set 16 = 15 never practised + 1 due (temerity);
+  8 not due yet (Nov 1 / 4 / 12) wait in review ahead. Working as designed (D60).
+- Tests: iOS unit 55/57 + 1 skipped + known TD-24; simulator launch screenshot shows the four tabs.
 
 ### 2026-10-30 — Word search (D63)
 

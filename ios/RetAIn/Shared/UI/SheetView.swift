@@ -1,8 +1,7 @@
 import SwiftUI
 
 /// The product moment (PRD §8): "working the magic" phases → the piece with highlights →
-/// tap-to-reveal, with each tap sent to the ledger. Used by the app's paste flow and by
-/// both extensions.
+/// tap-to-reveal, with each tap sent to the ledger. Used by both extensions.
 struct SheetView: View {
     let text: String
     var title: String? = nil

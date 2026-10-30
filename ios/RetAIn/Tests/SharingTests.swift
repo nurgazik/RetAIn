@@ -30,12 +30,12 @@ final class SharingTests: XCTestCase {
         XCTAssertNil(claimant(input(url: "mailto:a@b.c")))
     }
 
-    /// D52: Reddit and Facebook links ask for copied text and never fall through to the web-page reader.
-    func testPausedSourcesAskForCopiedText() async {
+    /// D52/D64: Reddit and Facebook links ask for the selected text and never fall through to the web-page reader.
+    func testPausedSourcesAskForSelectedText() async {
         for (url, name) in [("https://www.reddit.com/r/a/comments/b/c/", "reddit-paused"),
                             ("https://www.facebook.com/share/p/1DZxoEEMzn/", "facebook-paused")] {
-            guard case .unusable("Copy the text instead", let detail, name) = await ShareRouter().route(input(url: url)) else { return XCTFail(url) }
-            XCTAssertTrue(detail.contains("copied"))
+            guard case .unusable("Share the text instead", let detail, name) = await ShareRouter().route(input(url: url)) else { return XCTFail(url) }
+            XCTAssertTrue(detail.contains("Select the post's text"))
         }
     }
 

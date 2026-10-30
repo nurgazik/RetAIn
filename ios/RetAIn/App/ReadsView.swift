@@ -9,7 +9,7 @@ struct ReadsView: View {
     var body: some View {
         NavigationStack {
             List {
-                if pieces.isEmpty { Text("Nothing yet. Share some text to RetAIn, or paste it in the RetAInize tab.").foregroundStyle(.secondary) }
+                if pieces.isEmpty { Text("Nothing yet. In any app, share a page or selected text to RetAIn.").foregroundStyle(.secondary) }
                 ForEach(pieces) { p in
                     Button { Task { await open(p) } } label: {
                         VStack(alignment: .leading, spacing: 3) {

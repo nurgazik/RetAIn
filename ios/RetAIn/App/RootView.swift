@@ -4,12 +4,11 @@ import WidgetKit
 struct RootView: View {
     @Environment(SessionState.self) private var session
     @Environment(\.scenePhase) private var scenePhase
-    @State private var tab = "transform"
+    @State private var tab = "practice"   // D64: no paste tab; reading happens from the other app's share sheet
     @State private var openWordId: Int?
     var body: some View {
         if session.signedIn {
             TabView(selection: $tab) {
-                TransformView().tabItem { Label("RetAInize", systemImage: "sparkles") }.tag("transform")
                 PracticeView().tabItem { Label("Practice", systemImage: "pencil.and.list.clipboard") }.tag("practice")
                 WordsView(openWordId: $openWordId).tabItem { Label("Words", systemImage: "character.book.closed") }.tag("words")
                 ReadsView().tabItem { Label("My Reads", systemImage: "books.vertical") }.tag("reads")
