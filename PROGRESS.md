@@ -22,6 +22,9 @@ usage). Code schedules the words; the list stays unlimited; the user marks retai
 scan done (docs/poc2-transform.md §10): AI-graded sentences already ship elsewhere (VORCA,
 ReadUnbound), so the combination with the transform is the differentiator.
 **Next up: TD-20 (sentence-judge eval) → UX-16 (exercise screens).** Founder to-do: try ReadUnbound.
+**2026-10-30 (D65): stardust fill-in gap** — the blank is now the input: one shimmering dust cluster per letter inside
+the sentence, letters appear as you type, judged only on Check (wrong → the gap shakes, red word). Fixes the gap
+vanishing at a line end. Hangman parked as its own future exercise (UX-22). Needs a fresh install from Xcode.
 **2026-10-30 (D64): RetAInize tab removed** — reading starts from the other app's share sheet or the Safari action;
 the app opens on Practice. Needs a fresh install from Xcode.
 **2026-10-30 (D63): search my words** — search bar on Words: word, meanings and notes; forms and misspellings found;
@@ -242,6 +245,21 @@ all needed for TestFlight and none waits on a decision.**
 vacation coding ends). Home Mac: clone normally with personal credentials; recreate
 `.env.local` (4 API keys — gitignored, never on GitHub) and `data/retain.db` refills
 itself via the fetchers.
+
+### 2026-10-30 — Stardust fill-in gap (D65)
+
+- Founder saw a fill-in with no gap on the phone ("…increasingly / as the storm…"). The server data was right
+  (`_____` in the sentence); the app drew the blank as eight underlined spaces, and iOS hides spaces at a line end.
+- Founder's mockup: letter boxes that fill as you type, wrong letters bouncing. Agreed after pushback: no letter-by-
+  letter rejection (it would turn recall into Hangman and remove the miss signal); judged on Check only. Founder
+  asked for mist/stardust instead of boxes; built stardust per letter (assistant's pick). Hangman → UX-22 / Horizon 3.
+- Built: `App/FillSentence.swift` — a wrapping `FlowLayout` (words + the gap share a baseline), the letter gap, and
+  `Stardust` (one Canvas, seeded particles, still under Reduce Motion); shake via keyframeAnimator + haptics. The gap
+  is the input (hidden field, focused on arrival); the "Type the word" box is gone. Server: `fill.letters` (length
+  only; the word stays hidden until solved). Service restarted.
+- Tests: service practice 24/24; iOS 60: 58 pass, 1 skipped, 1 known TD-24 failure; new `FillSentenceTests` renders
+  the "precarious" sentence at 4 widths × 4 states (gap at line end, mid-line, line start: all visible); practice UI
+  walk-through passes (typing, wrong, solved screenshots). Not yet on the phone; the animation's feel is a device call.
 
 ### 2026-10-30 — RetAInize tab removed (D64)
 

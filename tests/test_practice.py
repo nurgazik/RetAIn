@@ -52,6 +52,7 @@ def test_set_is_built_once_per_day_with_answers_hidden(client, stubs):
     learning = sum(w["status"] == "learning" for w in client.get("/v1/words").json()["words"])
     assert s["remaining"] == {"today": learning - 5, "ahead": 0}  # every word is new: all in today's set
     assert all(i["fill"] and "_____" in i["fill"]["text"] and "answer" not in i["fill"] for i in s["items"])
+    assert all(i["fill"]["letters"] == len(i["word"]) for i in s["items"])  # D65: the gap's letter count only
     assert today(client)["items"] == s["items"]  # same set on the second open
 
 

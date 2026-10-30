@@ -17,14 +17,14 @@ flowchart TD
 
     P3 --> X
     P5 --> X
-    X([You see the sentence with a blank<br/>and the word's meaning as the cue]) --> Y([You type the word])
+    X([You see the sentence with a gap: one stardust cluster per letter (D65)<br/>and the word's meaning as the cue]) --> Y([You type into the gap: letters appear out of the dust,<br/>nothing is checked until you tap Check])
     X --> H([Stuck? You tap Hint])
     H --> H1["<b>JEV CHECK</b> · each stored lookalike in your blank:<br/>P(natural) ≥ 0.5 → it fits, dropped · ~0.2 s"]:::gate
     H1 --> H2([4 pills: the word + 3 lookalikes, shuffled])
     H2 -- "you tap one: same as typing it" --> Z
     Y --> Z{"Code: is it the word, in any form?<br/>(the blanked form, the lemma, or an inflection of it)"}:::code
     Z -- yes --> OK([Correct])
-    Z -- no --> NO(["Not quite: your word goes in the blank, red,<br/>tap it for its meaning (dictionary, no model) · try again"])
+    Z -- no --> NO(["Not quite: the gap shakes, your word goes in it, red,<br/>tap it for its meaning (dictionary, no model) · try again"])
     NO --> Y
     NO --> H
     OK --> S["Code: record every try; the sentence is now seen (never shown to you again);<br/>schedule from the FIRST try · today's set: right first → up a gap, wrong first → tomorrow<br/>review ahead: wrong first → tomorrow, right → no change"]:::code

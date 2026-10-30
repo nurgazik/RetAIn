@@ -63,8 +63,10 @@ final class PracticeScreenTests: XCTestCase {
                         if i == 1, !app.buttons["Next"].waitForExistence(timeout: 10) { shot("wrong-pill") }
                     }
                 } else {  // a wrong guess keeps the card (D58); then a pill to finish the word
-                    let field = app.textFields["Type the word"]
-                    field.tap(); field.typeText("guess")
+                    let field = app.textFields["fill-input"]  // D65: typing goes into the gap (focused on arrival)
+                    field.typeText("gu")
+                    if steps == 2 { shot("typing") }
+                    field.typeText("ess")
                     app.buttons["Check"].tap()
                     XCTAssertTrue(app.staticTexts["Not quite: try again. Tap the red word to see what it means."].waitForExistence(timeout: 20))
                     if steps == 2 { shot("wrong-try") }

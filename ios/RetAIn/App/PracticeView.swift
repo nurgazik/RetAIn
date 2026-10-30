@@ -45,6 +45,7 @@ struct PracticeView: View {
     @State private var writeResult: WriteResult?
     @State private var busy = false
     @State private var hinting = false
+    @State private var misses = 0                    // wrong fill-in tries on this word: each shakes the gap (D65)
     @State private var meaningShown: PracticeItem.Wrong?
     @State private var inputError: String?
     @State private var askReminder = false
@@ -105,9 +106,23 @@ struct PracticeView: View {
         VStack(alignment: .leading, spacing: 16) {
             label("Fill in the word", item.section == "ahead" ? "Review ahead" : nil)
             let lastWrong = item.fill?.wrong?.last
-            Text(blanked(item.fill?.text ?? "", answer: fillResult?.expected, wrong: fillResult == nil ? lastWrong?.answer : nil))
-                .font(.system(.title3, design: .serif)).lineSpacing(4)
-                .environment(\.openURL, OpenURLAction { _ in meaningShown = lastWrong; return .handled })
+            // D65: the gap is the input; a hidden field behind it takes the typing
+            FillSentence(text: item.fill?.text ?? "", letters: item.fill?.letters ?? 8, gap: gap(lastWrong),
+                         misses: misses, onTapWrong: { meaningShown = lastWrong })
+                .id(item.wordId)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .contentShape(Rectangle())
+                .onTapGesture { if fillResult == nil { typing = true } }
+                .background {
+                    TextField("Type the word", text: $answer)
+                        .focused($typing)
+                        .textInputAutocapitalization(.never).autocorrectionDisabled()
+                        .onSubmit { Task { await submitFill(item) } }
+                        .foregroundStyle(.clear).tint(.clear)  // no text or caret of its own: the gap shows it
+                        .frame(width: 1, height: 1).clipped().opacity(0.02)
+                        .accessibilityIdentifier("fill-input")
+                }
+                .task(id: item.wordId) { if fillResult == nil { typing = true } }
                 .popover(item: $meaningShown) { w in
                     VStack(alignment: .leading, spacing: 6) {
                         Text(w.answer).font(.system(.title3, design: .serif)).bold()
@@ -125,11 +140,6 @@ struct PracticeView: View {
                 if lastWrong != nil {
                     Text("Not quite: try again. Tap the red word to see what it means.").font(.callout).foregroundStyle(.red)
                 }
-                TextField("Type the word", text: $answer)
-                    .focused($typing)
-                    .textInputAutocapitalization(.never).autocorrectionDisabled()
-                    .textFieldStyle(.roundedBorder).font(.title3)
-                    .onSubmit { Task { await submitFill(item) } }
                 checkButton(disabled: answer.trimmingCharacters(in: .whitespaces).isEmpty) { await submitFill(item) }
                 if let options = item.fill?.hint { hintPills(item, options) }
                 else { hintButton(item) }
@@ -352,23 +362,12 @@ struct PracticeView: View {
         .background((ok ? Color.green : .red).opacity(0.1), in: .rect(cornerRadius: 10))
     }
 
-    /// The sentence with a visible blank, or with the answer filled in (bold) once it's known.
-    /// The sentence with a visible blank; the answer once known (bold); or the last wrong try in red,
-    /// a link that opens its meaning (D58).
-    private func blanked(_ text: String, answer: String?, wrong: String? = nil) -> AttributedString {
-        let parts = text.components(separatedBy: "_____")
-        var out = AttributedString(parts.first ?? "")
-        if parts.count > 1 {
-            var gap = AttributedString(answer ?? wrong ?? "\u{2007}\u{2007}\u{2007}\u{2007}\u{2007}\u{2007}\u{2007}\u{2007}")
-            gap.underlineStyle = .single
-            if answer != nil { gap.inlinePresentationIntent = .stronglyEmphasized }
-            if answer == nil, wrong != nil {
-                gap.foregroundColor = .red
-                gap.link = URL(string: "retain-meaning:wrong")
-            }
-            out += gap + AttributedString(parts.dropFirst().joined(separator: "_____"))
-        }
-        return out
+    /// What the gap shows: the word once solved (bold); the last wrong try in red until the user types
+    /// again (tap: its meaning, D58); otherwise what's typed so far, over the dust.
+    private func gap(_ lastWrong: PracticeItem.Wrong?) -> FillSentence.Gap {
+        if let r = fillResult { return .solved(r.expected ?? answer) }
+        if answer.isEmpty, let w = lastWrong { return .wrong(w.answer) }
+        return .typing(answer)
     }
 
     // MARK: actions
@@ -389,14 +388,14 @@ struct PracticeView: View {
             let r = try await RetAInClient.shared.practiceFill(wordId: item.wordId, answer: answer)
             inputError = nil; shown = index(item)
             if r.correct {  // done; ✓ in the summary only if right first time (D58)
-                fillResult = r
+                withAnimation(.spring(response: 0.35, dampingFraction: 0.6)) { fillResult = r }
                 let firstTry = item.fill?.wrong?.isEmpty ?? true
                 update(item.wordId) { $0.attempts.fill = .init(correct: firstTry ? 1 : 0, verdict: nil, reason: nil, fix: nil, answer: answer) }
             } else {  // try again: the word stays hidden; the wrong one goes in the blank
                 let w = PracticeItem.Wrong(answer: r.answer ?? answer.lowercased(), meaning: r.meaning)
                 let tried = (item.fill?.wrong ?? []).filter { $0.answer != w.answer } + [w]
                 update(item.wordId) { $0.fill?.wrong = tried }
-                answer = ""
+                answer = ""; misses += 1
             }
         } catch { inputError = error.localizedDescription }
     }
@@ -423,7 +422,7 @@ struct PracticeView: View {
     /// On to the next word in this exercise; at the end of a round with more to come, the checkpoint;
     /// when the part is finished, back to the chooser (the reminder is offered the first time).
     private func advance() {
-        fillResult = nil; writeResult = nil; answer = ""; inputError = nil; shown = nil
+        fillResult = nil; writeResult = nil; answer = ""; inputError = nil; shown = nil; misses = 0
         guard let exercise, exercise.next(set?.items ?? [], in: part) == nil else { return }
         if (set?.left(part) ?? 0) > 0 { return }  // the checkpoint shows
         self.exercise = nil
@@ -446,7 +445,7 @@ struct PracticeView: View {
     }
 
     private func leave() {
-        typing = false; fillResult = nil; writeResult = nil; answer = ""; inputError = nil; shown = nil; exercise = nil
+        typing = false; fillResult = nil; writeResult = nil; answer = ""; inputError = nil; shown = nil; exercise = nil; misses = 0
     }
 
     private func index(_ item: PracticeItem) -> Int? { set?.items.firstIndex { $0.wordId == item.wordId } }

@@ -145,6 +145,7 @@ struct PracticeItem: Codable, Identifiable, Hashable {
     var practised: Bool { attempts.fill != nil || attempts.write != nil || status == "retained" }
     struct Fill: Codable, Hashable {
         let text: String; let source: String; let answer: String?
+        var letters: Int? = nil     // the answer's length, for the gap's letter slots (D65); the word stays hidden
         var hint: [String]? = nil   // the Hint's options once asked for (D58): the word + lookalikes
         var wrong: [Wrong]? = nil   // today's wrong tries, each with its own meaning (tap to see)
     }

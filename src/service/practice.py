@@ -204,9 +204,9 @@ def get_set(con, user_id: str, day: str) -> dict | None:
         i.setdefault("part", "today")  # sets from before D60
         w = live.get(i["word_id"])
         i["status"], i["note"] = (w["status"], w["note"]) if w else ("learning", None)
-        if i["fill"]:  # the client never needs the answer before it's solved
+        if i["fill"]:  # the client never needs the answer before it's solved; only its length (D65)
             wrong = [t["answer"].lower() for t in fills.get(i["word_id"], []) if not t["correct"]]
-            i["fill"] = {"text": i["fill"]["text"], "source": i["fill"]["source"],
+            i["fill"] = {"text": i["fill"]["text"], "source": i["fill"]["source"], "letters": len(i["fill"]["answer"]),
                          **({"hint": i["fill"]["hint"]} if i["fill"].get("hint") else {}),
                          "wrong": [{"answer": w, "meaning": meaning(w, i.get("pos"))} for w in dict.fromkeys(wrong)],
                          **({"answer": i["fill"]["answer"]} if "fill" in i["attempts"] else {})}
