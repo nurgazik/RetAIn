@@ -22,6 +22,8 @@ usage). Code schedules the words; the list stays unlimited; the user marks retai
 scan done (docs/poc2-transform.md §10): AI-graded sentences already ship elsewhere (VORCA,
 ReadUnbound), so the combination with the transform is the differentiator.
 **Next up: TD-20 (sentence-judge eval) → UX-16 (exercise screens).** Founder to-do: try ReadUnbound.
+**2026-10-30 (D63): search my words** — search bar on Words: word, meanings and notes; forms and misspellings found;
+"Add" from search. Needs a fresh install from Xcode.
 **2026-10-29 (D62): Delete replaces Archive** — swipe or card button; the word disappears for the user (soft delete
 on the server); saving it again starts fresh. The founder's 5 archived words are now deleted.
 **2026-10-29 (D61): how common a word is** — every card shows five dots + "Uncommon · about once every 10–100 books"
@@ -238,6 +240,17 @@ all needed for TestFlight and none waits on a decision.**
 vacation coding ends). Home Mac: clone normally with personal credentials; recreate
 `.env.local` (4 API keys — gitignored, never on GitHub) and `data/retain.db` refills
 itself via the fetchers.
+
+### 2026-10-30 — Word search (D63)
+
+- Founder: a word search following keyword-search best practice. Built on the phone over the loaded list
+  (no server change): case/accent/space-insensitive; every term must match; fields = word, meanings, note;
+  ranking exact → prefix → inflection → contains → note → meaning → near-misspelling; bold matches; the second
+  line shows the matching note or meaning; "Add “…”" from search, below results, hidden for saved words or forms.
+- Two fixes after the simulator walk-through: Add row moved below results (it sat above "acrimony" for the typo
+  "acrimonie"); inflection matching limited to real endings (gazette ≠ gaze) and Add hidden for forms (bolstered).
+- Tests: iOS unit 55/57 + 1 skipped + known TD-24 (7 new search tests); UI walk-through passes (bolstered, bitter,
+  acrimonie, zzqx). Not yet on the phone.
 
 ### 2026-10-29 — Delete replaces Archive (D62)
 
