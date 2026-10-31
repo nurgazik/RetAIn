@@ -24,7 +24,7 @@ ReadUnbound), so the combination with the transform is the differentiator.
 **Next up: TD-20 (sentence-judge eval) → UX-16 (exercise screens).** Founder to-do: try ReadUnbound.
 **2026-10-30 (D65): stardust fill-in gap** — the blank is now the input: one shimmering dust cluster per letter inside
 the sentence, letters appear as you type, judged only on Check (wrong → the gap shakes, red word). Fixes the gap
-vanishing at a line end. Hangman parked as its own future exercise (UX-22). Needs a fresh install from Xcode.
+vanishing at a line end. 10-31: teal tiles + caret; the solved word is bold teal and opens its card. Hangman parked as its own future exercise (UX-22). Needs a fresh install from Xcode.
 **2026-10-30 (D64): RetAInize tab removed** — reading starts from the other app's share sheet or the Safari action;
 the app opens on Practice. Needs a fresh install from Xcode.
 **2026-10-30 (D63): search my words** — search bar on Words: word, meanings and notes; forms and misspellings found;
@@ -260,6 +260,10 @@ itself via the fetchers.
 - Tests: service practice 24/24; iOS 60: 58 pass, 1 skipped, 1 known TD-24 failure; new `FillSentenceTests` renders
   the "precarious" sentence at 4 widths × 4 states (gap at line end, mid-line, line start: all visible); practice UI
   walk-through passes (typing, wrong, solved screenshots). Not yet on the phone; the animation's feel is a device call.
+- 2026-10-31, founder feedback on screenshots: dust didn't read as an input; solved word underlined; wanted it tappable.
+  Now: text-high teal tiles + dust + blinking caret, keyboard back after a wrong try; solved word bold teal, tap →
+  word card sheet (as the reader). Brand colour `Color.brand` (`Shared/UI/Brand.swift`, #0D9488 light / #2DD4BF dark).
+  Render test + walk-through (now opens the card) pass.
 
 ### 2026-10-30 — RetAInize tab removed (D64)
 

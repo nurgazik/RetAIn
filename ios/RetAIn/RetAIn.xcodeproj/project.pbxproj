@@ -10,6 +10,7 @@
 		0049CC32258152B7D7718EB9 /* SafariActionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = EC2284CBBFDB316905ADFE18 /* SafariActionTests.swift */; };
 		022A500221881208BDE58EC5 /* WordNoteScreenTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 298F565A72357320D03411B0 /* WordNoteScreenTests.swift */; };
 		028348EC305509D58E9FCCBB /* SafariPageReader.swift in Sources */ = {isa = PBXBuildFile; fileRef = D195EDAB7D89B0CFA8C9CB3E /* SafariPageReader.swift */; };
+		0553C136E95198FBCE9163C9 /* Brand.swift in Sources */ = {isa = PBXBuildFile; fileRef = D986F5680916F251B2BA9D7E /* Brand.swift */; };
 		097AEEE792FA1F33A0F56BE0 /* PlainTextReader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3119962DDACEB36DE6A99A58 /* PlainTextReader.swift */; };
 		0ABF5FC779EC5A24E7F11342 /* Models.swift in Sources */ = {isa = PBXBuildFile; fileRef = 08606ADADCC454623CF9B809 /* Models.swift */; };
 		0B9FA92238C5BD902DE4E127 /* WordsStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 89B99CAAFDC861F17C71587F /* WordsStore.swift */; };
@@ -58,6 +59,7 @@
 		77DCB73ED87D31E044598367 /* ReadsStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = C31DA02FC3DE821DB8C935EB /* ReadsStore.swift */; };
 		7C7EDA928C5C5CC0E914F111 /* RetAInShare.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 293E390A139672E14211590E /* RetAInShare.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		7DF62037302C0DAEF1B9ABB2 /* SharingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3937445F467B7669CD60B2ED /* SharingTests.swift */; };
+		7ED24A5AB3E3032347480A7D /* Brand.swift in Sources */ = {isa = PBXBuildFile; fileRef = D986F5680916F251B2BA9D7E /* Brand.swift */; };
 		809D5DA9F5627AC5D72925B9 /* WordsStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 89B99CAAFDC861F17C71587F /* WordsStore.swift */; };
 		824F0F48455FC38A816CDD1A /* SourceReader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3990B0E5EE1BEBC61D4BBCEF /* SourceReader.swift */; };
 		83348BDC949556922B76A799 /* PlainTextReader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3119962DDACEB36DE6A99A58 /* PlainTextReader.swift */; };
@@ -100,6 +102,7 @@
 		D9FA7A40FE0247FAA069C8BC /* PageLoader.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD974EFE030D5357F6ECA002 /* PageLoader.swift */; };
 		D9FD7972FE9C34737BB26CE8 /* PieceHTML.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD249C58E4F455185FAFB480 /* PieceHTML.swift */; };
 		DC0AE76264DD05EF825D1A75 /* ShareRouter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3C2A57F69AB9CC53F9AF4AA3 /* ShareRouter.swift */; };
+		DC409A57133103696FABED2A /* Brand.swift in Sources */ = {isa = PBXBuildFile; fileRef = D986F5680916F251B2BA9D7E /* Brand.swift */; };
 		E02EE78A74B27E260E13D74C /* SSEReader.swift in Sources */ = {isa = PBXBuildFile; fileRef = F466E598D86A53E8A56E882B /* SSEReader.swift */; };
 		E0E1E697C645628DF68D5595 /* PracticeScreenTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A4AEC0117D5FE4580BDA0B12 /* PracticeScreenTests.swift */; };
 		E18EDEFDA1067F27D3791DCE /* SelectionReader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 845D026321A73AF82D70075B /* SelectionReader.swift */; };
@@ -224,6 +227,7 @@
 		CC3A20A78E389B481F0B403E /* SessionStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionStore.swift; sourceTree = "<group>"; };
 		CCC378FFCDCE34EEC4FDC93C /* SheetView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SheetView.swift; sourceTree = "<group>"; };
 		D195EDAB7D89B0CFA8C9CB3E /* SafariPageReader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SafariPageReader.swift; sourceTree = "<group>"; };
+		D986F5680916F251B2BA9D7E /* Brand.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Brand.swift; sourceTree = "<group>"; };
 		DB2FD1996BFFC3729A1494B7 /* RedditReader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RedditReader.swift; sourceTree = "<group>"; };
 		DD974EFE030D5357F6ECA002 /* PageLoader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PageLoader.swift; sourceTree = "<group>"; };
 		E0E48237D0A6D41A66811D72 /* DeleteWordScreenTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeleteWordScreenTests.swift; sourceTree = "<group>"; };
@@ -320,6 +324,7 @@
 		5C02F1C9EFFEE10FCC347CAF /* UI */ = {
 			isa = PBXGroup;
 			children = (
+				D986F5680916F251B2BA9D7E /* Brand.swift */,
 				FD249C58E4F455185FAFB480 /* PieceHTML.swift */,
 				A9E0D70C43F12FCE9F01B048 /* PieceWebView.swift */,
 				57DA24DE4F40E1FBFDECAFDA /* ReaderView.swift */,
@@ -645,6 +650,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				E85385EAD0A79DE310275AF9 /* AddWordIntent.swift in Sources */,
+				0553C136E95198FBCE9163C9 /* Brand.swift in Sources */,
 				E5271E9263BBB3740F9F822F /* FacebookReader.swift in Sources */,
 				5519C69CC8EFC48A1809D32F /* FillSentence.swift in Sources */,
 				1A2BF3817B25324FFD7DF7C7 /* Models.swift in Sources */,
@@ -687,6 +693,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				7ED24A5AB3E3032347480A7D /* Brand.swift in Sources */,
 				2C4A1AF8FAA1CCD72F4F12FA /* FacebookReader.swift in Sources */,
 				AEA8B60DD6F84B7A630758B9 /* Models.swift in Sources */,
 				D9FA7A40FE0247FAA069C8BC /* PageLoader.swift in Sources */,
@@ -719,6 +726,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				DC409A57133103696FABED2A /* Brand.swift in Sources */,
 				F4B51E3A9681EB71551ED78D /* FacebookReader.swift in Sources */,
 				0ABF5FC779EC5A24E7F11342 /* Models.swift in Sources */,
 				2B12D75EBF646B551703B6FA /* PageLoader.swift in Sources */,

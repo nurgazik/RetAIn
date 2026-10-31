@@ -82,6 +82,13 @@ final class PracticeScreenTests: XCTestCase {
                 }
                 XCTAssertTrue(app.buttons["Next"].waitForExistence(timeout: 20))
                 shot("fill-result")
+                if steps == 1 {  // D65: the solved word opens its card
+                    app.descendants(matching: .any)["solved-word"].tap()
+                    XCTAssertTrue(app.buttons["Got it — mark retained"].waitForExistence(timeout: 15), "word card didn't open")
+                    shot("word-card")
+                    app.swipeDown(velocity: .fast)
+                    XCTAssertTrue(app.buttons["Next"].waitForExistence(timeout: 5))
+                }
                 app.buttons["Next"].tap()
                 if app.alerts.firstMatch.waitForExistence(timeout: 2) { shot("reminder-offer"); app.alerts.buttons["Not now"].tap() }
             }

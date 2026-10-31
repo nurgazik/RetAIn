@@ -47,6 +47,7 @@ struct PracticeView: View {
     @State private var hinting = false
     @State private var misses = 0                    // wrong fill-in tries on this word: each shakes the gap (D65)
     @State private var meaningShown: PracticeItem.Wrong?
+    @State private var card: Word?                   // the solved word's card, opened from the gap (D65)
     @State private var inputError: String?
     @State private var askReminder = false
     @FocusState private var typing: Bool
@@ -69,6 +70,15 @@ struct PracticeView: View {
             }
             .task { await load() }
             .onChange(of: scenePhase) { _, p in if p == .active, set != nil { Task { await load() } } }
+            .sheet(item: $card) { w in  // as the reader's word sheet (D48)
+                WordCardView(word: w, onStatus: { status in Task { await cardStatus(w, status) } }, onNote: { text in
+                    let saved = try await RetAInClient.shared.setNote(w.id, text)
+                    update(w.id) { $0.note = saved.note }
+                    return saved
+                })
+                .presentationDetents([.medium, .large])
+                .presentationDragIndicator(.visible)
+            }
             .alert("Remind you to practise each day?", isPresented: $askReminder) {
                 Button("Remind me at 7 pm") { Task { await PracticeReminder.enable() } }
                 Button("Not now", role: .cancel) {}
@@ -108,7 +118,8 @@ struct PracticeView: View {
             let lastWrong = item.fill?.wrong?.last
             // D65: the gap is the input; a hidden field behind it takes the typing
             FillSentence(text: item.fill?.text ?? "", letters: item.fill?.letters ?? 8, gap: gap(lastWrong),
-                         misses: misses, onTapWrong: { meaningShown = lastWrong })
+                         misses: misses, active: typing, onTapWrong: { meaningShown = lastWrong },
+                         onTapSolved: { Task { await openCard(item) } })
                 .id(item.wordId)
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .contentShape(Rectangle())
@@ -396,6 +407,7 @@ struct PracticeView: View {
                 let tried = (item.fill?.wrong ?? []).filter { $0.answer != w.answer } + [w]
                 update(item.wordId) { $0.fill?.wrong = tried }
                 answer = ""; misses += 1
+                if item.fill?.hint == nil { typing = true }  // straight back to typing
             }
         } catch { inputError = error.localizedDescription }
     }
@@ -446,6 +458,23 @@ struct PracticeView: View {
 
     private func leave() {
         typing = false; fillResult = nil; writeResult = nil; answer = ""; inputError = nil; shown = nil; exercise = nil; misses = 0
+    }
+
+    /// The word's full card, from the user's word list (cards aren't part of the practice set).
+    private func openCard(_ item: PracticeItem) async {
+        do { card = try await RetAInClient.shared.words().first { $0.id == item.wordId }; inputError = nil }
+        catch { inputError = error.localizedDescription }
+    }
+
+    /// Mark retained or Delete from the card: as on the Words tab; a deleted word leaves today's set (D62).
+    private func cardStatus(_ w: Word, _ status: String) async {
+        card = nil
+        if status == "deleted" {
+            guard (try? await RetAInClient.shared.deleteWord(w.id)) != nil else { return }
+            advance(); await load()
+        } else if (try? await RetAInClient.shared.setWordStatus(w.id, status)) != nil {
+            update(w.id) { $0.status = status }
+        }
     }
 
     private func index(_ item: PracticeItem) -> Int? { set?.items.firstIndex { $0.wordId == item.wordId } }

@@ -16,7 +16,7 @@ final class FillSentenceTests: XCTestCase {
                                                     ("wrong", .wrong("perilous")), ("solved", .solved("precarious"))]
         for width in [300, 330, 350, 370] as [CGFloat] {
             for (name, gap) in states {
-                let view = FillSentence(text: precarious, letters: 10, gap: gap)
+                let view = FillSentence(text: precarious, letters: 10, gap: gap, active: true)
                     .frame(width: width, alignment: .leading).padding().background(.white)
                 let renderer = ImageRenderer(content: view)
                 renderer.scale = 2

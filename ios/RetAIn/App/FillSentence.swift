@@ -1,8 +1,9 @@
 import SwiftUI
 
-/// The fill-in sentence with a live gap (D65): one stardust cluster per letter of the answer; typed
+/// The fill-in sentence with a live gap (D65): one misty, stardusted tile per letter of the answer; typed
 /// letters condense out of the dust, with no judgment while typing. A wrong try shakes the gap and shows
-/// the wrong word in red (tap: its meaning, D58); a right one shows the word in bold. Words and gap wrap
+/// the wrong word in red (tap: its meaning, D58); a right one shows the word bold in the brand colour
+/// (tap: its card). Words and gap wrap
 /// together (FlowLayout), so the gap is a real view with a real width and can't hang off a line end.
 struct FillSentence: View {
     enum Gap: Equatable { case typing(String), wrong(String), solved(String) }
@@ -10,7 +11,9 @@ struct FillSentence: View {
     let letters: Int
     let gap: Gap
     var misses = 0              // wrong tries so far: each new one shakes the gap
+    var active = false          // the keyboard is up: a caret blinks in the next cell
     var onTapWrong: () -> Void = {}
+    var onTapSolved: () -> Void = {}
 
     @ScaledMetric(relativeTo: .title3) private var space: CGFloat = 5
 
@@ -20,7 +23,8 @@ struct FillSentence: View {
                 if let blank = token.range(of: "_____") {  // punctuation stays glued to the gap: "_____,"
                     HStack(alignment: .firstTextBaseline, spacing: 0) {
                         Text(token[..<blank.lowerBound])
-                        LetterGap(letters: letters, gap: gap, misses: misses, onTapWrong: onTapWrong)
+                        LetterGap(letters: letters, gap: gap, misses: misses, active: active,
+                                  onTapWrong: onTapWrong, onTapSolved: onTapSolved)
                         Text(token[blank.upperBound...])
                     }
                 } else {
@@ -37,7 +41,9 @@ private struct LetterGap: View {
     let letters: Int
     let gap: FillSentence.Gap
     let misses: Int
+    let active: Bool
     let onTapWrong: () -> Void
+    let onTapSolved: () -> Void
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @ScaledMetric(relativeTo: .title3) private var cell: CGFloat = 16
     private let gutter: CGFloat = 2
@@ -65,7 +71,10 @@ private struct LetterGap: View {
     @ViewBuilder private var content: some View {
         switch gap {
         case .solved(let word):
-            Text(word).bold().underline()
+            Text(word).bold().foregroundStyle(Color.brand)   // tap: the word's card
+                .onTapGesture(perform: onTapSolved)
+                .accessibilityIdentifier("solved-word")
+                .accessibilityAddTraits(.isButton)
                 .transition(.scale(scale: 0.7).combined(with: .opacity))
         case .wrong(let word):
             Text(word).foregroundStyle(.red).underline()
@@ -87,33 +96,43 @@ private struct LetterGap: View {
                 }
             }
             .background {
-                Stardust(cells: letters, filled: chars.count, cell: cell, gutter: gutter, still: reduceMotion)
+                Stardust(cells: letters, filled: chars.count, cell: cell, gutter: gutter, caret: active, still: reduceMotion)
             }
             .animation(.spring(response: 0.3, dampingFraction: 0.55), value: typed)
         }
     }
 }
 
-/// A shimmer of particles in each empty cell; the next cell to type into glows a little brighter.
-/// Drawn in one Canvas; positions are fixed per cell (seeded), only brightness and a slight drift move.
+/// A misty tile per letter, text-high, so the gap reads as "type here"; empty tiles shimmer with dust,
+/// the next one glows brighter and carries a blinking caret while the keyboard is up. One Canvas;
+/// particle positions are fixed per cell (seeded), only brightness and a slight drift move.
 private struct Stardust: View {
     let cells: Int
     let filled: Int
     let cell: CGFloat
     let gutter: CGFloat
-    let still: Bool             // Reduce Motion: a still frame
+    let caret: Bool
+    let still: Bool             // Reduce Motion: a still frame, a steady caret
 
     var body: some View {
         TimelineView(.animation(minimumInterval: 1 / 30, paused: still)) { timeline in
             let t = still ? 0 : timeline.date.timeIntervalSinceReferenceDate
             Canvas { g, size in
+                let ink = GraphicsContext.Shading.color(.brand)
+                for i in 0..<cells {  // a tile under every letter, typed or not
+                    let next = i == filled
+                    var tile = g
+                    tile.opacity = next ? 0.2 : 0.1
+                    tile.fill(Path(roundedRect: CGRect(x: CGFloat(i) * (cell + gutter), y: size.height * 0.06,
+                                                       width: cell, height: size.height * 0.88), cornerRadius: 4), with: ink)
+                }
+                if caret, filled < cells, still || Int(t * 2) % 2 == 0 {
+                    let x = CGFloat(filled) * (cell + gutter) + 2
+                    g.fill(Path(CGRect(x: x, y: size.height * 0.18, width: 1.5, height: size.height * 0.64)), with: ink)
+                }
                 for i in filled..<max(cells, filled) {
                     let left = CGFloat(i) * (cell + gutter)
                     let next = i == filled
-                    var mist = g
-                    mist.opacity = next ? 0.12 : 0.07
-                    mist.fill(Path(ellipseIn: CGRect(x: left + 1, y: size.height * 0.3, width: cell - 2, height: size.height * 0.55)),
-                              with: .foreground)
                     for k in 0..<(next ? 12 : 9) {
                         let r = { (n: Int) in Self.noise(i, k * 7 + n) }
                         let x = left + cell * (0.12 + 0.76 * r(1)) + sin(t * 0.7 + 6.3 * r(2)) * 1.2
@@ -122,7 +141,7 @@ private struct Stardust: View {
                         var dot = g
                         dot.opacity = min(1, (0.2 + 0.65 * (0.5 + 0.5 * sin(t * (1.4 + 2.2 * r(6)) + 6.3 * r(7)))) * (next ? 1.3 : 1))
                         dot.fill(Path(ellipseIn: CGRect(x: x - radius, y: y - radius, width: radius * 2, height: radius * 2)),
-                                 with: .foreground)
+                                 with: ink)
                     }
                 }
             }
