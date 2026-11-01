@@ -22,6 +22,7 @@ usage). Code schedules the words; the list stays unlimited; the user marks retai
 scan done (docs/poc2-transform.md §10): AI-graded sentences already ship elsewhere (VORCA,
 ReadUnbound), so the combination with the transform is the differentiator.
 **Next up: TD-20 (sentence-judge eval) → UX-16 (exercise screens).** Founder to-do: try ReadUnbound.
+**2026-11-01: Words tab A–Z** — learning and retained each sorted alphabetically. Needs a fresh install from Xcode.
 **2026-11-01 (D68): meaning decides, grammar is polish** — "✓ Meaning correct" + "Polished: …" when the word is used
 right; grammar never counts. Judge polishes first, then judges. Stress test (100 sentences): grammar-only 35/35 pass
 (was 17/35), no misuse let through. App result card changed: needs a fresh install from Xcode.
@@ -254,6 +255,12 @@ all needed for TestFlight and none waits on a decision.**
 vacation coding ends). Home Mac: clone normally with personal credentials; recreate
 `.env.local` (4 API keys — gitignored, never on GitHub) and `data/retain.db` refills
 itself via the fetchers.
+
+### 2026-11-01 — Words tab sorted A–Z
+
+- Founder: sort the words alphabetically. Each group of the Words tab (learning, then retained) is now A–Z, ignoring
+  case and accents (`WordsView.groups`); search results keep their relevance ranking (D63); the server's order is
+  unchanged (nothing needed it; the widget sorts its own copy). Test: `testListIsAlphabeticalWithinEachGroup` (WordSearchTests 8/8).
 
 ### 2026-11-01 — Meaning vs grammar in the sentence judge (D68)
 

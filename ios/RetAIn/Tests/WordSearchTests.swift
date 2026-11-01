@@ -30,6 +30,15 @@ final class WordSearchTests: XCTestCase {
         XCTAssertEqual(ids("Bolster"), [1, 2, 3])
     }
 
+    /// The list (not search): learning then retained, each A–Z regardless of case or the order words were saved.
+    func testListIsAlphabeticalWithinEachGroup() {
+        var r = w(4, "bolster"); r.status = "retained"
+        let g = WordsView.groups([w(1, "zeitgeist"), w(2, "Acumen"), r, w(3, "candor"), w(5, "aplomb")])
+        XCTAssertEqual(g.map(\.0), ["learning", "retained"])
+        XCTAssertEqual(g[0].1.map(\.word), ["Acumen", "aplomb", "candor", "zeitgeist"])
+        XCTAssertEqual(g[1].1.map(\.word), ["bolster"])
+    }
+
     func testInflectedFormsFindTheWord() {
         XCTAssertEqual(ids("bolstered").first, 1)
         XCTAssertEqual(ids("exigencies").first, 5)

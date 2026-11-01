@@ -119,9 +119,14 @@ struct WordsView: View {
         return out
     }
 
-    private var groups: [(String, [Word])] {
+    private var groups: [(String, [Word])] { Self.groups(words) }
+
+    /// Learning, then retained, each A–Z ignoring case and accents (search keeps its own ranking, D63).
+    static func groups(_ words: [Word]) -> [(String, [Word])] {
         ["learning", "retained"].compactMap { s in  // deleted words never come back from the server (D62)
-            let l = words.filter { $0.status == s }; return l.isEmpty ? nil : (s, l)
+            let l = words.filter { $0.status == s }
+                .sorted { $0.word.localizedStandardCompare($1.word) == .orderedAscending }
+            return l.isEmpty ? nil : (s, l)
         }
     }
     private func openPending() {
