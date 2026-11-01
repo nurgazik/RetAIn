@@ -22,7 +22,7 @@ Sentence judge (TD-20, D53; golden set data/evals/golden/sentences.json):
   .venv/bin/python src/evals sentences import <file> [rater]
                                                    load that page's export (rater defaults to founder)
   .venv/bin/python src/evals sentences export      founder-written sentences → blind packet for a second rater
-  .venv/bin/python src/evals sentences judge <name>
+  .venv/bin/python src/evals sentences judge <name> [--set <file>] [--prompt <file>]
                                                    run a registry model as the judge (scored in `report`)
   .venv/bin/python src/evals sentences feedback-export <run> [run ...]
                                                    blind packet of those runs' reasons + fixes (D55)
@@ -98,6 +98,10 @@ def main(argv: list) -> None:
     elif cmd == "sentences" and args[:1] == ["export"]:
         sentences.export_packet()
     elif cmd == "sentences" and args[:1] == ["judge"]:
+        if "--set" in args:  # another sentence set, e.g. the D68 stress set
+            sentences.use(golden=args[args.index("--set") + 1])
+        if "--prompt" in args:  # another judge prompt, e.g. production's previous one for a baseline
+            sentences.use(prompt=args[args.index("--prompt") + 1])
         sentences.judge(args[1])
     elif cmd == "sentences" and args[:1] == ["feedback-export"]:
         sentences.feedback_export([int(a) for a in args[1:]])

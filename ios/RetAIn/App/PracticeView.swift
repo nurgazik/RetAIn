@@ -221,9 +221,11 @@ struct PracticeView: View {
         .padding()
     }
 
+    /// D68: the verdict is about the word's meaning and usage only; when that's right, the corrected sentence
+    /// is grammar polish ("Polished:"), not a mistake; otherwise it's the usage fix ("Try:").
     private func verdictBanner(_ r: WriteResult) -> some View {
         let (title, color, icon): (String, Color, String) = switch r.verdict {
-        case "natural": ("Natural", .green, "checkmark.circle.fill")
+        case "natural": ("Meaning correct", .green, "checkmark.circle.fill")
         case "wrong": ("Not quite right", .red, "xmark.circle.fill")
         default: ("Could be better", .orange, "exclamationmark.circle.fill")
         }
@@ -231,7 +233,8 @@ struct PracticeView: View {
             Label(title, systemImage: icon).font(.headline).foregroundStyle(color)
             if let reason = r.reason, !reason.isEmpty { Text(reason).font(.callout) }
             if let fix = r.fix, !fix.isEmpty {
-                Text("Try: ").font(.callout).bold() + Text(fix).font(.system(.callout, design: .serif))
+                Text(r.verdict == "natural" ? "Polished: " : "Try: ").font(.callout).bold()
+                    + Text(fix).font(.system(.callout, design: .serif))
             }
         }
         .padding(12).frame(maxWidth: .infinity, alignment: .leading)

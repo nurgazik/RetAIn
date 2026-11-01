@@ -415,3 +415,14 @@ def test_the_judge_sees_every_meaning_of_the_word(client, stubs, monkeypatch):
     stubs["p"] = 0.1  # Jev unsure: the LLM judges
     client.post("/v1/practice/write", json={"word_id": item["word_id"], "sentence": f"He was not {item['word']} at all."})
     assert "Meanings:\n1. (adj) Clumsy, awkward.\n2. (adj) Unrefined, crude.\n" in seen[-1]
+
+
+def test_the_shown_sentence_is_polish_when_the_meaning_is_right():
+    """D68: grammar never decides the verdict; a natural verdict shows the polished sentence, if it changed."""
+    from service.practice import shown_fix
+    s = "Exigency of his trauma called for an immediate medical assistance"
+    polished = "The exigency of his trauma called for immediate medical assistance."
+    assert shown_fix({"verdict": "natural", "polished": polished, "fix": None}, s) == polished
+    assert shown_fix({"verdict": "natural", "polished": s + ".", "fix": None}, s) is None  # nothing changed
+    assert shown_fix({"verdict": "wrong", "polished": polished, "fix": "usage fix"}, s) == "usage fix"
+    assert shown_fix({"verdict": "could-be-better", "polished": polished, "fix": None}, s) == polished

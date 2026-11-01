@@ -303,6 +303,16 @@ def judge_message(word: str, meanings: list, sentence: str) -> str:
     return f"Target word: {word}\nMeanings:\n{listed}\nSentence: {sentence}"
 
 
+def shown_fix(d: dict, sentence: str) -> str | None:
+    """The one corrected sentence the user sees (D68): when the usage is right, the grammar-polished
+    sentence ("Polished:"), if it changed anything; otherwise the usage fix ("Try:")."""
+    if d.get("verdict") == "natural":
+        polished = (d.get("polished") or "").strip()
+        same = " ".join(polished.lower().rstrip(".!?").split()) == " ".join(sentence.lower().rstrip(".!?").split())
+        return None if not polished or same else polished
+    return d.get("fix") or d.get("polished") or None
+
+
 def judge_sentence(word: str, definition: str, sentence: str, env: dict, meanings: list | None = None) -> tuple:
     """Jev first: ✓ when P(natural) ≥ NATURAL_AT (it only ever accepts, so one meaning is enough for it).
     Otherwise the LLM gives verdict, reason, fix, seeing every meaning (D67). Jev failing falls
@@ -321,7 +331,7 @@ def judge_sentence(word: str, definition: str, sentence: str, env: dict, meaning
     calls.append(G.last_call())
     d, _ = json.JSONDecoder().raw_decode(raw[raw.index("{"):])
     verdict = d.get("verdict") if d.get("verdict") in ("natural", "could-be-better", "wrong") else "could-be-better"
-    return {"verdict": verdict, "reason": d.get("reason"), "fix": d.get("fix") if verdict != "natural" else None,
+    return {"verdict": verdict, "reason": d.get("reason"), "fix": shown_fix(d | {"verdict": verdict}, sentence),
             "by": "llm", "p_natural": p}, calls
 
 

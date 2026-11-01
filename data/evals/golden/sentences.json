@@ -1094,6 +1094,86 @@
    "origin": "synthetic",
    "expected": "wrong",
    "source": "D67: real misuse; the fix must still use the target word"
+  },
+  {
+   "id": "p01",
+   "word": "exigency",
+   "sentence": "Exigency of his trauma called for an immediate medical assistance",
+   "origin": "synthetic",
+   "expected": "natural",
+   "source": "founder's practice sentence 2026-11-01; D68 rule (founder 2026-11-01): the meaning is right; slips are grammar (articles, number, tense, agreement), shown as polish, never a strike"
+  },
+  {
+   "id": "p02",
+   "word": "adversity",
+   "sentence": "He grow stronger through adversity of his childhood.",
+   "origin": "synthetic",
+   "expected": "natural",
+   "source": "D68 rule (founder 2026-11-01): the meaning is right; slips are grammar (articles, number, tense, agreement), shown as polish, never a strike"
+  },
+  {
+   "id": "p03",
+   "word": "precarious",
+   "sentence": "Situation on the border were precarious for weeks.",
+   "origin": "synthetic",
+   "expected": "natural",
+   "source": "D68 rule (founder 2026-11-01): the meaning is right; slips are grammar (articles, number, tense, agreement), shown as polish, never a strike"
+  },
+  {
+   "id": "p04",
+   "word": "temerity",
+   "sentence": "Nobody had temerity to tell boss the truth.",
+   "origin": "synthetic",
+   "expected": "natural",
+   "source": "D68 rule (founder 2026-11-01): the meaning is right; slips are grammar (articles, number, tense, agreement), shown as polish, never a strike"
+  },
+  {
+   "id": "p05",
+   "word": "acumen",
+   "sentence": "Her business acumens helped the company grow fast.",
+   "origin": "synthetic",
+   "expected": "natural",
+   "source": "D68 rule (founder 2026-11-01): the meaning is right; slips are grammar (articles, number, tense, agreement), shown as polish, never a strike"
+  },
+  {
+   "id": "q01",
+   "word": "assuage",
+   "sentence": "The apology assuaged to her anger.",
+   "origin": "synthetic",
+   "expected": "wrong",
+   "source": "D68 rule: a pattern specific to the word (its preposition or what it takes) is usage, not polish"
+  },
+  {
+   "id": "q02",
+   "word": "bolster",
+   "sentence": "The win bolstered to the team's confidence.",
+   "origin": "synthetic",
+   "expected": "wrong",
+   "source": "D68 rule: a pattern specific to the word (its preposition or what it takes) is usage, not polish"
+  },
+  {
+   "id": "q03",
+   "word": "placate",
+   "sentence": "He placated at the angry customers with a refund.",
+   "origin": "synthetic",
+   "expected": "wrong",
+   "source": "D68 rule: a pattern specific to the word (its preposition or what it takes) is usage, not polish"
+  },
+  {
+   "id": "q04",
+   "word": "adamant",
+   "sentence": "She was adamant for staying home that night.",
+   "origin": "synthetic",
+   "expected": "wrong",
+   "source": "D68 rule: a pattern specific to the word (its preposition or what it takes) is usage, not polish"
+  },
+  {
+   "id": "q05",
+   "word": "curtail",
+   "sentence": "We curtailed from spending after the bills arrived.",
+   "origin": "synthetic",
+   "expected": "wrong",
+   "source": "D68 rule: a pattern specific to the word (its preposition or what it takes) is usage, not polish"
   }
  ]
 }

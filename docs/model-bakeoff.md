@@ -460,3 +460,32 @@ production has actually been using. Spend $0.11 (4 runs).
   meaning wording (which sense to show), not the judge.
 - **Fixes still drop the word ~16% of the time** despite the prompt; a code guard was considered and
   deferred by the founder.
+
+### Sentence judge v3: meaning decides, grammar is polish (D68) — 2026-11-01
+
+Trigger: the founder's *exigency* sentence got "could be better" for a missing article. Rule: the verdict is about
+the word's meaning and usage (incl. its own prepositions/objects); grammar anywhere is shown as a polished sentence,
+never a strike. Golden set +10 provisional items (p = grammar slips only, q = the word's own pattern wrong) → 145.
+New metric: share of gold-natural items given a polished sentence. Eval options added: `--set <file>`, `--prompt <file>`.
+
+| Flash-Lite, golden 145 | v2 (run 16) | v3a: "ignore grammar" (run 17) | **v3b: polish first, judge the polished sentence (run 18)** |
+|---|---|---|---|
+| Grammar-only items (p) passed | 1/5 | 1/5 | **5/5** |
+| False alarm (natural → wrong), of 73 | 4% | 4% | **1%** |
+| Exact agreement | 76% | 79% | **83%** |
+| Missed (wrong → natural), of 44 | 2% | 2% | 7% (2 are D68-correct: a form slip, a missing article; 1 real: "placated at") |
+| Fix keeps the word | 78% | 73% | 84% |
+
+**Stress set** (`data/evals/golden/sentences-stress.json`, 100 sentences written and labelled by Claude Code under
+D67/D68, kept out of the golden set), production v2 (run 19) vs v3b (run 20):
+
+| Case (n) | Expected | v2 | v3b |
+|---|---|---|---|
+| Grammar slips only (35) | natural | 17 natural · 7 cbb · 11 wrong | **35 natural** |
+| Clean (10) / less common meaning (10) | natural | 10 / 10 | 10 / 10 |
+| Word's own pattern wrong (20) | wrong | 17 wrong · 3 cbb | 19 wrong · 1 cbb |
+| Wrong meaning (20) | wrong | 20 wrong | 18 wrong · 2 cbb |
+| Register off (5) | could-be-better | 2/5 | 2/5 |
+
+0 of 40 wrong sentences called natural by either; natural called wrong 20% → 0%; fixes keeping the word 89% → 94%.
+**Shipped v3b** (prompt `f84c962e6f`). Spend for v3: $0.20 (6 runs). Caveat: the stress labels are Claude's.

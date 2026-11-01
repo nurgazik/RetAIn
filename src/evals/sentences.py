@@ -68,6 +68,13 @@ CREATE TABLE IF NOT EXISTS sentence_verdicts (
 """
 
 
+def use(golden: str = None, prompt: str = None) -> None:
+    """Point this run at another sentence set or judge prompt (paths relative to the repo root)."""
+    global GOLDEN, PROMPT
+    GOLDEN = ROOT / golden if golden else GOLDEN
+    PROMPT = ROOT / prompt if prompt else PROMPT
+
+
 def connect():
     con = results.connect()
     con.executescript(SCHEMA)
@@ -325,7 +332,8 @@ def judge_item(call, system: str, it: dict, defs: dict, push: bool) -> dict:
         row["cost"] += out["cost"]
         row["raw"] = out["text"]
         d = parse(out["text"])
-        row.update(ok=1, verdict=d["verdict"], reason=d.get("reason"), fix=d.get("fix"))
+        from service.practice import shown_fix  # what the user sees (D68)
+        row.update(ok=1, verdict=d["verdict"], reason=d.get("reason"), fix=shown_fix(d, it["sentence"]))
         if push:
             reply = PUSH_NATURAL if d["verdict"] == "natural" else PUSH_WRONG
             second = call(system, f"{user}\n\nYour earlier answer:\n{out['text'].strip()}\n\n"
@@ -510,7 +518,7 @@ def score(con, run_id: int) -> dict:
     fixes = [edit_share(items[r["item_id"]]["sentence"], r["fix"]) for r, _ in scored
              if r["verdict"] != "natural" and r["fix"]]
     from service.practice import uses_word
-    fixed = [r for r, _ in scored if r["verdict"] != "natural" and r["fix"]]
+    fixed = [r for r, _ in scored if r["fix"]]  # D68: a natural verdict may carry a polished sentence too
     pushed = [(r, x) for r, x in scored if r["pushback_verdict"] and r["verdict"] == x]
     flips = [r for r, x in pushed if (r["pushback_verdict"] == "natural") != (x == "natural")]
     return {
@@ -521,6 +529,7 @@ def score(con, run_id: int) -> dict:
         "softened": share(wrong, lambda r: r["verdict"] == "could-be-better"),
         "n_natural": len(natural), "false_alarm": share(natural, lambda r: r["verdict"] == "wrong"),
         "nitpick": share(natural, lambda r: r["verdict"] == "could-be-better"),
+        "polished": share(natural, lambda r: bool(r["fix"])),  # D68: natural, with a grammar-polished sentence
         "n_cbb": len(cbb), "cbb_agree": share(cbb, lambda r: r["verdict"] == "could-be-better"),
         "fix_share": statistics.mean(fixes) if fixes else None,
         "n_fixed": len(fixed),  # D67: a fix that drops the target word teaches nothing about it

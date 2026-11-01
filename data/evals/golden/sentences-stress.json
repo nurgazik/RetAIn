@@ -1,0 +1,805 @@
+{
+ "_readme": "D68 stress set (2026-11-01): 100 sentences written and labelled by Claude Code under the founder's D67/D68 rules (any card meaning counts; grammar is polish, never a strike; the word's own prepositions and complements are usage). Separate from the golden set so its provisional labels don't swamp it. Run: python src/evals sentences judge <model> --set data/evals/golden/sentences-stress.json",
+ "items": [
+  {
+   "id": "xa01",
+   "word": "adversity",
+   "sentence": "She faced many adversity in her first year abroad.",
+   "origin": "synthetic",
+   "expected": "natural",
+   "case": "grammar slips only, meaning right"
+  },
+  {
+   "id": "xa02",
+   "word": "squander",
+   "sentence": "He squander all his savings on a car last year.",
+   "origin": "synthetic",
+   "expected": "natural",
+   "case": "grammar slips only, meaning right"
+  },
+  {
+   "id": "xa03",
+   "word": "corroborate",
+   "sentence": "The new evidence corroborate the witness's account.",
+   "origin": "synthetic",
+   "expected": "natural",
+   "case": "grammar slips only, meaning right"
+  },
+  {
+   "id": "xa04",
+   "word": "assuage",
+   "sentence": "Nothing could assuaged her guilt after the accident.",
+   "origin": "synthetic",
+   "expected": "natural",
+   "case": "grammar slips only, meaning right"
+  },
+  {
+   "id": "xa05",
+   "word": "coalesce",
+   "sentence": "Over the years, the small villages has coalesced into one town.",
+   "origin": "synthetic",
+   "expected": "natural",
+   "case": "grammar slips only, meaning right"
+  },
+  {
+   "id": "xa06",
+   "word": "disparage",
+   "sentence": "He always disparage his colleagues behind their backs.",
+   "origin": "synthetic",
+   "expected": "natural",
+   "case": "grammar slips only, meaning right"
+  },
+  {
+   "id": "xa07",
+   "word": "eschew",
+   "sentence": "She eschews meat and dairy for ethical reason.",
+   "origin": "synthetic",
+   "expected": "natural",
+   "case": "grammar slips only, meaning right"
+  },
+  {
+   "id": "xa08",
+   "word": "placate",
+   "sentence": "The manager tried to placate an angry customers with a voucher.",
+   "origin": "synthetic",
+   "expected": "natural",
+   "case": "grammar slips only, meaning right"
+  },
+  {
+   "id": "xa09",
+   "word": "flounder",
+   "sentence": "The startup floundered after it's founder left.",
+   "origin": "synthetic",
+   "expected": "natural",
+   "case": "grammar slips only, meaning right"
+  },
+  {
+   "id": "xa10",
+   "word": "candor",
+   "sentence": "I appreciated the candor of his answer, it was refreshing.",
+   "origin": "synthetic",
+   "expected": "natural",
+   "case": "grammar slips only, meaning right"
+  },
+  {
+   "id": "xa11",
+   "word": "conundrum",
+   "sentence": "Choosing between two job offer was a real conundrum.",
+   "origin": "synthetic",
+   "expected": "natural",
+   "case": "grammar slips only, meaning right"
+  },
+  {
+   "id": "xa12",
+   "word": "gravitas",
+   "sentence": "The new anchor lacks a gravitas of her predecessor.",
+   "origin": "synthetic",
+   "expected": "natural",
+   "case": "grammar slips only, meaning right"
+  },
+  {
+   "id": "xa13",
+   "word": "impasse",
+   "sentence": "After six hours, talks reached impasse.",
+   "origin": "synthetic",
+   "expected": "natural",
+   "case": "grammar slips only, meaning right"
+  },
+  {
+   "id": "xa14",
+   "word": "panacea",
+   "sentence": "Technology is not panacea for every problem in schools.",
+   "origin": "synthetic",
+   "expected": "natural",
+   "case": "grammar slips only, meaning right"
+  },
+  {
+   "id": "xa15",
+   "word": "windfall",
+   "sentence": "The family receive a windfall when their grandmother's house sold.",
+   "origin": "synthetic",
+   "expected": "natural",
+   "case": "grammar slips only, meaning right"
+  },
+  {
+   "id": "xa16",
+   "word": "linchpin",
+   "sentence": "She is linchpin of the whole project.",
+   "origin": "synthetic",
+   "expected": "natural",
+   "case": "grammar slips only, meaning right"
+  },
+  {
+   "id": "xa17",
+   "word": "acumen",
+   "sentence": "His financial acumens is well known in the city.",
+   "origin": "synthetic",
+   "expected": "natural",
+   "case": "grammar slips only, meaning right"
+  },
+  {
+   "id": "xa18",
+   "word": "quagmire",
+   "sentence": "The war turned into quagmire that lasted a decade.",
+   "origin": "synthetic",
+   "expected": "natural",
+   "case": "grammar slips only, meaning right"
+  },
+  {
+   "id": "xa19",
+   "word": "zeitgeist",
+   "sentence": "The song captured a zeitgeist of the nineties perfectly.",
+   "origin": "synthetic",
+   "expected": "natural",
+   "case": "grammar slips only, meaning right"
+  },
+  {
+   "id": "xa20",
+   "word": "astute",
+   "sentence": "She made a astute observation about the market.",
+   "origin": "synthetic",
+   "expected": "natural",
+   "case": "grammar slips only, meaning right"
+  },
+  {
+   "id": "xa21",
+   "word": "perfunctory",
+   "sentence": "The guard gave our passports a perfunctory glance and wave us through.",
+   "origin": "synthetic",
+   "expected": "natural",
+   "case": "grammar slips only, meaning right"
+  },
+  {
+   "id": "xa22",
+   "word": "tenuous",
+   "sentence": "The link between the two crimes are tenuous at best.",
+   "origin": "synthetic",
+   "expected": "natural",
+   "case": "grammar slips only, meaning right"
+  },
+  {
+   "id": "xa23",
+   "word": "ubiquitous",
+   "sentence": "Smartphones has become ubiquitous in classrooms.",
+   "origin": "synthetic",
+   "expected": "natural",
+   "case": "grammar slips only, meaning right"
+  },
+  {
+   "id": "xa24",
+   "word": "scathing",
+   "sentence": "The critic wrote an scathing review of the play.",
+   "origin": "synthetic",
+   "expected": "natural",
+   "case": "grammar slips only, meaning right"
+  },
+  {
+   "id": "xa25",
+   "word": "meticulous",
+   "sentence": "He is meticulous about keep his records in order.",
+   "origin": "synthetic",
+   "expected": "natural",
+   "case": "grammar slips only, meaning right"
+  },
+  {
+   "id": "xa26",
+   "word": "succinct",
+   "sentence": "Please keep your answer succinct, we has little time.",
+   "origin": "synthetic",
+   "expected": "natural",
+   "case": "grammar slips only, meaning right"
+  },
+  {
+   "id": "xa27",
+   "word": "mitigate",
+   "sentence": "The new barriers will mitigates the risk of flooding.",
+   "origin": "synthetic",
+   "expected": "natural",
+   "case": "grammar slips only, meaning right"
+  },
+  {
+   "id": "xa28",
+   "word": "bolster",
+   "sentence": "The good news bolstered investors confidence.",
+   "origin": "synthetic",
+   "expected": "natural",
+   "case": "grammar slips only, meaning right"
+  },
+  {
+   "id": "xa29",
+   "word": "curtail",
+   "sentence": "The city curtailing water use during the drought last summer.",
+   "origin": "synthetic",
+   "expected": "natural",
+   "case": "grammar slips only, meaning right"
+  },
+  {
+   "id": "xa30",
+   "word": "underscore",
+   "sentence": "The report underscore the need for better training.",
+   "origin": "synthetic",
+   "expected": "natural",
+   "case": "grammar slips only, meaning right"
+  },
+  {
+   "id": "xa31",
+   "word": "caveat",
+   "sentence": "There is one caveats: the offer ends on friday.",
+   "origin": "synthetic",
+   "expected": "natural",
+   "case": "grammar slips only, meaning right"
+  },
+  {
+   "id": "xa32",
+   "word": "benchmark",
+   "sentence": "This results will be the benchmark for next year.",
+   "origin": "synthetic",
+   "expected": "natural",
+   "case": "grammar slips only, meaning right"
+  },
+  {
+   "id": "xa33",
+   "word": "hindsight",
+   "sentence": "With hindsight, I would of chosen a different university.",
+   "origin": "synthetic",
+   "expected": "natural",
+   "case": "grammar slips only, meaning right"
+  },
+  {
+   "id": "xa34",
+   "word": "pitfall",
+   "sentence": "One of the biggest pitfall of freelancing is irregular income.",
+   "origin": "synthetic",
+   "expected": "natural",
+   "case": "grammar slips only, meaning right"
+  },
+  {
+   "id": "xa35",
+   "word": "elusive",
+   "sentence": "The thief remain elusive despite a nationwide search.",
+   "origin": "synthetic",
+   "expected": "natural",
+   "case": "grammar slips only, meaning right"
+  },
+  {
+   "id": "xb01",
+   "word": "galvanize",
+   "sentence": "The scandal galvanized voters who had never cared about politics.",
+   "origin": "synthetic",
+   "expected": "natural",
+   "case": "clean, meaning right"
+  },
+  {
+   "id": "xb02",
+   "word": "shrewd",
+   "sentence": "It was a shrewd move to sell the shares before the crash.",
+   "origin": "synthetic",
+   "expected": "natural",
+   "case": "clean, meaning right"
+  },
+  {
+   "id": "xb03",
+   "word": "pragmatic",
+   "sentence": "We need a pragmatic solution, not a perfect one.",
+   "origin": "synthetic",
+   "expected": "natural",
+   "case": "clean, meaning right"
+  },
+  {
+   "id": "xb04",
+   "word": "hindsight",
+   "sentence": "In hindsight, we should have left an hour earlier.",
+   "origin": "synthetic",
+   "expected": "natural",
+   "case": "clean, meaning right"
+  },
+  {
+   "id": "xb05",
+   "word": "caveat",
+   "sentence": "I'll help you move, with one caveat: I can't lift anything heavy.",
+   "origin": "synthetic",
+   "expected": "natural",
+   "case": "clean, meaning right"
+  },
+  {
+   "id": "xb06",
+   "word": "salient",
+   "sentence": "The report summarizes the salient points of the debate.",
+   "origin": "synthetic",
+   "expected": "natural",
+   "case": "clean, meaning right"
+  },
+  {
+   "id": "xb07",
+   "word": "propensity",
+   "sentence": "He has a propensity to exaggerate when he's nervous.",
+   "origin": "synthetic",
+   "expected": "natural",
+   "case": "clean, meaning right"
+  },
+  {
+   "id": "xb08",
+   "word": "elusive",
+   "sentence": "Success proved elusive for the young band.",
+   "origin": "synthetic",
+   "expected": "natural",
+   "case": "clean, meaning right"
+  },
+  {
+   "id": "xb09",
+   "word": "dichotomy",
+   "sentence": "The film plays with the dichotomy between public image and private life.",
+   "origin": "synthetic",
+   "expected": "natural",
+   "case": "clean, meaning right"
+  },
+  {
+   "id": "xb10",
+   "word": "prudent",
+   "sentence": "It would be prudent to save some money before you quit.",
+   "origin": "synthetic",
+   "expected": "natural",
+   "case": "clean, meaning right"
+  },
+  {
+   "id": "xc01",
+   "word": "eschew",
+   "sentence": "She eschews from eating meat.",
+   "origin": "synthetic",
+   "expected": "wrong",
+   "case": "the word's own pattern wrong (preposition / complement)"
+  },
+  {
+   "id": "xc02",
+   "word": "disparage",
+   "sentence": "He disparaged about his coworkers at lunch.",
+   "origin": "synthetic",
+   "expected": "wrong",
+   "case": "the word's own pattern wrong (preposition / complement)"
+  },
+  {
+   "id": "xc03",
+   "word": "squander",
+   "sentence": "They squandered their money for useless gadgets.",
+   "origin": "synthetic",
+   "expected": "wrong",
+   "case": "the word's own pattern wrong (preposition / complement)"
+  },
+  {
+   "id": "xc04",
+   "word": "corroborate",
+   "sentence": "Two witnesses corroborated with her story.",
+   "origin": "synthetic",
+   "expected": "wrong",
+   "case": "the word's own pattern wrong (preposition / complement)"
+  },
+  {
+   "id": "xc05",
+   "word": "mitigate",
+   "sentence": "The new law mitigates against the risk of fraud.",
+   "origin": "synthetic",
+   "expected": "wrong",
+   "case": "the word's own pattern wrong (preposition / complement)"
+  },
+  {
+   "id": "xc06",
+   "word": "placate",
+   "sentence": "She placated to her angry boss with an apology.",
+   "origin": "synthetic",
+   "expected": "wrong",
+   "case": "the word's own pattern wrong (preposition / complement)"
+  },
+  {
+   "id": "xc07",
+   "word": "assuage",
+   "sentence": "The doctor assuaged him from his fears.",
+   "origin": "synthetic",
+   "expected": "wrong",
+   "case": "the word's own pattern wrong (preposition / complement)"
+  },
+  {
+   "id": "xc08",
+   "word": "underscore",
+   "sentence": "The speech underscored on the need for reform.",
+   "origin": "synthetic",
+   "expected": "wrong",
+   "case": "the word's own pattern wrong (preposition / complement)"
+  },
+  {
+   "id": "xc09",
+   "word": "curtail",
+   "sentence": "The company curtailed on hiring this year.",
+   "origin": "synthetic",
+   "expected": "wrong",
+   "case": "the word's own pattern wrong (preposition / complement)"
+  },
+  {
+   "id": "xc10",
+   "word": "belabor",
+   "sentence": "Let's not belabor on this point any longer.",
+   "origin": "synthetic",
+   "expected": "wrong",
+   "case": "the word's own pattern wrong (preposition / complement)"
+  },
+  {
+   "id": "xc11",
+   "word": "delineate",
+   "sentence": "The map delineates about the borders of the park.",
+   "origin": "synthetic",
+   "expected": "wrong",
+   "case": "the word's own pattern wrong (preposition / complement)"
+  },
+  {
+   "id": "xc12",
+   "word": "extrapolate",
+   "sentence": "We can extrapolate future sales of the current data.",
+   "origin": "synthetic",
+   "expected": "wrong",
+   "case": "the word's own pattern wrong (preposition / complement)"
+  },
+  {
+   "id": "xc13",
+   "word": "bolster",
+   "sentence": "The new evidence bolstered for their case.",
+   "origin": "synthetic",
+   "expected": "wrong",
+   "case": "the word's own pattern wrong (preposition / complement)"
+  },
+  {
+   "id": "xc14",
+   "word": "adamant",
+   "sentence": "He was adamant on that he had locked the door.",
+   "origin": "synthetic",
+   "expected": "wrong",
+   "case": "the word's own pattern wrong (preposition / complement)"
+  },
+  {
+   "id": "xc15",
+   "word": "entrench",
+   "sentence": "The company entrenched into its position as market leader.",
+   "origin": "synthetic",
+   "expected": "wrong",
+   "case": "the word's own pattern wrong (preposition / complement)"
+  },
+  {
+   "id": "xc16",
+   "word": "coalesce",
+   "sentence": "The groups coalesced to a single movement.",
+   "origin": "synthetic",
+   "expected": "wrong",
+   "case": "the word's own pattern wrong (preposition / complement)"
+  },
+  {
+   "id": "xc17",
+   "word": "galvanize",
+   "sentence": "The speech galvanized at the crowd.",
+   "origin": "synthetic",
+   "expected": "wrong",
+   "case": "the word's own pattern wrong (preposition / complement)"
+  },
+  {
+   "id": "xc18",
+   "word": "propensity",
+   "sentence": "She has a propensity of losing her keys.",
+   "origin": "synthetic",
+   "expected": "wrong",
+   "case": "the word's own pattern wrong (preposition / complement)"
+  },
+  {
+   "id": "xc19",
+   "word": "caveat",
+   "sentence": "The doctor caveated me about the side effects.",
+   "origin": "synthetic",
+   "expected": "wrong",
+   "case": "the word's own pattern wrong (preposition / complement)"
+  },
+  {
+   "id": "xc20",
+   "word": "precedent",
+   "sentence": "This ruling sets a precedent to future cases.",
+   "origin": "synthetic",
+   "expected": "wrong",
+   "case": "the word's own pattern wrong (preposition / complement)"
+  },
+  {
+   "id": "xd01",
+   "word": "meticulous",
+   "sentence": "He was so meticulous that he forgot half of his tasks.",
+   "origin": "synthetic",
+   "expected": "wrong",
+   "case": "wrong meaning"
+  },
+  {
+   "id": "xd02",
+   "word": "affable",
+   "sentence": "The affable storm destroyed three houses.",
+   "origin": "synthetic",
+   "expected": "wrong",
+   "case": "wrong meaning"
+  },
+  {
+   "id": "xd03",
+   "word": "succinct",
+   "sentence": "Her succinct three-hour lecture covered every detail of the topic.",
+   "origin": "synthetic",
+   "expected": "wrong",
+   "case": "wrong meaning"
+  },
+  {
+   "id": "xd04",
+   "word": "deft",
+   "sentence": "The deft child dropped every plate he carried.",
+   "origin": "synthetic",
+   "expected": "wrong",
+   "case": "wrong meaning"
+  },
+  {
+   "id": "xd05",
+   "word": "ubiquitous",
+   "sentence": "The rare stamp is ubiquitous; only two exist in the world.",
+   "origin": "synthetic",
+   "expected": "wrong",
+   "case": "wrong meaning"
+  },
+  {
+   "id": "xd06",
+   "word": "elusive",
+   "sentence": "The answer was elusive, so everyone found it immediately.",
+   "origin": "synthetic",
+   "expected": "wrong",
+   "case": "wrong meaning"
+  },
+  {
+   "id": "xd07",
+   "word": "candor",
+   "sentence": "He hid the truth with remarkable candor.",
+   "origin": "synthetic",
+   "expected": "wrong",
+   "case": "wrong meaning"
+  },
+  {
+   "id": "xd08",
+   "word": "panacea",
+   "sentence": "The new tax was a panacea that caused more problems than it solved.",
+   "origin": "synthetic",
+   "expected": "wrong",
+   "case": "wrong meaning"
+  },
+  {
+   "id": "xd09",
+   "word": "hindsight",
+   "sentence": "In hindsight, I will plan next year's trip carefully.",
+   "origin": "synthetic",
+   "expected": "wrong",
+   "case": "wrong meaning"
+  },
+  {
+   "id": "xd10",
+   "word": "convoluted",
+   "sentence": "The instructions were so convoluted that a child could follow them.",
+   "origin": "synthetic",
+   "expected": "wrong",
+   "case": "wrong meaning"
+  },
+  {
+   "id": "xd11",
+   "word": "astute",
+   "sentence": "The astute student failed every test because he never noticed anything.",
+   "origin": "synthetic",
+   "expected": "wrong",
+   "case": "wrong meaning"
+  },
+  {
+   "id": "xd12",
+   "word": "windfall",
+   "sentence": "The windfall of debts forced them to sell the house.",
+   "origin": "synthetic",
+   "expected": "wrong",
+   "case": "wrong meaning"
+  },
+  {
+   "id": "xd13",
+   "word": "conundrum",
+   "sentence": "The weather was a pleasant conundrum, sunny and warm.",
+   "origin": "synthetic",
+   "expected": "wrong",
+   "case": "wrong meaning"
+  },
+  {
+   "id": "xd14",
+   "word": "gravitas",
+   "sentence": "The clown's gravitas made the children laugh nonstop.",
+   "origin": "synthetic",
+   "expected": "wrong",
+   "case": "wrong meaning"
+  },
+  {
+   "id": "xd15",
+   "word": "benchmark",
+   "sentence": "He benchmarked the door shut with a hammer.",
+   "origin": "synthetic",
+   "expected": "wrong",
+   "case": "wrong meaning"
+  },
+  {
+   "id": "xd16",
+   "word": "pragmatic",
+   "sentence": "She is so pragmatic that she believes in fairy tales.",
+   "origin": "synthetic",
+   "expected": "wrong",
+   "case": "wrong meaning"
+  },
+  {
+   "id": "xd17",
+   "word": "dichotomy",
+   "sentence": "There is a dichotomy between these two identical twins.",
+   "origin": "synthetic",
+   "expected": "wrong",
+   "case": "wrong meaning"
+  },
+  {
+   "id": "xd18",
+   "word": "salient",
+   "sentence": "The salient detail was so minor that nobody noticed it.",
+   "origin": "synthetic",
+   "expected": "wrong",
+   "case": "wrong meaning"
+  },
+  {
+   "id": "xd19",
+   "word": "caveat",
+   "sentence": "The caveat of the cake was its chocolate frosting.",
+   "origin": "synthetic",
+   "expected": "wrong",
+   "case": "wrong meaning"
+  },
+  {
+   "id": "xd20",
+   "word": "shrewd",
+   "sentence": "He was so shrewd that he believed every scam email.",
+   "origin": "synthetic",
+   "expected": "wrong",
+   "case": "wrong meaning"
+  },
+  {
+   "id": "xe01",
+   "word": "flounder",
+   "sentence": "We grilled two flounder for dinner.",
+   "origin": "synthetic",
+   "expected": "natural",
+   "case": "less common card meaning used correctly"
+  },
+  {
+   "id": "xe02",
+   "word": "windfall",
+   "sentence": "After the storm, the orchard floor was covered with windfalls.",
+   "origin": "synthetic",
+   "expected": "natural",
+   "case": "less common card meaning used correctly"
+  },
+  {
+   "id": "xe03",
+   "word": "linchpin",
+   "sentence": "The wheel came off because the linchpin had worked loose.",
+   "origin": "synthetic",
+   "expected": "natural",
+   "case": "less common card meaning used correctly"
+  },
+  {
+   "id": "xe04",
+   "word": "pitfall",
+   "sentence": "The hunters dug a pitfall and covered it with branches.",
+   "origin": "synthetic",
+   "expected": "natural",
+   "case": "less common card meaning used correctly"
+  },
+  {
+   "id": "xe05",
+   "word": "quagmire",
+   "sentence": "The heavy rain turned the field into a quagmire.",
+   "origin": "synthetic",
+   "expected": "natural",
+   "case": "less common card meaning used correctly"
+  },
+  {
+   "id": "xe06",
+   "word": "benchmark",
+   "sentence": "The surveyor checked the height against a benchmark on the church wall.",
+   "origin": "synthetic",
+   "expected": "natural",
+   "case": "less common card meaning used correctly"
+  },
+  {
+   "id": "xe07",
+   "word": "belabor",
+   "sentence": "The bully belabored the boy with a stick.",
+   "origin": "synthetic",
+   "expected": "natural",
+   "case": "less common card meaning used correctly"
+  },
+  {
+   "id": "xe08",
+   "word": "underscore",
+   "sentence": "The film's underscore swelled during the final scene.",
+   "origin": "synthetic",
+   "expected": "natural",
+   "case": "less common card meaning used correctly"
+  },
+  {
+   "id": "xe09",
+   "word": "salient",
+   "sentence": "The building has a salient corner that juts into the street.",
+   "origin": "synthetic",
+   "expected": "natural",
+   "case": "less common card meaning used correctly"
+  },
+  {
+   "id": "xe10",
+   "word": "caveat",
+   "sentence": "Her lawyer lodged a caveat to stop the sale of the land.",
+   "origin": "synthetic",
+   "expected": "natural",
+   "case": "less common card meaning used correctly"
+  },
+  {
+   "id": "xf01",
+   "word": "underscore",
+   "sentence": "Dude, I wanna underscore that the pizza was fire.",
+   "origin": "synthetic",
+   "expected": "could-be-better",
+   "case": "register off"
+  },
+  {
+   "id": "xf02",
+   "word": "delineate",
+   "sentence": "Can you delineate where you left my keys?",
+   "origin": "synthetic",
+   "expected": "could-be-better",
+   "case": "register off"
+  },
+  {
+   "id": "xf03",
+   "word": "extrapolate",
+   "sentence": "Mom, can I extrapolate that we're having pasta tonight?",
+   "origin": "synthetic",
+   "expected": "could-be-better",
+   "case": "register off"
+  },
+  {
+   "id": "xf04",
+   "word": "salient",
+   "sentence": "Text me the salient details, bro.",
+   "origin": "synthetic",
+   "expected": "could-be-better",
+   "case": "register off"
+  },
+  {
+   "id": "xf05",
+   "word": "zeitgeist",
+   "sentence": "The zeitgeist at my house this morning was grumpy.",
+   "origin": "synthetic",
+   "expected": "could-be-better",
+   "case": "register off"
+  }
+ ]
+}

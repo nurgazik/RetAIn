@@ -2,7 +2,7 @@
 
 Catch-up file for founder and assistant alike. **Convention: update the "Now / Next"
 block and append a dated entry at the end of every working session.** Newest entries
-first. Decisions live in PRD.md's log (D1–D67); this file is the narrative timeline.
+first. Decisions live in PRD.md's log (D1–D68); this file is the narrative timeline.
 
 ---
 
@@ -22,6 +22,9 @@ usage). Code schedules the words; the list stays unlimited; the user marks retai
 scan done (docs/poc2-transform.md §10): AI-graded sentences already ship elsewhere (VORCA,
 ReadUnbound), so the combination with the transform is the differentiator.
 **Next up: TD-20 (sentence-judge eval) → UX-16 (exercise screens).** Founder to-do: try ReadUnbound.
+**2026-11-01 (D68): meaning decides, grammar is polish** — "✓ Meaning correct" + "Polished: …" when the word is used
+right; grammar never counts. Judge polishes first, then judges. Stress test (100 sentences): grammar-only 35/35 pass
+(was 17/35), no misuse let through. App result card changed: needs a fresh install from Xcode.
 **2026-11-01 (D67): sentence judge v2** — right if ANY card meaning fits; only the target word is judged (slips elsewhere
 ignored); the reason is always shown. Eval: false alarms 9% → 4%, fixes keeping the word 43% → 84%. **Blocker found:
 OpenRouter key rejected (401) since ~Oct 27 — every model call runs on the Flash-Lite fallback.** Founder: leave for now.
@@ -251,6 +254,19 @@ all needed for TestFlight and none waits on a decision.**
 vacation coding ends). Home Mac: clone normally with personal credentials; recreate
 `.env.local` (4 API keys — gitignored, never on GitHub) and `data/retain.db` refills
 itself via the fetchers.
+
+### 2026-11-01 — Meaning vs grammar in the sentence judge (D68)
+
+- Founder on *exigency* ("could be better" for a missing "the"): grammar shouldn't count; say the meaning is right and
+  show a polished sentence. Line agreed: the word's own prepositions/objects are usage, everything else is grammar.
+- Tried "ignore grammar" in the prompt: no effect (1 of 5 grammar-only items passed). Polish-first (the judge writes
+  the grammar-fixed sentence, then judges it) worked: 5/5. Founder asked for a bigger test: a 100-sentence stress set
+  (Claude-written, own file) → production judge passed 17/35 grammar-only sentences, the new one 35/35; 0 of 40 wrong
+  sentences let through by either. One known gap: the polish step can drop a wrong preposition ("placated at").
+- Built: prompt v3 (`f84c962e6f`), `practice.shown_fix` (natural → "Polished:" sentence, else "Try:"; same stored
+  field), app card "✓ Meaning correct" + "Polished:"; eval `--set` / `--prompt` options + stress set. Spend $0.20.
+- Tests: service 101/101 (1 new); app builds; practice walk-through passes ("Meaning correct" on a Jev-passed
+  sentence). Service restarted.
 
 ### 2026-11-01 — Sentence judge v2 (D67)
 
