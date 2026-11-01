@@ -3,14 +3,15 @@
 Code owns the schedule and the fill-in check; models only write fill-in sentences (into a shared
 bank, D60) and judge written sentences (Jev first, an LLM writes feedback only when needed).
 
-The day (D60): **today's set** is every word due today plus every word never practised (due first, most
-overdue first; then new, oldest first); **review ahead** is the rest, soonest due first. No cap: words come
-in rounds of ROUND_SIZE, prepared when the user asks, and the round after is written in the background.
+One list, no limit (D66, amends D60): every learning word, prioritised: due (most overdue first), then never
+practised (oldest first), then not due yet (soonest first). The user goes as far down it as they like, in rounds
+of ROUND_SIZE prepared when asked; the round after is written in the background. Each word in the day's set
+records whether it was due when it joined (`part`: today = due or new, ahead = not due yet) for the schedule.
 
 Scheduling (Leitner-style expanding gaps): a word's `box` 0..4 maps to the gap before it's due
 again. A miss (wrong fill-in, or a sentence judged wrong) sends it back to box 0, due tomorrow;
-a clean pass moves it up a box; "could be better" keeps its box. Review ahead never moves a word up:
-only a miss counts (back to tomorrow).
+a clean pass moves it up a box; "could be better" keeps its box. A word practised before it's due never
+moves up (early review helps memory less): only a miss counts (back to tomorrow).
 """
 import json
 import re
@@ -94,19 +95,19 @@ def model_sentence(con, user_id: str, word: str, definition: str, env: dict) -> 
             "sentence_id": row["id"]}, calls
 
 
-# ---------------------------------------------------------------- today's set and review ahead
+# ---------------------------------------------------------------- the list and its rounds
 
-def queue(con, user_id: str, day: str, part: str = "today", exclude=()) -> list:
-    """The words for a part of the day, in order (D60). today: due (most overdue first), then never
-    practised (oldest first). ahead: not due yet, soonest first. Retained/unverified never."""
+def queue(con, user_id: str, day: str, exclude=()) -> list:
+    """Every learning word in priority order (D66): due (most overdue first), never practised (oldest
+    first), then not due yet (soonest first); each tagged with its `part` for the schedule.
+    Retained/unverified never."""
     base = "SELECT * FROM words WHERE user_id=? AND status='learning' AND definition != ''"
-    if part == "today":
-        due = con.execute(base + " AND due_day IS NOT NULL AND due_day <= ? ORDER BY due_day, id", (user_id, day)).fetchall()
-        rows = [*due, *con.execute(base + " AND due_day IS NULL ORDER BY id", (user_id,)).fetchall()]
-    else:
-        rows = con.execute(base + " AND due_day > ? ORDER BY due_day, id", (user_id, day)).fetchall()
-    skip = set(exclude)
-    return [dict(r) for r in rows if r["id"] not in skip]
+    due = con.execute(base + " AND due_day IS NOT NULL AND due_day <= ? ORDER BY due_day, id", (user_id, day)).fetchall()
+    new = con.execute(base + " AND due_day IS NULL ORDER BY id", (user_id,)).fetchall()
+    later = con.execute(base + " AND due_day > ? ORDER BY due_day, id", (user_id, day)).fetchall()
+    skip, now = set(exclude), {r["id"] for r in [*due, *new]}
+    return [dict(r) | {"part": "today" if r["id"] in now else "ahead"}
+            for r in [*due, *new, *later] if r["id"] not in skip]
 
 
 def _prepare(user_id: str, words: list, env: dict) -> tuple:
@@ -136,15 +137,13 @@ def spawn(fn, *args) -> None:
     threading.Thread(target=fn, args=args, daemon=True).start()
 
 
-def warm(user: dict, part: str, env: dict) -> None:
+def warm(user: dict, env: dict) -> None:
     """Write the next round's sentences ahead of time, so "Next round" is instant (D60). Writes only to
     the shared bank: nothing is marked seen, so the round picks these up when it's asked for."""
     con = db.connect()
     try:
         in_set = [i["word_id"] for i in _items(con, user["id"], user["day"]) or []]
-        words = queue(con, user["id"], user["day"], part, in_set)
-        if not words and part == "today":  # today's set is all in: get review ahead ready instead
-            words = queue(con, user["id"], user["day"], "ahead", in_set)
+        words = queue(con, user["id"], user["day"], in_set)
         _, calls = _prepare(user["id"], words[:ROUND_SIZE], env)
         db.record_calls(con, user["id"], None, calls, prices(), day=user["day"])
     except Exception as exc:
@@ -153,28 +152,55 @@ def warm(user: dict, part: str, env: dict) -> None:
         con.close()
 
 
-def add_round(con, user: dict, part: str, env: dict) -> dict:
-    """The next ROUND_SIZE words of a part join today's set, each with a fill-in sentence; then the
-    round after is written in the background. Today's first open prepares round one of today's set."""
+def add_round(con, user: dict, env: dict) -> dict:
+    """The next ROUND_SIZE words of the list join the day's set, each with a fill-in sentence; then the
+    round after is written in the background. The day's first open prepares round one."""
     uid, day = user["id"], user["day"]
-    words = queue(con, uid, day, part, [i["word_id"] for i in _items(con, uid, day) or []])[:ROUND_SIZE]
+    words = queue(con, uid, day, [i["word_id"] for i in _items(con, uid, day) or []])[:ROUND_SIZE]
     fills, calls = _prepare(uid, words, env)
     with db._lock:  # re-read under the lock: a round asked for twice at once adds its words once
         items = _items(con, uid, day) or []
         have = {i["word_id"] for i in items}
         items += [{"word_id": w["id"], "word": w["word"], "definition": w["definition"], "pos": w.get("pos"),
-                   "box": w["box"], "part": part, "fill": f} for w, f in zip(words, fills) if w["id"] not in have]
+                   "box": w["box"], "part": w["part"], "fill": f} for w, f in zip(words, fills) if w["id"] not in have]
         con.execute("INSERT INTO practice_sets (user_id, day, items, created_at) VALUES (?,?,?,?) "
                     "ON CONFLICT(user_id, day) DO UPDATE SET items=excluded.items", (uid, day, json.dumps(items), db.now()))
         con.commit()
     db.record_calls(con, uid, None, calls, prices(), day=day)
-    spawn(warm, user, part, env)
+    spawn(warm, user, env)
     return get_set(con, uid, day)
 
 
 def today_set(con, user: dict, env: dict) -> dict:
-    """Today's set as it stands; the first call of the user's day prepares round one."""
-    return get_set(con, user["id"], user["day"]) or add_round(con, user, "today", env)
+    """The day's set as it stands; the first call of the user's day prepares round one. A word that
+    came without a fill-in sentence gets one more try in the background, once a day (D66)."""
+    s = get_set(con, user["id"], user["day"])
+    if s and any(not i["fill"] and not i.get("refill") for i in _items(con, user["id"], user["day"])):
+        spawn(refill, user, env)
+    return s or add_round(con, user, env)
+
+
+def refill(user: dict, env: dict) -> None:
+    """Write a fill-in sentence for each word in the day's set that has none; marks the try either way,
+    so a word the checks keep rejecting costs one try a day, not one per open."""
+    con = db.connect()
+    try:
+        uid, day = user["id"], user["day"]
+        missing = [i for i in _items(con, uid, day) or [] if not i["fill"] and not i.get("refill")]
+        fills, calls = _prepare(uid, missing, env)
+        got = {i["word_id"]: f for i, f in zip(missing, fills)}
+        with db._lock:
+            items = _items(con, uid, day)
+            for i in items:
+                if i["word_id"] in got:
+                    i["fill"], i["refill"] = got[i["word_id"]], day
+            con.execute("UPDATE practice_sets SET items=? WHERE user_id=? AND day=?", (json.dumps(items), uid, day))
+            con.commit()
+        db.record_calls(con, uid, None, calls, prices(), day=day)
+    except Exception as exc:
+        print(f"[practice] refilling fill-ins failed ({exc})")
+    finally:
+        con.close()
 
 
 def get_set(con, user_id: str, day: str) -> dict | None:
@@ -183,7 +209,8 @@ def get_set(con, user_id: str, day: str) -> dict | None:
         return None
     items = json.loads(row["items"])
     in_set = [i["word_id"] for i in items]
-    remaining = {part: len(queue(con, user_id, day, part, in_set)) for part in PARTS}
+    left = queue(con, user_id, day, in_set)  # by part only so app builds from before D66 still work
+    remaining = {part: sum(w["part"] == part for w in left) for part in PARTS}
     done, fills = {}, {}
     for a in con.execute("SELECT word_id, kind, correct, verdict, reason, fix, answer FROM practice_attempts "
                          "WHERE user_id=? AND day=? ORDER BY id", (user_id, day)):
@@ -309,7 +336,7 @@ def reschedule(con, user: dict, item: dict) -> None:
     its own): a miss → box 0, due tomorrow; a "could be better" → same box; otherwise up one box.
     The base is the box when the word joined today's set, so two clean exercises are still one step.
     A fill-in is judged on its first try (D58): wrong first, right later is still a miss.
-    Review ahead (D60) only ever moves a word back: a miss → tomorrow; anything else changes nothing."""
+    A word that wasn't due when it joined (part "ahead") only ever moves back: a miss → tomorrow (D60, D66)."""
     tries = {}
     for a in con.execute("SELECT kind, correct, verdict FROM practice_attempts WHERE user_id=? AND word_id=? AND day=? "
                          "ORDER BY id", (user["id"], item["word_id"], user["day"])):

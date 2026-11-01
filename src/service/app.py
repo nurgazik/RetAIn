@@ -191,12 +191,12 @@ class WriteIn(BaseModel):
 
 
 class RoundIn(BaseModel):
-    part: str = Field(pattern="^(today|ahead)$")
+    part: str | None = Field(default=None, pattern="^(today|ahead)$")  # ignored since D66: one list
 
 
 @app.get("/v1/practice/today")
 def practice_today(user=Depends(auth.current_user)):
-    """Today's set so far + how many words are left in each part (D60); the first call of the user's
+    """The day's set so far + how many words of the list are left (D66); the first call of the user's
     day prepares round one (a few seconds when fill-in sentences have to be written)."""
     con = db.connect()
     try:
@@ -207,10 +207,10 @@ def practice_today(user=Depends(auth.current_user)):
 
 @app.post("/v1/practice/round")
 def practice_round(body: RoundIn, user=Depends(auth.current_user)):
-    """The next round of today's set or of review ahead (D60) → the whole set."""
+    """The next round: the next words of the one prioritised list (D66) → the whole set."""
     con = db.connect()
     try:
-        return practice.add_round(con, user, body.part, engine.model_env())
+        return practice.add_round(con, user, engine.model_env())
     finally:
         con.close()
 

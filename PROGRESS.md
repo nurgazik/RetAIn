@@ -22,6 +22,9 @@ usage). Code schedules the words; the list stays unlimited; the user marks retai
 scan done (docs/poc2-transform.md §10): AI-graded sentences already ship elsewhere (VORCA,
 ReadUnbound), so the combination with the transform is the differentiator.
 **Next up: TD-20 (sentence-judge eval) → UX-16 (exercise screens).** Founder to-do: try ReadUnbound.
+**2026-10-31 (D66): practice is one list, no limit** — every learning word, due ones first, as far as you like;
+no today's set, no locked review ahead. Words without a fill-in sentence are retried and named. **Open:** why Jev rejected
+every sentence for *untarnishable* and *uncouth* (check before touching the threshold; D55). Needs a fresh install from Xcode.
 **2026-10-30 (D65): stardust fill-in gap** — the blank is now the input: one shimmering dust cluster per letter inside
 the sentence, letters appear as you type, judged only on Check (wrong → the gap shakes, red word). Fixes the gap
 vanishing at a line end. 10-31: teal tiles + caret; the solved word is bold teal and opens its card. Hangman parked as its own future exercise (UX-22). Needs a fresh install from Xcode.
@@ -245,6 +248,22 @@ all needed for TestFlight and none waits on a decision.**
 vacation coding ends). Home Mac: clone normally with personal credentials; recreate
 `.env.local` (4 API keys — gitignored, never on GitHub) and `data/retain.db` refills
 itself via the fetchers.
+
+### 2026-10-31 — One list, no limit (D66)
+
+- Founder on the phone: only 12 of 25+ words today. Data: 12 in today's set (due + new), 13 not due (Nov 1–12)
+  in review ahead, which D60 locked until today's set was done — and it never could be: *untarnishable* had no
+  fill-in sentence (the fill card said Done; the word was untouched). Founder: no such thing as "due today",
+  one list, prioritise within it, never limit. The lock was my D60 pick; removed.
+- Server: `queue()` returns every learning word (due → new → not due), each tagged `part` for the schedule rule
+  (early correct answers still don't promote); `add_round` takes the next 5, no part; `/round` ignores `part`
+  (old builds still work, `remaining` keeps its shape). `refill()`: a word without a fill-in gets one background
+  retry per day. App: one chooser ("N of M practised today · due words come first"), no review-ahead section,
+  words without a fill-in named.
+- Evidence for the open Jev question: 12 Gemma sentences for *untarnishable* / *uncouth* on 10-30/31, all fine
+  to read, none kept; the call log doesn't tie Jev's score to its sentence, so the cause is inferred.
+- Tests: service 99/99 (practice 26: 2 new, 5 updated); iOS 61: 59 pass, 1 skipped, known TD-24; walk-through passes
+  (dev account: "10 of 235 words practised today", no gate). Service restarted.
 
 ### 2026-10-30 — Stardust fill-in gap (D65)
 

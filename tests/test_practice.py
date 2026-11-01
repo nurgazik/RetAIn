@@ -249,7 +249,7 @@ def test_the_note_shows_live_and_never_reaches_a_model(client, stubs, monkeypatc
     assert today(client)["items"][0]["note"] == "changed today"  # not frozen in the day's set
 
 
-# ---------------------------------------------------------------- D60: rounds, review ahead, the sentence bank
+# ---------------------------------------------------------------- D60/D66: one list, rounds, the sentence bank
 
 def set_due(days: dict):
     """{word_id: due_day or None} straight into the words table."""
@@ -260,7 +260,7 @@ def set_due(days: dict):
     con.commit(); con.close()
 
 
-def test_queue_order_due_then_new_then_ahead_soonest_first(client, stubs):
+def test_one_list_due_then_new_then_the_rest_soonest_first(client, stubs):
     import service.db as db
     from service.practice import add_days, queue
     me = client.get("/v1/me").json()
@@ -270,35 +270,48 @@ def test_queue_order_due_then_new_then_ahead_soonest_first(client, stubs):
     a, b, c, d, e = ids[:5]
     set_due({a: add_days(day, -1), b: add_days(day, -4), c: None, d: add_days(day, 2), e: day})
     con = db.connect()
-    assert [w["id"] for w in queue(con, me["user_id"], day, "today")] == [b, a, e, c]  # most overdue first, new last
-    assert [w["id"] for w in queue(con, me["user_id"], day, "ahead")][:1] == [d]       # soonest first
+    q = queue(con, me["user_id"], day)
+    assert [w["id"] for w in q][:5] == [b, a, e, c, d]  # most overdue first, then new, then soonest due
+    assert [w["part"] for w in q][:5] == ["today"] * 4 + ["ahead"] and len(q) == len(ids)  # every word, D66
     con.close()
 
 
-def test_rounds_add_the_next_words_until_todays_set_is_done(client, stubs):
-    first = today(client)
-    left = first["remaining"]["today"]
-    r = client.post("/v1/practice/round", json={"part": "today"}).json()
-    assert len(r["items"]) == 10 and r["remaining"]["today"] == left - 5
+def test_rounds_add_the_next_words_of_the_list(client, stubs):
+    left = sum(today(client)["remaining"].values())
+    r = client.post("/v1/practice/round", json={}).json()
+    assert len(r["items"]) == 10 and sum(r["remaining"].values()) == left - 5
     assert len({i["word_id"] for i in r["items"]}) == 10  # no word twice in a day
+    assert client.post("/v1/practice/round", json={"part": "today"}).status_code == 200  # app builds before D66
     assert client.post("/v1/practice/round", json={"part": "bogus"}).status_code == 422
 
 
+def test_rounds_run_past_the_due_words_into_the_rest(client, stubs):
+    """D66: no limit — 2 due words, then the not-yet-due ones come in the same rounds, no gate."""
+    from service.practice import add_days
+    day = client.get("/v1/me").json()["day"]
+    ids = [w["id"] for w in client.get("/v1/words").json()["words"] if w["status"] == "learning"]
+    set_due({wid: add_days(day, 5) for wid in ids})
+    set_due({ids[0]: day, ids[1]: add_days(day, -2)})
+    s = today(client)
+    assert [i["part"] for i in s["items"]] == ["today", "today", "ahead", "ahead", "ahead"]
+    s = client.post("/v1/practice/round", json={}).json()
+    assert len(s["items"]) == 10 and sum(s["remaining"].values()) == len(ids) - 10
+
+
 def test_a_word_saved_mid_day_joins_todays_set(client, stubs):
-    left = today(client)["remaining"]["today"]
+    left = sum(today(client)["remaining"].values())
     client.post("/v1/words", json={"word": "perspicacious", "definition": "Having keen insight."})
-    assert today(client)["remaining"]["today"] == left + 1
+    assert sum(today(client)["remaining"].values()) == left + 1
 
 
-def test_review_ahead_never_moves_a_word_up_but_a_miss_brings_it_back(client, stubs):
+def test_a_word_not_yet_due_never_moves_up_but_a_miss_brings_it_back(client, stubs):
     from service.practice import add_days
     day = client.get("/v1/me").json()["day"]
     ids = [w["id"] for w in client.get("/v1/words").json()["words"] if w["status"] == "learning"]
     set_due({wid: add_days(day, 5) for wid in ids})  # nothing due, nothing new
-    s = today(client)
-    assert s["items"] == [] and s["remaining"] == {"today": 0, "ahead": len(ids)}
-    s = client.post("/v1/practice/round", json={"part": "ahead"}).json()
+    s = today(client)  # nothing due: the first round is simply the next words of the list (D66)
     assert len(s["items"]) == 5 and {i["part"] for i in s["items"]} == {"ahead"}
+    assert s["remaining"] == {"today": 0, "ahead": len(ids) - 5}
     right, wrote, missed = s["items"][:3]
     client.post("/v1/practice/fill", json={"word_id": right["word_id"], "answer": right["word"]})
     client.post("/v1/practice/write", json={"word_id": wrote["word_id"], "sentence": f"We {wrote['word']} it."})
@@ -354,7 +367,7 @@ def test_the_next_round_is_written_in_the_background(client, stubs):
     fn, args = stubs["spawned"].pop()
     fn(*args)  # the warm-up the server would run on a thread
     assert written() == 10
-    client.post("/v1/practice/round", json={"part": "today"})
+    client.post("/v1/practice/round", json={})
     assert written() == 10  # round two came straight from the bank
     con.close()
 
@@ -363,3 +376,24 @@ def test_a_deleted_word_leaves_todays_practice(client, stubs):
     first = today(client)["items"][0]
     client.delete(f"/v1/words/{first['word_id']}")
     assert first["word_id"] not in [i["word_id"] for i in today(client)["items"]]
+
+
+def test_a_word_without_a_fill_in_gets_one_more_try_a_day(client, stubs, monkeypatch):
+    """D66: a word whose sentences were all rejected is retried in the background on the next open, once."""
+    import service.practice as practice
+    real = practice.write_sentence
+    monkeypatch.setattr(practice, "write_sentence", lambda *a: (None, []))  # every sentence rejected
+    s = today(client)
+    assert all(i["fill"] is None for i in s["items"])
+    stubs["spawned"].clear()
+    monkeypatch.setattr(practice, "write_sentence", real)
+    today(client)
+    refills = [(fn, a) for fn, a in stubs["spawned"] if fn is practice.refill]
+    assert len(refills) == 1
+    refills[0][0](*refills[0][1])
+    s = today(client)
+    assert all(i["fill"] and "_____" in i["fill"]["text"] for i in s["items"])
+    stubs["spawned"].clear()
+    monkeypatch.setattr(practice, "write_sentence", lambda *a: (None, []))
+    today(client)
+    assert not [fn for fn, _ in stubs["spawned"] if fn is practice.refill]  # nothing missing now

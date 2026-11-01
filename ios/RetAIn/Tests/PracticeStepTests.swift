@@ -11,23 +11,26 @@ final class PracticeStepTests: XCTestCase {
                             attempts: .init(fill: filled ? a : nil, write: written ? a : nil), status: status, part: part)
     }
 
-    // D60: today's set and review ahead walk separately; words not yet in a round count as left.
-    func testPartsWalkSeparately() {
-        let items = [item(1, part: "ahead"), item(2), item(3, filled: true)]
-        XCTAssertEqual(PracticeExercise.fill.next(items, in: "today"), 1)
-        XCTAssertEqual(PracticeExercise.fill.next(items, in: "ahead"), 0)
-        let p = PracticeExercise.fill.progress(items, in: "today", remaining: 7)
-        XCTAssertEqual(p.done, 1); XCTAssertEqual(p.total, 9)
+    // D66: one list — due and not-yet-due words walk together; words not yet in a round count as left.
+    func testOneListWalksInOrder() {
+        let items = [item(1, filled: true), item(2, part: "ahead"), item(3)]
+        XCTAssertEqual(PracticeExercise.fill.next(items), 1)
+        let p = PracticeExercise.fill.progress(items, remaining: 7)
+        XCTAssertEqual(p.done, 1); XCTAssertEqual(p.total, 10)
     }
 
-    func testTodaysSetIsDoneWhenEveryWordIsPractisedAndNoneAreLeft() {
+    func testTheListIsDoneOnlyWhenEveryWordIsPractisedAndNoneAreLeft() {
         var set = PracticeSet(day: "2026-10-28", items: [item(1, filled: true), item(2, written: true), item(3, status: "retained"),
                                                        item(4, part: "ahead")], remaining: ["today": 0, "ahead": 12])
-        XCTAssertTrue(set.isDone("today"))
-        XCTAssertEqual(set.wordProgress("ahead").done, 0); XCTAssertEqual(set.wordProgress("ahead").total, 13)
-        set.remaining?["today"] = 2
-        XCTAssertFalse(set.isDone("today"))
-        XCTAssertEqual(set.wordProgress("today").total, 5)
+        XCTAssertFalse(set.isDone)  // not-yet-due words are still on the list: no gate, no "done for today"
+        XCTAssertEqual(set.wordProgress.done, 3); XCTAssertEqual(set.wordProgress.total, 16)
+        set.items[3].attempts.write = set.items[1].attempts.write; set.remaining = ["today": 0, "ahead": 0]
+        XCTAssertTrue(set.isDone)
+    }
+
+    func testAWordWithoutAFillInIsListed() {
+        let set = PracticeSet(day: "2026-10-31", items: [item(1, fill: false), item(2, fill: false, written: true), item(3)])
+        XCTAssertEqual(set.withoutFill.map(\.wordId), [1])  // once written, it's practised: no longer listed
     }
 
     func testDecodesRemainingAndPart() throws {
@@ -35,7 +38,7 @@ final class PracticeStepTests: XCTestCase {
             + #""fill":null,"attempts":{},"status":"learning"}],"remaining":{"today":0,"ahead":40}}"#
         let d = JSONDecoder(); d.keyDecodingStrategy = .convertFromSnakeCase
         let s = try d.decode(PracticeSet.self, from: Data(json.utf8))
-        XCTAssertEqual(s.items.first?.section, "ahead"); XCTAssertEqual(s.left("ahead"), 40)
+        XCTAssertEqual(s.items.first?.part, "ahead"); XCTAssertEqual(s.left, 40)
     }
 
     func testEachExerciseWalksItsOwnWords() {
@@ -74,7 +77,7 @@ final class PracticeStepTests: XCTestCase {
         let s = try d.decode(PracticeSet.self, from: Data(json.utf8))
         XCTAssertEqual(s.items.first?.fill?.source, "read"); XCTAssertNil(s.items.first?.attempts.fill)
         XCTAssertNil(s.items.first?.fill?.hint)
-        XCTAssertEqual(s.items.first?.section, "today"); XCTAssertEqual(s.left("today"), 0)  // a set from before D60
+        XCTAssertNil(s.items.first?.part); XCTAssertEqual(s.left, 0)  // a set from before D60
     }
 
     func testDecodesWrongTriesAndAWrongResult() throws {
