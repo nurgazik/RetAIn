@@ -3,6 +3,7 @@ import SwiftUI
 @main
 struct RetAInApp: App {
     @State private var session = SessionState()
+    init() { Theme.applyNavigationBar() }  // D70: handwritten large titles
     var body: some Scene {
         WindowGroup {
             RootView().environment(session)

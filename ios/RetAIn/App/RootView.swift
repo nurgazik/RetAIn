@@ -14,6 +14,8 @@ struct RootView: View {
                 ReadsView().tabItem { Label("My Reads", systemImage: "books.vertical") }.tag("reads")
                 SettingsView().tabItem { Label("Settings", systemImage: "gearshape") }.tag("settings")
             }
+            .fontDesign(.rounded)   // D70: SF Pro Rounded app-wide; the reader's serif and the handwriting set their own
+            .tint(.brandText)
             // The widget links to retain://word/<id>: open that word in the Words tab.
             .onOpenURL { url in
                 guard let id = WordLink.id(from: url) else { return }

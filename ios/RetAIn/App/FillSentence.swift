@@ -32,7 +32,7 @@ struct FillSentence: View {
                 }
             }
         }
-        .font(.system(.title3, design: .serif))
+        .font(.system(.title3, design: .serif)).fontDesign(.serif)
     }
 }
 
@@ -71,7 +71,7 @@ private struct LetterGap: View {
     @ViewBuilder private var content: some View {
         switch gap {
         case .solved(let word):
-            Text(word).bold().foregroundStyle(Color.brand)   // tap: the word's card
+            Text(word).bold().foregroundStyle(Color.brandText)   // tap: the word's card
                 .onTapGesture(perform: onTapSolved)
                 .accessibilityIdentifier("solved-word")
                 .accessibilityAddTraits(.isButton)
@@ -122,7 +122,7 @@ struct Stardust: View {
         TimelineView(.animation(minimumInterval: 1 / 30, paused: still)) { timeline in
             let t = still ? 0 : timeline.date.timeIntervalSinceReferenceDate
             Canvas { g, size in
-                let ink = GraphicsContext.Shading.color(.brand)
+                let ink = GraphicsContext.Shading.color(.brandText)
                 for i in empty.indices where tiles?[i] ?? true {  // a tile under every letter, shown or not
                     var tile = g
                     tile.opacity = (i == next ? 0.2 : 0.1) + 0.2 * mist

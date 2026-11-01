@@ -64,6 +64,8 @@ struct PracticeView: View {
                 else if let error { ContentUnavailableView("Couldn't load practice", systemImage: "wifi.exclamationmark", description: Text(error)) }
                 else { ProgressView("Preparing today's words…") }
             }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .background(Color.paper.ignoresSafeArea())   // D70: cream paper behind every screen
             .navigationTitle("Practice")
             .toolbar {
                 if exercise != nil {
@@ -99,7 +101,7 @@ struct PracticeView: View {
         } else if let exercise, let i = shown ?? exercise.next(set.items) {
             let p = exercise.progress(set.items, remaining: set.left)
             VStack(spacing: 0) {
-                ProgressView(value: Double(p.done), total: Double(max(p.total, 1)))
+                InkProgress(value: Double(p.done), total: Double(max(p.total, 1)))
                     .padding(.horizontal).padding(.top, 4)
                 ScrollView {
                     switch exercise {
@@ -121,7 +123,8 @@ struct PracticeView: View {
         VStack(alignment: .leading, spacing: 16) {
             label("Fill in the word", nil)
             let lastWrong = item.fill?.wrong?.last
-            // D65: the gap is the input; a hidden field behind it takes the typing
+            // D65: the gap is the input; a hidden field behind it takes the typing. D70: sentence + meaning on a paper card
+            VStack(alignment: .leading, spacing: 14) {
             FillSentence(text: item.fill?.text ?? "", letters: item.fill?.letters ?? 8, gap: gap(lastWrong),
                          misses: misses, active: typing, onTapWrong: { meaningShown = lastWrong },
                          onTapSolved: { Task { await openCard(item) } })
@@ -141,13 +144,16 @@ struct PracticeView: View {
                 .task(id: item.wordId) { if fillResult == nil { typing = true } }
                 .popover(item: $meaningShown) { w in
                     VStack(alignment: .leading, spacing: 6) {
-                        Text(w.answer).font(.system(.title3, design: .serif)).bold()
+                        Text(w.answer).font(.system(.title3, design: .serif)).fontDesign(.serif).bold()
                         Text(w.meaning ?? "No dictionary meaning for this word.").font(.callout)
                     }
                     .padding().frame(maxWidth: 320, alignment: .leading)
                     .presentationCompactAdaptation(.popover)
                 }
-            Text("Meaning: \(item.definition)").font(.callout).foregroundStyle(.secondary)
+            Text("Meaning: \(item.definition)").font(.callout).foregroundStyle(Color.inkSoft)
+            }
+            .padding(16)
+            .paperCard()
             if let r = fillResult {
                 resultBanner(ok: true, title: "Correct", detail: r.note)
                 yourNote(item)   // only once solved: the note may hold the word itself
@@ -168,10 +174,13 @@ struct PracticeView: View {
     /// The user's own note on the word (D59), as on its card.
     @ViewBuilder private func yourNote(_ item: PracticeItem) -> some View {
         if let note = item.note, !note.isEmpty {
-            Label(note, systemImage: "note.text").font(.callout)
-                .padding(10).frame(maxWidth: .infinity, alignment: .leading)
-                .background(.yellow.opacity(0.15), in: RoundedRectangle(cornerRadius: 8))
-                .accessibilityIdentifier("practice-note")
+            VStack(alignment: .leading, spacing: 0) {  // D70: a note card, the one place with ruled lines
+                Text("your note").font(.hand(18, relativeTo: .caption)).foregroundStyle(Color.inkSoft)
+                Text(note).font(.hand(26)).foregroundStyle(Color.brandText)
+            }
+            .noteCard()
+            .accessibilityElement(children: .combine)
+            .accessibilityIdentifier("practice-note")
         }
     }
 
@@ -183,10 +192,10 @@ struct PracticeView: View {
                 ForEach(options, id: \.self) { option in
                     let tried = item.fill?.wrong?.contains { $0.answer == option.lowercased() } ?? false
                     Button { answer = option; typing = false; Task { await submitFill(item) } } label: {
-                        Text(option).font(.system(.body, design: .serif)).lineLimit(1).minimumScaleFactor(0.7)
+                        Text(option).font(.system(.body, design: .serif)).fontDesign(.serif).lineLimit(1).minimumScaleFactor(0.7)
                             .strikethrough(tried).frame(maxWidth: .infinity).padding(.vertical, 10)
                     }
-                    .buttonStyle(.bordered).buttonBorderShape(.capsule).disabled(busy || tried)
+                    .buttonStyle(ChunkyButtonStyle(kind: .secondary, height: 46)).disabled(busy || tried)
                     .accessibilityIdentifier("hint-option")
                 }
             }
@@ -198,7 +207,7 @@ struct PracticeView: View {
             HStack { if hinting { ProgressView().padding(.trailing, 4) }; Label("Hint", systemImage: "lightbulb") }
                 .frame(maxWidth: .infinity)
         }
-        .buttonStyle(.bordered).controlSize(.large).disabled(hinting || busy)
+        .buttonStyle(ChunkyButtonStyle(kind: .secondary)).disabled(hinting || busy)
     }
 
     // MARK: hangman (D69)
@@ -217,19 +226,20 @@ struct PracticeView: View {
     private func writeCard(_ item: PracticeItem) -> some View {
         VStack(alignment: .leading, spacing: 16) {
             label("Use it in a sentence", nil)
-            Text(item.word).font(.system(.largeTitle, design: .serif)).bold().accessibilityIdentifier("practice-word")
+            Text(item.word).font(.system(.largeTitle, design: .serif)).fontDesign(.serif).bold().accessibilityIdentifier("practice-word")
             Text(item.definition).font(.callout).foregroundStyle(.secondary)
             yourNote(item)
             if let r = writeResult {
-                Text(answer).font(.system(.body, design: .serif)).padding(10)
+                Text(answer).font(.system(.body, design: .serif)).fontDesign(.serif).padding(12)
                     .frame(maxWidth: .infinity, alignment: .leading)
-                    .background(.quaternary.opacity(0.5), in: .rect(cornerRadius: 8))
+                    .paperCard(radius: 14, edge: 2)
                 verdictBanner(r)
                 nextButton()
             } else {
                 TextField("Write your own sentence with “\(item.word)”", text: $answer, axis: .vertical)
                     .focused($typing)
-                    .lineLimit(3...6).textFieldStyle(.roundedBorder).font(.system(.body, design: .serif))
+                    .lineLimit(3...6).textFieldStyle(.plain).font(.system(.body, design: .serif)).fontDesign(.serif)
+                    .padding(12).paperCard(radius: 14, edge: 2)
                 checkButton(disabled: answer.split(separator: " ").count < 3) { await submitWrite(item) }
                 Text("Dictation works too: tap the mic on the keyboard.").font(.caption).foregroundStyle(.secondary)
             }
@@ -251,11 +261,11 @@ struct PracticeView: View {
             if let reason = r.reason, !reason.isEmpty { Text(reason).font(.callout) }
             if let fix = r.fix, !fix.isEmpty {
                 Text(r.verdict == "natural" ? "Polished: " : "Try: ").font(.callout).bold()
-                    + Text(fix).font(.system(.callout, design: .serif))
+                    + Text(fix).font(.system(.callout, design: .serif)).fontDesign(.serif)
             }
         }
         .padding(12).frame(maxWidth: .infinity, alignment: .leading)
-        .background(color.opacity(0.1), in: .rect(cornerRadius: 10))
+        .paperCard(radius: 16)
     }
 
     // MARK: chooser
@@ -270,7 +280,7 @@ struct PracticeView: View {
             } else {
                 Text("\(words.done) of \(words.total) words practised today · due words come first")
                     .font(.callout).foregroundStyle(.secondary)
-                ProgressView(value: Double(words.done), total: Double(words.total)).accessibilityIdentifier("today-progress")
+                InkProgress(value: Double(words.done), total: Double(words.total)).accessibilityIdentifier("today-progress")
                 exerciseCard(.fill, "Fill in the word", "Recall it from a sentence", set)
                 exerciseCard(.write, "Use it in a sentence", "Write your own", set)
                 exerciseCard(.hangman, "Hangman", "Guess it letter by letter", set)
@@ -294,7 +304,8 @@ struct PracticeView: View {
                     if item.status == "retained" {
                         Label("Retained", systemImage: "checkmark").font(.caption).foregroundStyle(.green)
                     } else {
-                        Button("Mark retained") { Task { await retain(item) } }.buttonStyle(.bordered).font(.caption)
+                        Button("Mark retained") { Task { await retain(item) } }
+                            .buttonStyle(ChunkyButtonStyle(kind: .secondary, height: 34)).frame(width: 150)
                     }
                 }
                 Divider()
@@ -313,9 +324,9 @@ struct PracticeView: View {
             Button { Task { await nextRound() } } label: {
                 HStack { if preparing { ProgressView().padding(.trailing, 4) }; Text("Next round") }.frame(maxWidth: .infinity)
             }
-            .buttonStyle(.borderedProminent).controlSize(.large).disabled(preparing).accessibilityIdentifier("next-round")
+            .buttonStyle(ChunkyButtonStyle()).disabled(preparing).accessibilityIdentifier("next-round")
             Button { leave() } label: { Text("Back to exercises").frame(maxWidth: .infinity) }
-                .buttonStyle(.bordered).controlSize(.large)
+                .buttonStyle(ChunkyButtonStyle(kind: .secondary))
             if let error = inputError { Text(error).font(.callout).foregroundStyle(.red) }
         }
         .padding().frame(maxHeight: .infinity)
@@ -343,7 +354,7 @@ struct PracticeView: View {
                 }
             }
             .padding().frame(maxWidth: .infinity, alignment: .leading)
-            .background(.quaternary.opacity(0.5), in: .rect(cornerRadius: 12))
+            .paperCard()
         }
         .buttonStyle(.plain).disabled(left == 0 || preparing)
     }
@@ -371,12 +382,12 @@ struct PracticeView: View {
         Button { typing = false; Task { await action() } } label: {
             HStack { if busy { ProgressView().padding(.trailing, 4) }; Text("Check") }.frame(maxWidth: .infinity)
         }
-        .buttonStyle(.borderedProminent).controlSize(.large).disabled(disabled || busy)
+        .buttonStyle(ChunkyButtonStyle()).disabled(disabled || busy)
     }
 
     private func nextButton() -> some View {
         Button { advance() } label: { Text("Next").frame(maxWidth: .infinity) }
-            .buttonStyle(.borderedProminent).controlSize(.large)
+            .buttonStyle(ChunkyButtonStyle())
     }
 
     private func resultBanner(ok: Bool, title: String, detail: String?) -> some View {
@@ -386,7 +397,7 @@ struct PracticeView: View {
             if let detail { Text(detail).font(.callout) }
         }
         .padding(12).frame(maxWidth: .infinity, alignment: .leading)
-        .background((ok ? Color.green : .red).opacity(0.1), in: .rect(cornerRadius: 10))
+        .paperCard(radius: 16)
     }
 
     /// What the gap shows: the word once solved (bold); the last wrong try in red until the user types

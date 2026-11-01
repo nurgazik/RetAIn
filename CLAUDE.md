@@ -32,7 +32,7 @@ in `spikes/`.
   queue, and the dated narrative log. Update its NOW block and append an entry at the
   end of every working session — the founder relies on it to catch up after days away.
 
-- `PRD.md` — product source of truth: hypothesis, decisions log (D1–D69), risks, and the
+- `PRD.md` — product source of truth: hypothesis, decisions log (D1–D70), risks, and the
   horizons (PoC 1 closed / PoC 2 / MVP / Future state). Update the decisions log when a new product
   decision is made; park good-but-deferred ideas in Horizon 3, never drop them.
 - `docs/content-sources.md` — verified licensing research on rewritable content sources

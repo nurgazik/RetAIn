@@ -2,7 +2,7 @@
 
 Catch-up file for founder and assistant alike. **Convention: update the "Now / Next"
 block and append a dated entry at the end of every working session.** Newest entries
-first. Decisions live in PRD.md's log (D1–D69); this file is the narrative timeline.
+first. Decisions live in PRD.md's log (D1–D70); this file is the narrative timeline.
 
 ---
 
@@ -22,6 +22,8 @@ usage). Code schedules the words; the list stays unlimited; the user marks retai
 scan done (docs/poc2-transform.md §10): AI-graded sentences already ship elsewhere (VORCA,
 ReadUnbound), so the combination with the transform is the differentiator.
 **Next up: TD-20 (sentence-judge eval) → UX-16 (exercise screens).** Founder to-do: try ReadUnbound.
+**2026-11-01 (D70): the notebook look, Practice first** — cream paper, chunky ink cards and buttons, ink blue + highlighter,
+rounded type, handwritten titles, lined note cards; light and dark. Other tabs next (UX-23). Needs a fresh install from Xcode.
 **2026-11-01 (D69): hangman** — third exercise: guess the word from its meaning, 6 lives, sentence hint, stardust tiles;
 every game stored for stats (`hangman_games`). Needs a fresh install from Xcode.
 **2026-11-01: Words tab A–Z** — learning and retained each sorted alphabetically. Needs a fresh install from Xcode.
@@ -257,6 +259,19 @@ all needed for TestFlight and none waits on a decision.**
 vacation coding ends). Home Mac: clone normally with personal credentials; recreate
 `.env.local` (4 API keys — gitignored, never on GitHub) and `data/retain.db` refills
 itself via the fetchers.
+
+### 2026-11-01 — The notebook look (D70), Practice first
+
+- Founder wanted the app's own look on native components ("bubbly … like Duolingo"). Mocked 3 directions, then two
+  A-based ones (notebook, old newspaper), then the notebook on other screens with and without ruled lines, on a
+  claude.ai canvas ("RetAIn style directions"). Picked: A × notebook, ruled lines only on note cards, SF Pro Rounded,
+  Caveat handwriting; ink blue replaces teal.
+- Built: `Shared/UI/Brand.swift` (light/dark colour pairs, `ChunkyButtonStyle`, `paperCard`, `noteCard`,
+  `InkProgress`), `App/Theme.swift` (`Font.hand`, handwritten large titles), Caveat in `App/Fonts` (+ OFL text,
+  registered in project.yml); root: `.fontDesign(.rounded)` + ink tint; Practice, fill-in, write, hangman restyled.
+- Two bugs caught in screenshots and fixed: the app-wide rounded design overrode the serif sentences (now pinned
+  `.fontDesign(.serif)`); hangman's correct keys had cream letters on yellow in dark mode (now always dark).
+- Tests: walk-through passes in light and dark (screens sent to the founder); app builds after the last fix.
 
 ### 2026-11-01 — Hangman (D69)
 
