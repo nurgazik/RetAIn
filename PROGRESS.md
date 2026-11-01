@@ -2,11 +2,11 @@
 
 Catch-up file for founder and assistant alike. **Convention: update the "Now / Next"
 block and append a dated entry at the end of every working session.** Newest entries
-first. Decisions live in PRD.md's log (D1–D34); this file is the narrative timeline.
+first. Decisions live in PRD.md's log (D1–D66); this file is the narrative timeline.
 
 ---
 
-## NOW (as of 2026-09-30)
+## NOW (as of 2026-10-31)
 
 **Phase: MVP build (Phase 2) — M1–M6 built and verified on the founder's phone; Sign in
 with Apple live; membership active; M8 (monetization) and M9 (TestFlight) remain.**
