@@ -9,7 +9,7 @@ flowchart TD
     CK -- no --> B
     CK -- yes --> J["<b>JEV</b> · model, choice of three<br/>how sure is it the sentence is natural?"]:::gate
     J -- "P(natural) ≥ 0.9" --> OK(["✓ Natural · ~0.2 s"])
-    J -- "less sure, or Jev down" --> F["<b>GEMMA</b> · model writes text<br/>verdict + one-line reason + smallest fix"]:::writer
+    J -- "less sure, or Jev down" --> F["<b>GEMMA</b> · model writes text · sees every meaning on the card (D67)<br/>verdict + one-line reason + smallest fix<br/>right if ANY meaning fits · only the target word is judged"]:::writer
     F --> SHOW([You see the verdict, why, and the fix · ~3 s])
     OK --> S["Code: record the attempt,<br/>schedule the word's next date"]:::code
     SHOW --> S

@@ -289,9 +289,24 @@ def check_fill(item: dict, answer: str) -> dict:
     return {"correct": False, "answer": given, "meaning": meaning(given, item.get("pos"))}
 
 
-def judge_sentence(word: str, definition: str, sentence: str, env: dict) -> tuple:
-    """Jev first: ✓ when P(natural) ≥ NATURAL_AT. Otherwise the LLM gives verdict, reason, fix.
-    Jev failing falls through to the LLM. → (result dict, call rows)."""
+def meanings(con, word_id: int, definition: str) -> list:
+    """The word's meanings from its card, in order (D67); the shown definition when it has no card."""
+    rows = con.execute("SELECT s.pos, s.gloss FROM words w JOIN senses s ON s.lexicon_id = w.lexicon_id "
+                       "WHERE w.id=? ORDER BY s.ord", (word_id,)).fetchall()
+    return [f"({r['pos']}) {r['gloss']}" for r in rows] or [definition]
+
+
+def judge_message(word: str, meanings: list, sentence: str) -> str:
+    """The sentence judge's input (D67): every meaning, so a correct use of any of them counts.
+    The eval (src/evals/sentences.py) sends exactly this."""
+    listed = "\n".join(f"{n}. {m}" for n, m in enumerate(meanings, 1))
+    return f"Target word: {word}\nMeanings:\n{listed}\nSentence: {sentence}"
+
+
+def judge_sentence(word: str, definition: str, sentence: str, env: dict, meanings: list | None = None) -> tuple:
+    """Jev first: ✓ when P(natural) ≥ NATURAL_AT (it only ever accepts, so one meaning is enough for it).
+    Otherwise the LLM gives verdict, reason, fix, seeing every meaning (D67). Jev failing falls
+    through to the LLM. → (result dict, call rows)."""
     calls = []
     try:
         p, row = typesafe.p_natural(word, definition, sentence)
@@ -301,7 +316,7 @@ def judge_sentence(word: str, definition: str, sentence: str, env: dict) -> tupl
     except Exception as exc:
         print(f"[practice] Jev failed, LLM judges ({exc})")
         p = None
-    raw, _ = G.call_model(JUDGE_PROMPT, f"Target word: {word} — {definition}\nSentence: {sentence}", env,
+    raw, _ = G.call_model(JUDGE_PROMPT, judge_message(word, meanings or [definition], sentence), env,
                           purpose="feedback")
     calls.append(G.last_call())
     d, _ = json.JSONDecoder().raw_decode(raw[raw.index("{"):])

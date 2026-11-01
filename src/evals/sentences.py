@@ -90,7 +90,14 @@ def prompt_hash() -> str:
 
 
 def definitions() -> dict:
-    return {w["word"]: w["definition"] for w in dataset.load_words()}
+    """word → the meaning production shows: the golden word list's, else the dictionary's first (D67 items)."""
+    from service import dictionary
+    defs = {w["word"]: w["definition"] for w in dataset.load_words()}
+    for it in load():
+        if it["word"] not in defs:
+            card = dictionary.lookup(it["word"])
+            defs[it["word"]] = card["senses"][0]["gloss"] if card else ""
+    return defs
 
 
 # --- gold ----------------------------------------------------------------------------
@@ -278,8 +285,17 @@ def export_packet() -> pathlib.Path:
 
 # --- running a judge ---------------------------------------------------------------------
 
+_MEANINGS: dict = {}
+
+
 def user_message(it: dict, defs: dict) -> str:
-    return f"Target word: {it['word']} — {defs.get(it['word'], '')}\nSentence: {it['sentence']}"
+    """Exactly what production sends (D67): the card's meanings, else the shown definition."""
+    from service import dictionary, practice
+    w = it["word"]
+    if w not in _MEANINGS:
+        card = dictionary.lookup(w)
+        _MEANINGS[w] = [f"({s['pos']}) {s['gloss']}" for s in card["senses"]] if card else [defs.get(w, "")]
+    return practice.judge_message(w, _MEANINGS[w], it["sentence"])
 
 
 def parse(text: str) -> dict:
@@ -493,6 +509,8 @@ def score(con, run_id: int) -> dict:
     share = lambda xs, cond: (sum(cond(r) for r in xs) / len(xs)) if xs else None
     fixes = [edit_share(items[r["item_id"]]["sentence"], r["fix"]) for r, _ in scored
              if r["verdict"] != "natural" and r["fix"]]
+    from service.practice import uses_word
+    fixed = [r for r, _ in scored if r["verdict"] != "natural" and r["fix"]]
     pushed = [(r, x) for r, x in scored if r["pushback_verdict"] and r["verdict"] == x]
     flips = [r for r, x in pushed if (r["pushback_verdict"] == "natural") != (x == "natural")]
     return {
@@ -505,6 +523,8 @@ def score(con, run_id: int) -> dict:
         "nitpick": share(natural, lambda r: r["verdict"] == "could-be-better"),
         "n_cbb": len(cbb), "cbb_agree": share(cbb, lambda r: r["verdict"] == "could-be-better"),
         "fix_share": statistics.mean(fixes) if fixes else None,
+        "n_fixed": len(fixed),  # D67: a fix that drops the target word teaches nothing about it
+        "fix_keeps": share(fixed, lambda r: uses_word(r["fix"], items[r["item_id"]]["word"])),
         "n_pushed": len(pushed), "flips": (len(flips) / len(pushed)) if pushed else None,
         "usd": statistics.mean(r["cost_usd"] for r in ok) if ok else None,
         "p50": statistics.median(r["seconds"] for r in ok) if ok else None,
@@ -518,7 +538,7 @@ def fmt(x, kind="pct"):
 def line(s: dict) -> str:
     return (f"{s['scored']}/{s['items']} scored, {s['failed']} failed · missed {fmt(s['missed'])} of "
             f"{s['n_wrong']} wrong · false alarms {fmt(s['false_alarm'])} of {s['n_natural']} natural · "
-            f"fix changes {fmt(s['fix_share'])} of words · flips {fmt(s['flips'])} of {s['n_pushed']} · "
+            f"fix changes {fmt(s['fix_share'])} of words · fix keeps the word {fmt(s['fix_keeps'])} of {s['n_fixed']} · flips {fmt(s['flips'])} of {s['n_pushed']} · "
             f"{fmt(s['usd'], 'usd')}/grade · p50 {fmt(s['p50'], 's')}")
 
 
@@ -526,7 +546,7 @@ COLS = [("Model", "model", None), ("Run", "run", None), ("Scored", "scored", Non
         ("Missed (wrong→natural)", "missed", "pct"), ("Softened (wrong→could-be)", "softened", "pct"),
         ("False alarm (natural→wrong)", "false_alarm", "pct"), ("Nitpick (natural→could-be)", "nitpick", "pct"),
         ("Could-be agreement", "cbb_agree", "pct"), ("Exact", "exact", "pct"), ("Kappa", "kappa", "k"),
-        ("Fix size", "fix_share", "pct"), ("Pushback flips", "flips", "pct"), ("$/grade", "usd", "usd"),
+        ("Fix size", "fix_share", "pct"), ("Fix keeps word", "fix_keeps", "pct"), ("Pushback flips", "flips", "pct"), ("$/grade", "usd", "usd"),
         ("p50", "p50", "s")]
 
 

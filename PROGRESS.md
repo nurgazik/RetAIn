@@ -2,7 +2,7 @@
 
 Catch-up file for founder and assistant alike. **Convention: update the "Now / Next"
 block and append a dated entry at the end of every working session.** Newest entries
-first. Decisions live in PRD.md's log (D1–D66); this file is the narrative timeline.
+first. Decisions live in PRD.md's log (D1–D67); this file is the narrative timeline.
 
 ---
 
@@ -22,6 +22,9 @@ usage). Code schedules the words; the list stays unlimited; the user marks retai
 scan done (docs/poc2-transform.md §10): AI-graded sentences already ship elsewhere (VORCA,
 ReadUnbound), so the combination with the transform is the differentiator.
 **Next up: TD-20 (sentence-judge eval) → UX-16 (exercise screens).** Founder to-do: try ReadUnbound.
+**2026-11-01 (D67): sentence judge v2** — right if ANY card meaning fits; only the target word is judged (slips elsewhere
+ignored); the reason is always shown. Eval: false alarms 9% → 4%, fixes keeping the word 43% → 84%. **Blocker found:
+OpenRouter key rejected (401) since ~Oct 27 — every model call runs on the Flash-Lite fallback.** Founder: leave for now.
 **2026-10-31 (D66): practice is one list, no limit** — every learning word, due ones first, as far as you like;
 no today's set, no locked review ahead. Words without a fill-in sentence are retried and named. **Open:** why Jev rejected
 every sentence for *untarnishable* and *uncouth* (check before touching the threshold; D55). Needs a fresh install from Xcode.
@@ -248,6 +251,20 @@ all needed for TestFlight and none waits on a decision.**
 vacation coding ends). Home Mac: clone normally with personal credentials; recreate
 `.env.local` (4 API keys — gitignored, never on GitHub) and `data/retain.db` refills
 itself via the fetchers.
+
+### 2026-11-01 — Sentence judge v2 (D67)
+
+- Founder's *uncouth* sentence was called wrong although the card said "Clumsy, awkward."; the "Try" swapped the
+  word out. Root cause: the card shows Wiktionary's first meaning; the judge got only that one meaning and judged by
+  modern usage; the fix rule ("keep the writer's meaning") pushed it to drop the word.
+- Founder's rule: any meaning counts; judge only the word; always give the reason, the user may disagree.
+- Built: the judge gets every card meaning (`practice.meanings` + `judge_message`, shared with the eval); prompt v2.
+  Eval: 15 new golden items (provisional), new "fix keeps the word" metric; 4 Flash-Lite runs, $0.11 (record:
+  docs/model-bakeoff.md "Sentence judge v2"). Shipped v2 as measured (prompt 7c6e6037b4); a "name the meaning
+  first" variant didn't help. *Uncouth* stays wrong with a clear reason — the card's meaning wording is the issue.
+- Found: OpenRouter key returns 401 since ~Oct 27; production Gemma calls all fall back to Flash-Lite (165 calls
+  Oct 29 – Nov 1, none on Gemma; ~3× the cost per judgement). Founder: leave for now.
+- Tests: service 100/100 (1 new: the judge sees every meaning). Service restarted.
 
 ### 2026-10-31 — One list, no limit (D66)
 

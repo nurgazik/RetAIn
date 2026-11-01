@@ -974,6 +974,126 @@
    "origin": "synthetic",
    "expected": "wrong",
    "note": "become entrenched / entrenched themselves"
+  },
+  {
+   "id": "m01",
+   "word": "uncouth",
+   "sentence": "Despite missing a limb he was not uncouth at all",
+   "origin": "synthetic",
+   "expected": "natural",
+   "source": "founder's practice sentence 2026-10-31 (meaning shown: 'Clumsy, awkward.'); D67 rule (founder 2026-11-01): right if ANY of the word's meanings fits; this one uses a less common meaning"
+  },
+  {
+   "id": "m02",
+   "word": "restive",
+   "sentence": "The mule grew restive at the river's edge and would not take another step.",
+   "origin": "synthetic",
+   "expected": "natural",
+   "source": "D67 rule (founder 2026-11-01): right if ANY of the word's meanings fits; this one uses a less common meaning"
+  },
+  {
+   "id": "m03",
+   "word": "terrific",
+   "sentence": "A terrific storm tore the roofs off half the houses in the village.",
+   "origin": "synthetic",
+   "expected": "natural",
+   "source": "D67 rule (founder 2026-11-01): right if ANY of the word's meanings fits; this one uses a less common meaning"
+  },
+  {
+   "id": "m04",
+   "word": "decimate",
+   "sentence": "The general threatened to decimate the legion that had fled the battlefield.",
+   "origin": "synthetic",
+   "expected": "natural",
+   "source": "D67 rule (founder 2026-11-01): right if ANY of the word's meanings fits; this one uses a less common meaning"
+  },
+  {
+   "id": "m05",
+   "word": "nice",
+   "sentence": "There is a nice distinction between borrowing an idea and stealing it.",
+   "origin": "synthetic",
+   "expected": "natural",
+   "source": "D67 rule (founder 2026-11-01): right if ANY of the word's meanings fits; this one uses a less common meaning"
+  },
+  {
+   "id": "m06",
+   "word": "precarious",
+   "sentence": "His position was precarious, held only at the pleasure of the board.",
+   "origin": "synthetic",
+   "expected": "natural",
+   "source": "D67 rule (founder 2026-11-01): right if ANY of the word's meanings fits; this one uses a less common meaning"
+  },
+  {
+   "id": "u01",
+   "word": "precarious",
+   "sentence": "the hikers was in a precarious position on the ledge when the storm hit",
+   "origin": "synthetic",
+   "expected": "natural",
+   "source": "D67 rule: only the target word is judged; this sentence has unrelated slips elsewhere"
+  },
+  {
+   "id": "u02",
+   "word": "abdicate",
+   "sentence": "She abdicated her responsibilty to the team when she stoped answering emails.",
+   "origin": "synthetic",
+   "expected": "natural",
+   "source": "D67 rule: only the target word is judged; this sentence has unrelated slips elsewhere"
+  },
+  {
+   "id": "u03",
+   "word": "temerity",
+   "sentence": "He had the temerity to ask for a raise, after missing three deadline in a row.",
+   "origin": "synthetic",
+   "expected": "natural",
+   "source": "D67 rule: only the target word is judged; this sentence has unrelated slips elsewhere"
+  },
+  {
+   "id": "u04",
+   "word": "meretricious",
+   "sentence": "The film was meretricious: lot of flashy effects but nothing underneath",
+   "origin": "synthetic",
+   "expected": "natural",
+   "source": "D67 rule: only the target word is judged; this sentence has unrelated slips elsewhere"
+  },
+  {
+   "id": "u05",
+   "word": "adversity",
+   "sentence": "Despite adversity she kept going, she never complain about it.",
+   "origin": "synthetic",
+   "expected": "natural",
+   "source": "D67 rule: only the target word is judged; this sentence has unrelated slips elsewhere"
+  },
+  {
+   "id": "k01",
+   "word": "precarious",
+   "sentence": "We had a precarious dinner with lovely wine and great company.",
+   "origin": "synthetic",
+   "expected": "wrong",
+   "source": "D67: real misuse; the fix must still use the target word"
+  },
+  {
+   "id": "k02",
+   "word": "temerity",
+   "sentence": "She showed great temerity by calmly reading in the noisy café.",
+   "origin": "synthetic",
+   "expected": "wrong",
+   "source": "D67: real misuse; the fix must still use the target word"
+  },
+  {
+   "id": "k03",
+   "word": "abdicate",
+   "sentence": "He abdicated the bus at the next stop and walked home.",
+   "origin": "synthetic",
+   "expected": "wrong",
+   "source": "D67: real misuse; the fix must still use the target word"
+  },
+  {
+   "id": "k04",
+   "word": "uncouth",
+   "sentence": "The uncouth weather ruined our picnic by the lake.",
+   "origin": "synthetic",
+   "expected": "wrong",
+   "source": "D67: real misuse; the fix must still use the target word"
   }
  ]
 }

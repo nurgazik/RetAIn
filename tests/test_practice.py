@@ -397,3 +397,21 @@ def test_a_word_without_a_fill_in_gets_one_more_try_a_day(client, stubs, monkeyp
     monkeypatch.setattr(practice, "write_sentence", lambda *a: (None, []))
     today(client)
     assert not [fn for fn, _ in stubs["spawned"] if fn is practice.refill]  # nothing missing now
+
+
+def test_the_judge_sees_every_meaning_of_the_word(client, stubs, monkeypatch):
+    """D67: a sentence is right if ANY of the card's meanings fits, so the LLM judge gets them all."""
+    import service.db as db
+    import service.practice as practice
+    item = today(client)["items"][0]
+    con = db.connect()
+    lex = con.execute("INSERT INTO lexicon (headword, source, created_at) VALUES (?, 'wiktionary', ?)",
+                      (item["word"] + "-test", db.now())).lastrowid
+    con.executemany("INSERT INTO senses (lexicon_id, ord, pos, gloss) VALUES (?,?,?,?)",
+                    [(lex, 0, "adj", "Clumsy, awkward."), (lex, 1, "adj", "Unrefined, crude.")])
+    con.execute("UPDATE words SET lexicon_id=? WHERE id=?", (lex, item["word_id"])); con.commit(); con.close()
+    seen, real = [], practice.G.call_model
+    monkeypatch.setattr(practice.G, "call_model", lambda s, u, *a, **k: (seen.append(u), real(s, u, *a, **k))[1])
+    stubs["p"] = 0.1  # Jev unsure: the LLM judges
+    client.post("/v1/practice/write", json={"word_id": item["word_id"], "sentence": f"He was not {item['word']} at all."})
+    assert "Meanings:\n1. (adj) Clumsy, awkward.\n2. (adj) Unrefined, crude.\n" in seen[-1]

@@ -259,7 +259,8 @@ def practice_write(body: WriteIn, user=Depends(auth.current_user)):
         item = _practice_item(con, user, body.word_id)
         if not practice.uses_word(sentence, item["word"]):
             raise HTTPException(422, f"Use “{item['word']}” in your sentence.")
-        result, calls = practice.judge_sentence(item["word"], item["definition"], sentence, engine.model_env())
+        result, calls = practice.judge_sentence(item["word"], item["definition"], sentence, engine.model_env(),
+                                                practice.meanings(con, body.word_id, item["definition"]))
         attempt = practice.record(con, user, item, "write", sentence, result)
         db.record_calls(con, user["id"], None, calls, practice.prices(), day=user["day"], attempt_id=attempt)
         return {k: result[k] for k in ("verdict", "reason", "fix")}

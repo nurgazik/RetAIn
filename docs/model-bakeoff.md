@@ -430,3 +430,33 @@ the blank. Then Jev scored each lookalike in the blank. Total cost of the eval �
   cheap guard (~$0.00001).
 - **Pick: Gemma.** Better and a third of the cost; it is already the production chain (with the
   Flash-Lite fallback).
+
+### Sentence judge v2: any meaning counts, only the word is judged (D67) — 2026-11-01
+
+Trigger: the founder's *uncouth* sentence ("Despite missing a limb he was not uncouth at all") was called wrong
+while the card showed "Clumsy, awkward."; the "Try" swapped the word for *clumsy*. Founder's rule: right if ANY
+meaning fits, however old; judge only the target word, never unrelated slips; give the reason so the user is aware.
+
+Set: golden sentences + 15 new provisional items (Claude-written; m = less common meaning used correctly,
+u = right word with unrelated slips, k = real misuse) → 135 items. Input change: the judge now gets every card
+meaning (`practice.judge_message`, shared by production and the eval). New metric: **fix keeps the word**.
+Gemma could not run (OpenRouter 401 since ~Oct 27, see PROGRESS), so all runs are Flash-Lite, which is what
+production has actually been using. Spend $0.11 (4 runs).
+
+| Flash-Lite, 135 items | old prompt (run 12) | v2: any meaning (run 14) | v2 + name the meaning first (run 15) |
+|---|---|---|---|
+| Missed (wrong → natural), of 39 | 0% | 3% | 5% |
+| False alarm (natural → wrong), of 68 | 9% | 4% | 3% |
+| Fix keeps the word | 43% of 68 | 84% of 56 | 81% of 53 |
+| Fix size | 16% | 44% | 38% |
+| Pushback flips | 6% | 0% | 0% |
+
+- **Shipped: v2 (run 14, prompt `7c6e6037b4`).** Unrelated slips no longer sink a sentence (u-items 5/5
+  natural, were 3/5); "a nice distinction" (precise) passes. The one new "miss" (*entrench on* our freedom)
+  uses a listed meaning (to encroach), so it is right under D67; the old label predates the rule.
+- **The meaning-first step didn't help** (within noise) but showed why *uncouth* still fails: the judge picks
+  meaning 1 and still says no, because *uncouth* never meant physical clumsiness ("awkward" there means
+  awkward in manner). Founder: fine — the user sees the reason and may disagree. The real fix is the card's
+  meaning wording (which sense to show), not the judge.
+- **Fixes still drop the word ~16% of the time** despite the prompt; a code guard was considered and
+  deferred by the founder.
