@@ -96,7 +96,8 @@ private struct LetterGap: View {
                 }
             }
             .background {
-                Stardust(cells: letters, filled: chars.count, cell: cell, gutter: gutter, caret: active, still: reduceMotion)
+                Stardust(empty: (0..<letters).map { $0 >= chars.count }, next: chars.count < letters ? chars.count : nil,
+                         cell: cell, gutter: gutter, caret: active, still: reduceMotion)
             }
             .animation(.spring(response: 0.3, dampingFraction: 0.55), value: typed)
         }
@@ -104,14 +105,17 @@ private struct LetterGap: View {
 }
 
 /// A misty tile per letter, text-high, so the gap reads as "type here"; empty tiles shimmer with dust,
-/// the next one glows brighter and carries a blinking caret while the keyboard is up. One Canvas;
+/// the next one glows brighter and carries a blinking caret while the keyboard is up. Shared by the
+/// fill-in gap (D65) and hangman (D69, where wrong guesses thicken the mist). One Canvas;
 /// particle positions are fixed per cell (seeded), only brightness and a slight drift move.
-private struct Stardust: View {
-    let cells: Int
-    let filled: Int
+struct Stardust: View {
+    let empty: [Bool]           // per cell: true = still dust (no letter there yet)
+    var tiles: [Bool]? = nil    // per cell: draw its tile (nil = every cell); hangman's spaces have none
+    var next: Int? = nil        // the cell that glows brighter (and carries the caret)
     let cell: CGFloat
     let gutter: CGFloat
-    let caret: Bool
+    var caret = false
+    var mist = 0.0              // 0…1: denser, darker dust (hangman's wrong guesses, D69)
     let still: Bool             // Reduce Motion: a still frame, a steady caret
 
     var body: some View {
@@ -119,27 +123,26 @@ private struct Stardust: View {
             let t = still ? 0 : timeline.date.timeIntervalSinceReferenceDate
             Canvas { g, size in
                 let ink = GraphicsContext.Shading.color(.brand)
-                for i in 0..<cells {  // a tile under every letter, typed or not
-                    let next = i == filled
+                for i in empty.indices where tiles?[i] ?? true {  // a tile under every letter, shown or not
                     var tile = g
-                    tile.opacity = next ? 0.2 : 0.1
+                    tile.opacity = (i == next ? 0.2 : 0.1) + 0.2 * mist
                     tile.fill(Path(roundedRect: CGRect(x: CGFloat(i) * (cell + gutter), y: size.height * 0.06,
                                                        width: cell, height: size.height * 0.88), cornerRadius: 4), with: ink)
                 }
-                if caret, filled < cells, still || Int(t * 2) % 2 == 0 {
-                    let x = CGFloat(filled) * (cell + gutter) + 2
+                if caret, let next, still || Int(t * 2) % 2 == 0 {
+                    let x = CGFloat(next) * (cell + gutter) + 2
                     g.fill(Path(CGRect(x: x, y: size.height * 0.18, width: 1.5, height: size.height * 0.64)), with: ink)
                 }
-                for i in filled..<max(cells, filled) {
+                for i in empty.indices where empty[i] {
                     let left = CGFloat(i) * (cell + gutter)
-                    let next = i == filled
-                    for k in 0..<(next ? 12 : 9) {
+                    let glow = i == next
+                    for k in 0..<((glow ? 12 : 9) + Int(mist * 10)) {
                         let r = { (n: Int) in Self.noise(i, k * 7 + n) }
                         let x = left + cell * (0.12 + 0.76 * r(1)) + sin(t * 0.7 + 6.3 * r(2)) * 1.2
                         let y = size.height * (0.28 + 0.58 * r(3)) + cos(t * 0.6 + 6.3 * r(4)) * 1.2
                         let radius = 0.6 + 1.0 * r(5)
                         var dot = g
-                        dot.opacity = min(1, (0.2 + 0.65 * (0.5 + 0.5 * sin(t * (1.4 + 2.2 * r(6)) + 6.3 * r(7)))) * (next ? 1.3 : 1))
+                        dot.opacity = min(1, (0.2 + 0.65 * (0.5 + 0.5 * sin(t * (1.4 + 2.2 * r(6)) + 6.3 * r(7)))) * (glow ? 1.3 : 1) * (1 + 0.4 * mist))
                         dot.fill(Path(ellipseIn: CGRect(x: x - radius, y: y - radius, width: radius * 2, height: radius * 2)),
                                  with: ink)
                     }

@@ -140,7 +140,7 @@ struct PracticeItem: Codable, Identifiable, Hashable {
     var note: String? = nil   // the user's own note (D59), read live from the word
     var part: String? = nil   // today | ahead: due when it joined or not (the server's schedule rule, D66)
     var id: Int { wordId }
-    var practised: Bool { attempts.fill != nil || attempts.write != nil || status == "retained" }
+    var practised: Bool { attempts.fill != nil || attempts.write != nil || attempts.hangman != nil || status == "retained" }
     struct Fill: Codable, Hashable {
         let text: String; let source: String; let answer: String?
         var letters: Int? = nil     // the answer's length, for the gap's letter slots (D65); the word stays hidden
@@ -148,11 +148,13 @@ struct PracticeItem: Codable, Identifiable, Hashable {
         var wrong: [Wrong]? = nil   // today's wrong tries, each with its own meaning (tap to see)
     }
     struct Wrong: Codable, Hashable, Identifiable { let answer: String; let meaning: String?; var id: String { answer } }
-    struct Attempts: Codable, Hashable { var fill: Attempt?; var write: Attempt? }
+    struct Attempts: Codable, Hashable { var fill: Attempt?; var write: Attempt?; var hangman: Attempt? = nil }
     struct Attempt: Codable, Hashable {
         let correct: Int?; let verdict: String?; let reason: String?; let fix: String?; let answer: String?
     }
 }
+/// A finished hangman game as the server re-checked it (D69).
+struct HangmanResult: Codable, Hashable { let won: Bool; let wrong: Int; let word: String }
 /// Right: expected (+ note when another form was typed). Wrong: the answer and its meaning; the word stays hidden (D58).
 struct FillResult: Codable, Hashable {
     let correct: Bool; let expected: String?; let note: String?; let answer: String?; let meaning: String?

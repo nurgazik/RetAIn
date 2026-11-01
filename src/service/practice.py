@@ -27,6 +27,8 @@ from .config import ROOT
 ROUND_SIZE = 5                      # words per round (D60); no daily cap
 PARTS = ("today", "ahead")
 GAPS = [1, 3, 7, 14, 30]           # days until due again, by box
+LIVES = 6                           # hangman: wrong guesses allowed, the same for every word so games compare (D69)
+LETTERS = set("abcdefghijklmnopqrstuvwxyz")  # the hangman keyboard; anything else in a word is shown from the start
 NATURAL_AT = 0.9                    # Jev ✓ only when this sure (TD-21: 0/35 wrong passed on the eval set)
 FILL_PROMPT = (ROOT / "prompts" / "exercises" / "fill-sentence.md").read_text()
 JUDGE_PROMPT = (ROOT / "prompts" / "exercises" / "sentence-judge.md").read_text()
@@ -356,21 +358,50 @@ def record(con, user: dict, item: dict, kind: str, answer: str, result: dict) ->
     return cur.lastrowid
 
 
+# ---------------------------------------------------------------- hangman (D69)
+
+def hangman_result(word: str, guesses: list) -> dict:
+    """Replay the phone's guess log against the word → {won, wrong}. The phone plays the game; the server
+    re-checks it, so a bug can't record the wrong result. Repeats and non-letters don't count."""
+    letters = {c for c in word.lower() if c in LETTERS}
+    seen, wrong = set(), 0
+    for g in (str(g).lower() for g in guesses):
+        if g not in LETTERS or g in seen or wrong >= LIVES or letters <= seen:
+            continue
+        seen.add(g)
+        wrong += g not in letters
+    return {"won": letters <= seen and wrong < LIVES, "wrong": wrong}
+
+
+def play_hangman(con, user: dict, item: dict, guesses: list, hint: bool, seconds: float | None) -> dict:
+    """Store one finished game (its full log) and count it like any exercise attempt → the result."""
+    r = hangman_result(item["word"], guesses)
+    with db._lock:
+        con.execute("INSERT INTO hangman_games (user_id, word_id, day, word, guesses, wrong, hint, won, seconds, created_at) "
+                    "VALUES (?,?,?,?,?,?,?,?,?,?)", (user["id"], item["word_id"], user["day"], item["word"],
+                                                      json.dumps([str(g).lower() for g in guesses]), r["wrong"],
+                                                      int(hint), int(r["won"]), seconds, db.now()))
+        con.commit()
+    record(con, user, item, "hangman", "".join(str(g).lower() for g in guesses), {"correct": int(r["won"])})
+    return r | {"word": item["word"]}
+
+
 def reschedule(con, user: dict, item: dict) -> None:
     """After every attempt, from all of today's attempts on the word (D57: either exercise counts on
     its own): a miss → box 0, due tomorrow; a "could be better" → same box; otherwise up one box.
     The base is the box when the word joined today's set, so two clean exercises are still one step.
     A fill-in is judged on its first try (D58): wrong first, right later is still a miss.
-    A word that wasn't due when it joined (part "ahead") only ever moves back: a miss → tomorrow (D60, D66)."""
+    A word that wasn't due when it joined (part "ahead") only ever moves back: a miss → tomorrow (D60, D66).
+    Hangman (D69) is easier recall: a lost game is a miss; a won game alone never moves the word up."""
     tries = {}
     for a in con.execute("SELECT kind, correct, verdict FROM practice_attempts WHERE user_id=? AND word_id=? AND day=? "
                          "ORDER BY id", (user["id"], item["word_id"], user["day"])):
         tries.setdefault(a["kind"], a)
-    fill, write = tries.get("fill"), tries.get("write")
+    fill, write, hangman = tries.get("fill"), tries.get("write"), tries.get("hangman")
     box = item["box"]
-    if (fill and not fill["correct"]) or (write and write["verdict"] == "wrong"):
+    if (fill and not fill["correct"]) or (write and write["verdict"] == "wrong") or (hangman and not hangman["correct"]):
         box = 0
-    elif item.get("part") == "ahead":
+    elif item.get("part") == "ahead" or not (fill or write):
         return
     elif not (write and write["verdict"] == "could-be-better"):
         box = min(box + 1, len(GAPS) - 1)

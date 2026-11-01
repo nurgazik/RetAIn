@@ -78,6 +78,12 @@ final class RetAInClient {
         var req = try request("v1/practice/round", method: "POST", body: [:]); req.timeoutInterval = 90
         return try await send(req, as: PracticeSet.self)
     }
+    /// A finished hangman game: its guess log, for the server to re-check and store (D69).
+    func practiceHangman(wordId: Int, guesses: [Character], hint: Bool, seconds: Double) async throws -> HangmanResult {
+        try await send(request("v1/practice/hangman", method: "POST",
+                               body: ["word_id": wordId, "guesses": guesses.map(String.init), "hint": hint, "seconds": seconds]),
+                       as: HangmanResult.self)
+    }
     func practiceFill(wordId: Int, answer: String) async throws -> FillResult {
         try await send(request("v1/practice/fill", method: "POST", body: ["word_id": wordId, "answer": answer]), as: FillResult.self)
     }

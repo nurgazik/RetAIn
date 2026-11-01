@@ -426,3 +426,38 @@ def test_the_shown_sentence_is_polish_when_the_meaning_is_right():
     assert shown_fix({"verdict": "natural", "polished": s + ".", "fix": None}, s) is None  # nothing changed
     assert shown_fix({"verdict": "wrong", "polished": polished, "fix": "usage fix"}, s) == "usage fix"
     assert shown_fix({"verdict": "could-be-better", "polished": polished, "fix": None}, s) == polished
+
+
+# ---------------------------------------------------------------- D69: hangman
+
+def test_hangman_replays_the_guess_log():
+    from service.practice import hangman_result
+    assert hangman_result("gait", list("gait")) == {"won": True, "wrong": 0}
+    assert hangman_result("gait", list("eagoti")) == {"won": True, "wrong": 2}       # e, o miss
+    assert hangman_result("gait", list("aaaa")) == {"won": False, "wrong": 0}        # repeats don't count
+    assert hangman_result("gait", list("bcdefhj")) == {"won": False, "wrong": 6}     # the 7th guess is past the end
+    assert hangman_result("ad hoc", list("adhoc")) == {"won": True, "wrong": 0}      # the space is shown, not guessed
+
+
+def test_a_lost_game_is_a_miss_and_a_won_game_alone_never_moves_a_word_up(client, stubs):
+    import service.db as db
+    from service.practice import add_days
+    items = today(client)["items"]
+    won, lost = items[0], items[1]
+    before = boxes([won["word_id"], lost["word_id"]])
+    r = client.post("/v1/practice/hangman", json={"word_id": won["word_id"], "guesses": list(dict.fromkeys(won["word"])),
+                                                  "hint": True, "seconds": 31.5}).json()
+    assert r == {"won": True, "wrong": 0, "word": won["word"]}
+    r = client.post("/v1/practice/hangman", json={"word_id": lost["word_id"], "guesses": list("qxzjvkw")}).json()
+    assert r["won"] is False
+    day = client.get("/v1/me").json()["day"]
+    after = boxes([won["word_id"], lost["word_id"]])
+    assert after[won["word_id"]] == before[won["word_id"]]          # a win alone: its place stays
+    assert after[lost["word_id"]] == (0, add_days(day, 1))          # a loss: top of tomorrow's list
+    con = db.connect()
+    games = con.execute("SELECT word, guesses, wrong, hint, won, seconds FROM hangman_games ORDER BY id").fetchall()
+    con.close()
+    assert tuple(games[0]) == (won["word"], json.dumps(list(dict.fromkeys(won["word"]))), 0, 1, 1, 31.5)
+    s = {i["word_id"]: i for i in today(client)["items"]}
+    assert s[won["word_id"]]["attempts"]["hangman"]["correct"] == 1 and s[lost["word_id"]]["attempts"]["hangman"]["correct"] == 0
+    assert client.post("/v1/practice/hangman", json={"word_id": won["word_id"], "guesses": ["a"]}).status_code == 409

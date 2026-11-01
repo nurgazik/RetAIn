@@ -5,7 +5,7 @@ import SwiftUI
 /// One list, no limit (D66): every learning word, due ones first; the user goes as far as they like, in
 /// rounds of five with a checkpoint between them. Words so far sit below, with Mark retained.
 enum PracticeExercise: Equatable {
-    case fill, write
+    case fill, write, hangman
 
     /// Whether this word still has this exercise to do today.
     func pending(_ item: PracticeItem) -> Bool {
@@ -13,10 +13,15 @@ enum PracticeExercise: Equatable {
         switch self {
         case .fill: return item.fill != nil && item.attempts.fill == nil
         case .write: return item.attempts.write == nil
+        case .hangman: return item.attempts.hangman == nil
         }
     }
     private func done(_ item: PracticeItem) -> Bool {
-        self == .fill ? item.attempts.fill != nil : item.attempts.write != nil
+        switch self {
+        case .fill: item.attempts.fill != nil
+        case .write: item.attempts.write != nil
+        case .hangman: item.attempts.hangman != nil
+        }
     }
 
     /// The next word to do in this exercise, if any.
@@ -100,6 +105,7 @@ struct PracticeView: View {
                     switch exercise {
                     case .fill: fillCard(set.items[i])
                     case .write: writeCard(set.items[i])
+                    case .hangman: hangmanCard(set.items[i])
                     }
                 }
                 .scrollDismissesKeyboard(.interactively)
@@ -195,6 +201,17 @@ struct PracticeView: View {
         .buttonStyle(.bordered).controlSize(.large).disabled(hinting || busy)
     }
 
+    // MARK: hangman (D69)
+
+    private func hangmanCard(_ item: PracticeItem) -> some View {
+        VStack(alignment: .leading, spacing: 0) {
+            HangmanCard(item: item, onFinish: { game, hint, seconds in await submitHangman(item, game, hint, seconds) },
+                        onOpenCard: { Task { await openCard(item) } }, onNext: advance)
+                .id(item.wordId)
+            if let error = inputError { Text(error).font(.callout).foregroundStyle(.red).padding(.horizontal) }
+        }
+    }
+
     // MARK: write a sentence
 
     private func writeCard(_ item: PracticeItem) -> some View {
@@ -256,6 +273,7 @@ struct PracticeView: View {
                 ProgressView(value: Double(words.done), total: Double(words.total)).accessibilityIdentifier("today-progress")
                 exerciseCard(.fill, "Fill in the word", "Recall it from a sentence", set)
                 exerciseCard(.write, "Use it in a sentence", "Write your own", set)
+                exerciseCard(.hangman, "Hangman", "Guess it letter by letter", set)
                 if !set.withoutFill.isEmpty {  // D66: say so rather than count them as done
                     Text("No fill-in sentence today for \(set.withoutFill.map(\.word).joined(separator: ", ")): try \(set.withoutFill.count == 1 ? "it" : "them") in a sentence.")
                         .font(.caption).foregroundStyle(.secondary)
@@ -333,6 +351,7 @@ struct PracticeView: View {
     private func outcome(_ item: PracticeItem) -> String {
         var parts: [String] = []
         if let f = item.attempts.fill { parts.append(f.correct == 1 ? "fill-in ✓" : "fill-in ✗") }
+        if let h = item.attempts.hangman { parts.append(h.correct == 1 ? "hangman ✓" : "hangman ✗") }
         if let w = item.attempts.write {
             parts.append(["natural": "sentence ✓", "wrong": "sentence ✗"][w.verdict ?? ""] ?? "sentence: could be better")
         }
@@ -406,6 +425,17 @@ struct PracticeView: View {
                 answer = ""; misses += 1
                 if item.fill?.hint == nil { typing = true }  // straight back to typing
             }
+        } catch { inputError = error.localizedDescription }
+    }
+
+    private func submitHangman(_ item: PracticeItem, _ game: HangmanGame, _ hint: Bool, _ seconds: Double) async {
+        shown = index(item)  // the finished game stays on screen until Next
+        do {
+            let r = try await RetAInClient.shared.practiceHangman(wordId: item.wordId, guesses: game.guesses, hint: hint,
+                                                                  seconds: seconds)
+            inputError = nil
+            update(item.wordId) { $0.attempts.hangman = .init(correct: r.won ? 1 : 0, verdict: nil, reason: nil, fix: nil,
+                                                             answer: String(game.guesses)) }
         } catch { inputError = error.localizedDescription }
     }
 

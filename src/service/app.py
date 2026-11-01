@@ -185,6 +185,13 @@ class HintIn(BaseModel):
     word_id: int
 
 
+class HangmanIn(BaseModel):
+    word_id: int
+    guesses: list[str] = Field(max_length=26)   # letters in the order tapped (D69)
+    hint: bool = False
+    seconds: float | None = None
+
+
 class WriteIn(BaseModel):
     word_id: int
     sentence: str = Field(min_length=3, max_length=400)
@@ -247,6 +254,21 @@ def practice_hint(body: HintIn, user=Depends(auth.current_user)):
         options, calls = practice.hint(con, user, body.word_id, engine.model_env())
         db.record_calls(con, user["id"], None, calls, practice.prices(), day=user["day"])
         return {"options": options}
+    finally:
+        con.close()
+
+
+@app.post("/v1/practice/hangman")
+def practice_hangman(body: HangmanIn, user=Depends(auth.current_user)):
+    """A finished hangman game (D69): the phone sends the guess log; the server re-checks it, stores the game
+    and counts it on the schedule. One game per word a day."""
+    con = db.connect()
+    try:
+        item = _practice_item(con, user, body.word_id)
+        if con.execute("SELECT 1 FROM practice_attempts WHERE user_id=? AND word_id=? AND day=? AND kind='hangman'",
+                       (user["id"], body.word_id, user["day"])).fetchone():
+            raise HTTPException(409, "this word's hangman is already played today")
+        return practice.play_hangman(con, user, item, body.guesses, body.hint, body.seconds)
     finally:
         con.close()
 

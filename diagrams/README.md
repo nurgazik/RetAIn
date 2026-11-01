@@ -18,6 +18,7 @@ choosing (a live quality gate), dashed grey boxes plain code.
 | [flow-share-an-article.md](flow-share-an-article.md) | Shares or pastes something they're reading, reads it back with their words | writer · word checker · fact checker | D40, D41 | live |
 | [flow-save-a-word.md](flow-save-a-word.md) | Saves a word (share sheet, Siri, word list) and gets its card | example writer · "real word?" check | D48, D50 | live |
 | [flow-fill-in-the-word.md](flow-fill-in-the-word.md) | Fills the blank in a sentence | sentence writer (only when the user has answered every banked sentence for the word); the answer is checked by code | D53, D56, D60 | built |
+| [flow-hangman.md](flow-hangman.md) | Guesses a word letter by letter from its meaning | none (code only) | D69 | built |
 | [flow-write-a-sentence.md](flow-write-a-sentence.md) | Writes a sentence with a word, gets a verdict | judge · feedback writer | D53 | designed |
 
 ## Evals — tests we run while building, never on a user's request

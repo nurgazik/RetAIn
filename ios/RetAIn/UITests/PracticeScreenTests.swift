@@ -101,6 +101,21 @@ final class PracticeScreenTests: XCTestCase {
             app.buttons["Exercises"].tap()
         }
         XCTAssertTrue(writeCard.waitForExistence(timeout: 5), "back on the chooser")
+        let hangmanCard = app.buttons.containing(.staticText, identifier: "Hangman").firstMatch  // D69
+        if hangmanCard.waitForExistence(timeout: 5), hangmanCard.isEnabled {
+            hangmanCard.tap()
+            XCTAssertTrue(app.staticTexts["HANGMAN"].waitForExistence(timeout: 30), "hangman didn't open")
+            shot("hangman")
+            for (n, c) in "etaoinshrdlucmfwypvbgkjqxz".enumerated() {  // most common letters first
+                if app.otherElements["hangman-result"].exists || app.buttons["Next"].exists { break }
+                let key = app.buttons["hangman-key-\(c)"]
+                if key.isEnabled { key.tap() }
+                if n == 3 { shot("hangman-playing") }
+            }
+            XCTAssertTrue(app.buttons["Next"].waitForExistence(timeout: 15), "hangman didn't end")
+            shot("hangman-result")
+            app.buttons["Exercises"].tap()
+        }
         shot("chooser-end")
     }
 }

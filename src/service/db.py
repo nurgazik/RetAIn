@@ -106,7 +106,7 @@ CREATE TABLE IF NOT EXISTS practice_attempts (
     user_id     TEXT NOT NULL REFERENCES users(id),
     word_id     INTEGER NOT NULL REFERENCES words(id),
     day         TEXT NOT NULL,
-    kind        TEXT NOT NULL,      -- fill | write
+    kind        TEXT NOT NULL,      -- fill | write | hangman (D69; its guesses are in hangman_games)
     answer      TEXT NOT NULL,      -- what the user typed
     correct     INTEGER,            -- fill: code's check
     verdict     TEXT,               -- write: natural | could-be-better | wrong
@@ -130,6 +130,21 @@ CREATE TABLE IF NOT EXISTS practice_sentences (
     sentence    TEXT NOT NULL,
     answer      TEXT NOT NULL,      -- the word as it appears in the sentence
     p_natural   REAL,               -- Jev's check when written
+    created_at  TEXT NOT NULL
+);
+-- one row per hangman game (D69): the whole guess log, so stats (games per word, wrong guesses, hint rate,
+-- streaks, leaderboard points) are worked out later without changing what's stored
+CREATE TABLE IF NOT EXISTS hangman_games (
+    id          INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id     TEXT NOT NULL REFERENCES users(id),
+    word_id     INTEGER NOT NULL REFERENCES words(id),
+    day         TEXT NOT NULL,
+    word        TEXT NOT NULL,       -- the word played, as saved (dictionary form)
+    guesses     TEXT NOT NULL,       -- JSON ["e", "a", ...] in the order tapped
+    wrong       INTEGER NOT NULL,    -- wrong guesses (LIVES ends the game)
+    hint        INTEGER NOT NULL,    -- 1 = the sentence hint was shown
+    won         INTEGER NOT NULL,
+    seconds     REAL,                -- from the word appearing to the game ending, as the phone timed it
     created_at  TEXT NOT NULL
 );
 -- which bank sentences each user has answered (D60), so nobody sees the same fill-in twice

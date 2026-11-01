@@ -2,7 +2,7 @@
 
 Catch-up file for founder and assistant alike. **Convention: update the "Now / Next"
 block and append a dated entry at the end of every working session.** Newest entries
-first. Decisions live in PRD.md's log (D1–D68); this file is the narrative timeline.
+first. Decisions live in PRD.md's log (D1–D69); this file is the narrative timeline.
 
 ---
 
@@ -22,6 +22,8 @@ usage). Code schedules the words; the list stays unlimited; the user marks retai
 scan done (docs/poc2-transform.md §10): AI-graded sentences already ship elsewhere (VORCA,
 ReadUnbound), so the combination with the transform is the differentiator.
 **Next up: TD-20 (sentence-judge eval) → UX-16 (exercise screens).** Founder to-do: try ReadUnbound.
+**2026-11-01 (D69): hangman** — third exercise: guess the word from its meaning, 6 lives, sentence hint, stardust tiles;
+every game stored for stats (`hangman_games`). Needs a fresh install from Xcode.
 **2026-11-01: Words tab A–Z** — learning and retained each sorted alphabetically. Needs a fresh install from Xcode.
 **2026-11-01 (D68): meaning decides, grammar is polish** — "✓ Meaning correct" + "Polished: …" when the word is used
 right; grammar never counts. Judge polishes first, then judges. Stress test (100 sentences): grammar-only 35/35 pass
@@ -255,6 +257,19 @@ all needed for TestFlight and none waits on a decision.**
 vacation coding ends). Home Mac: clone normally with personal credentials; recreate
 `.env.local` (4 API keys — gitignored, never on GitHub) and `data/retain.db` refills
 itself via the fetchers.
+
+### 2026-11-01 — Hangman (D69)
+
+- Founder decisions: every word eligible (no minimum length); clue = meaning, hint = the banked fill-in sentence;
+  exercises independent (no skipping); the stardust look; per-game stats for later leaderboards. Assistant's picks,
+  approved: 6 fixed lives; game on the phone with the log re-checked on the server; lost = miss, won = no promotion.
+- Built: `App/HangmanView.swift` (`HangmanGame` rules + `HangmanCard`), the shared `Stardust` tiles gained a mist
+  level and per-cell masks; server `hangman_result` / `play_hangman`, `POST /v1/practice/hangman` (one game per
+  word a day), table `hangman_games`; `reschedule` counts a lost game as a miss and never promotes on a win alone.
+- Tests: service 103/103 (2 new); iOS HangmanTests 3/3; full iOS run 65 (62 pass, 1 skipped, the hangman test
+  fixed after the run, known TD-24); walk-through passes with a hangman step (game stored: 11 guesses, lost).
+- Seen in passing: the dev account's *abdicate* has no fill-in sentence today (so no hint) — another word the
+  sentence checks rejected; same open question as *untarnishable* (Jev's scores).
 
 ### 2026-11-01 — Words tab sorted A–Z
 
