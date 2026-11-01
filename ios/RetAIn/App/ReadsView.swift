@@ -13,14 +13,16 @@ struct ReadsView: View {
                 ForEach(pieces) { p in
                     Button { Task { await open(p) } } label: {
                         VStack(alignment: .leading, spacing: 3) {
-                            Text(p.title ?? "Untitled").font(.body)
+                            Text(p.title ?? "Untitled").font(.body.weight(.bold)).foregroundStyle(Color.ink)
                             Text("\(String(p.createdAt.prefix(10))) · \(p.wordsUsed.count) word\(p.wordsUsed.count == 1 ? "" : "s")\(p.wordsUsed.isEmpty ? "" : ": " + p.wordsUsed.joined(separator: ", "))")
                                 .font(.caption).foregroundStyle(.secondary)
                         }
                     }
+                    .listRowBackground(Color.card)
                 }
                 if let error { Text(error).foregroundStyle(.red).font(.caption) }
             }
+            .notebookList()   // D70
             .navigationTitle("My Reads")
             .refreshable { await load() }
             .task { await load() }

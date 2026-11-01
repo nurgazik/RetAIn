@@ -20,7 +20,7 @@ enum PieceHTML {
         <style>
           /* Dynamic Type: root size follows the iOS text-size setting (17px at default); every rem scales */
           html { font: -apple-system-body; }
-          body { font-family: ui-serif, Georgia, 'Times New Roman', serif; background: #faf8f4; color: #26221c;
+          body { font-family: ui-serif, Georgia, 'Times New Roman', serif; background: #F7F0DC; color: #26221c;
                  margin: 0; padding: 1.25rem 1.25rem 4rem 1.75rem; line-height: 1.65; -webkit-text-size-adjust: 100%; }
           .kicker { font-family: -apple-system, sans-serif; font-size: .75rem; letter-spacing: .12em;
                     text-transform: uppercase; color: #8a6d3b; margin-bottom: .5rem; }
@@ -66,7 +66,7 @@ enum PieceHTML {
                     font-family: -apple-system, sans-serif; font-size: .8rem; color: #6d675e; }
           .attrib a { color: #8a6d3b; }
           @media (prefers-color-scheme: dark) {
-            body { background: #1c1a17; color: #ece7dd; }
+            body { background: #1B1915; color: #ece7dd; }
             mark { background: linear-gradient(transparent 55%, #7a5d13 55%); color: inherit; }
             .dek { color: #b9b1a4; } .byline { color: #a39c90; }
             .kicker { color: #c9a45c; } .attrib { color: #a39c90; border-top-color: #3a352e; } .attrib a { color: #c9a45c; }

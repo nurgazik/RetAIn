@@ -14,8 +14,8 @@ struct SignInView: View {
     var body: some View {
         VStack(spacing: 24) {
             Spacer()
-            Text("RetAIn").font(.system(size: 34, weight: .bold)).tracking(4)
-            Text("Your words, in whatever you're reading.").foregroundStyle(.secondary)
+            Text("RetAIn").font(.hand(64, relativeTo: .largeTitle)).fontDesign(nil).foregroundStyle(Color.brandText)
+            Text("Your words, in whatever you're reading.").foregroundStyle(Color.inkSoft)
             Spacer()
             SignInWithAppleButton(.signIn) { request in
                 request.requestedScopes = [.email]
@@ -27,14 +27,17 @@ struct SignInView: View {
             if let error { Text(error).font(.caption).foregroundStyle(.red).multilineTextAlignment(.center).padding(.horizontal) }
             #if DEBUG
             VStack(spacing: 6) {
-                TextField("Developer token (simulator)", text: $devToken).textFieldStyle(.roundedBorder)
+                TextField("Developer token (simulator)", text: $devToken).textFieldStyle(.plain).padding(10).paperCard(radius: 12, edge: 2)
                     .textInputAutocapitalization(.never).autocorrectionDisabled()
                 Button("Use developer token") { SessionStore.token = devToken; session.signedIn = true }
-                    .disabled(devToken.isEmpty)
+                    .disabled(devToken.isEmpty).buttonStyle(ChunkyButtonStyle(kind: .secondary, height: 44))
             }.padding(.horizontal, 32).font(.footnote)
             #endif
             Spacer(minLength: 40)
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(Color.paper.ignoresSafeArea())   // D70
+        .fontDesign(.rounded)
     }
 
     private func handle(_ result: Result<ASAuthorization, Error>) async {

@@ -22,8 +22,8 @@ usage). Code schedules the words; the list stays unlimited; the user marks retai
 scan done (docs/poc2-transform.md §10): AI-graded sentences already ship elsewhere (VORCA,
 ReadUnbound), so the combination with the transform is the differentiator.
 **Next up: TD-20 (sentence-judge eval) → UX-16 (exercise screens).** Founder to-do: try ReadUnbound.
-**2026-11-01 (D70): the notebook look, Practice first** — cream paper, chunky ink cards and buttons, ink blue + highlighter,
-rounded type, handwritten titles, lined note cards; light and dark. Other tabs next (UX-23). Needs a fresh install from Xcode.
+**2026-11-01 (D70): the notebook look on every screen** — cream paper, chunky ink cards and buttons, ink blue + highlighter,
+rounded type, handwritten titles, lined handwritten note cards; light and dark; native lists kept. Needs a fresh install from Xcode.
 **2026-11-01 (D69): hangman** — third exercise: guess the word from its meaning, 6 lives, sentence hint, stardust tiles;
 every game stored for stats (`hangman_games`). Needs a fresh install from Xcode.
 **2026-11-01: Words tab A–Z** — learning and retained each sorted alphabetically. Needs a fresh install from Xcode.
@@ -259,6 +259,20 @@ all needed for TestFlight and none waits on a decision.**
 vacation coding ends). Home Mac: clone normally with personal credentials; recreate
 `.env.local` (4 API keys — gitignored, never on GitHub) and `data/retain.db` refills
 itself via the fetchers.
+
+### 2026-11-01 — The notebook look on every screen (D70)
+
+- Founder: continue with all screens and sheets. Done: Words (native list on paper, cream rows, chunky Add), the word
+  card (ink status chip, handwritten lined note card + note editor, chunky Save/Cancel/Retained/Delete, badges on
+  highlighter), My Reads, the reader page background (tier colours untouched), Settings, sign-in (handwritten
+  "RetAIn"), the share/Safari sheet; Caveat bundled in both extensions; `notebookList`, `chip`, a `destructive` button.
+- Bugs found in screenshots and fixed: the handwriting font wasn't found by name (`Font.custom("Caveat")` fell back
+  to the system font) → loaded by family via UIFont, scaled with Dynamic Type; the app-wide rounded design then
+  replaced it → `.fontDesign(nil)` on note cards; ruled lines now follow the font's real line height.
+  A project.yml edit briefly broke the Safari action's name ("RetAInize"); caught in the diff and restored.
+- Tests (dark run): 69 — 66 pass, 1 skipped, TD-24, and the reader highlight-colour test, which only passes in light
+  appearance (re-run in light: passes) → noted in UX-23. UI walk-throughs (Practice, notes, search, delete, new
+  `AppTourScreenTests`) pass; screenshots sent to the founder.
 
 ### 2026-11-01 — The notebook look (D70), Practice first
 

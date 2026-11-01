@@ -23,7 +23,7 @@ struct SheetView: View {
                 switch phase {
                 case .sending, .working:
                     VStack(spacing: 14) {
-                        Image(systemName: "sparkles").font(.system(size: 40)).foregroundStyle(.orange).symbolEffect(.pulse)
+                        Image(systemName: "sparkles").font(.system(size: 40)).foregroundStyle(Color.highlighter).symbolEffect(.pulse)
                         Text("Working the magic — rewriting this just for you…").font(.callout).multilineTextAlignment(.center)
                         Text(phaseLabel).font(.caption).foregroundStyle(.secondary)
                         Text("\(elapsed)s").font(.caption2).foregroundStyle(.tertiary)
@@ -44,6 +44,9 @@ struct SheetView: View {
                         .padding(.horizontal).padding(.vertical, 8).background(.bar)
                 }
             }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .background(Color.paper.ignoresSafeArea())   // D70
+            .fontDesign(.rounded)
             .navigationTitle("RetAIn").navigationBarTitleDisplayMode(.inline)
             .toolbar { ToolbarItem(placement: .cancellationAction) { Button("Done") { onDone() } } }
         }

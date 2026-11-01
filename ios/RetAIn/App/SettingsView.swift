@@ -19,19 +19,24 @@ struct SettingsView: View {
                     }
                     Button("Sign out", role: .destructive) { SessionStore.token = nil; session.signedIn = false }
                 }
+                .listRowBackground(Color.card)
                 Section("Practice") {
                     Toggle("Daily reminder at 7 pm", isOn: $reminder)
                         .onChange(of: reminder) { _, on in
                             if on { Task { reminder = await PracticeReminder.enable() } } else { PracticeReminder.disable() }
                         }
                 }
+                .listRowBackground(Color.card)
                 Section("Server") {
                     LabeledContent("Default", value: (Bundle.main.object(forInfoDictionaryKey: "RETAIN_SERVER") as? String) ?? "")
                     TextField("Override URL (blank = default)", text: $serverURL).textInputAutocapitalization(.never).autocorrectionDisabled()
                         .onSubmit { SessionStore.setServerURL(serverURL) }
                 }
+                .listRowBackground(Color.card)
                 Section { Text("Adapted with AI to carry your words: phrasing may be added or changed, facts should not be — check the original for anything that matters.").font(.footnote).foregroundStyle(.secondary) }
+                    .listRowBackground(Color.card)
             }
+            .notebookList()   // D70
             .navigationTitle("Settings")
             .task { me = try? await RetAInClient.shared.me() }
         }

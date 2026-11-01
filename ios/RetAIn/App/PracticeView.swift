@@ -175,8 +175,8 @@ struct PracticeView: View {
     @ViewBuilder private func yourNote(_ item: PracticeItem) -> some View {
         if let note = item.note, !note.isEmpty {
             VStack(alignment: .leading, spacing: 0) {  // D70: a note card, the one place with ruled lines
-                Text("your note").font(.hand(18, relativeTo: .caption)).foregroundStyle(Color.inkSoft)
-                Text(note).font(.hand(26)).foregroundStyle(Color.brandText)
+                Text("your note").font(.hand(18, relativeTo: .caption1)).foregroundStyle(Color.inkSoft)
+                Text(note).font(.hand(26, relativeTo: .body)).foregroundStyle(Color.brandText)
             }
             .noteCard()
             .accessibilityElement(children: .combine)

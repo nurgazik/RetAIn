@@ -18,6 +18,7 @@ struct WordsView: View {
                 if searching { searchResults } else { allWords }
                 if let error { Text(error).foregroundStyle(.red).font(.caption) }
             }
+            .notebookList()   // D70: paper behind, cream rows; native swipe, search and refresh
             .searchable(text: $query, placement: .navigationBarDrawer(displayMode: .always),
                         prompt: "Search words, meanings, notes")
             .autocorrectionDisabled().textInputAutocapitalization(.never)
@@ -42,12 +43,15 @@ struct WordsView: View {
                 TextField("Add a word", text: $newWord).textInputAutocapitalization(.never).autocorrectionDisabled()
                     .onSubmit { Task { await add(newWord) } }
                 Button("Add") { Task { await add(newWord) } }.disabled(newWord.trimmingCharacters(in: .whitespaces).isEmpty || busy)
+                    .buttonStyle(ChunkyButtonStyle(height: 36)).frame(width: 76)
             }
+            .listRowBackground(Color.card)
         }
         ForEach(groups, id: \.0) { status, list in
             Section("\(status) · \(list.count)") {
                 ForEach(list) { w in row(w, nil) }
             }
+            .listRowBackground(Color.card)
         }
     }
 
@@ -63,6 +67,7 @@ struct WordsView: View {
             Section("\(hits.count) result\(hits.count == 1 ? "" : "s")") {
                 ForEach(hits) { h in row(h.word, h) }
             }
+            .listRowBackground(Color.card)
             addRow(typed, hits)
         }
     }
@@ -77,6 +82,7 @@ struct WordsView: View {
                 }
                 .disabled(busy).accessibilityIdentifier("search-add")
             }
+            .listRowBackground(Color.card)
         }
     }
 
@@ -84,7 +90,7 @@ struct WordsView: View {
         NavigationLink(value: w) {
             VStack(alignment: .leading) {
                 HStack {
-                    Text(highlighted(w.word)).font(.body.weight(.medium))
+                    Text(highlighted(w.word)).font(.body.weight(.bold))
                     if let r = w.rarity { Text(r.dots).font(.caption2).foregroundStyle(.secondary).accessibilityLabel(r.label) }
                     if let n = w.servings, n > 0 { Text("· \(n)").foregroundStyle(.secondary).font(.caption) }
                     if w.isUnverified { Text("Unverified").font(.caption2).foregroundStyle(.orange) }

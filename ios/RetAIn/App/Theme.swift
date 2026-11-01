@@ -1,15 +1,7 @@
 import SwiftUI
 import UIKit
 
-/// App-only parts of the notebook look (D70): the handwriting font (Caveat, SIL OFL 1.1, App/Fonts) and
-/// the native navigation bar's titles. Extensions don't bundle the font, so these stay in the app.
-extension Font {
-    /// Handwriting, for screen titles and short notes only (it tires the eye in long text).
-    static func hand(_ size: CGFloat, relativeTo style: Font.TextStyle = .title) -> Font {
-        .custom("Caveat", size: size, relativeTo: style).weight(.bold)
-    }
-}
-
+/// App-only part of the notebook look (D70): the native navigation bar's titles.
 enum Theme {
     /// Large titles in handwriting, inline titles in SF Pro Rounded, both ink blue; the bar itself stays native.
     static func applyNavigationBar() {

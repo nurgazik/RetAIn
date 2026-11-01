@@ -29,9 +29,26 @@ extension UIColor {
     }
 }
 
+extension UIFont {
+    /// Handwriting (Caveat, SIL OFL 1.1, App/Fonts; bundled in the app and both extensions), found by its
+    /// family (the variable font's PostScript names don't match "Caveat"), bold, scaled with Dynamic Type.
+    static func hand(_ size: CGFloat, relativeTo style: UIFont.TextStyle = .title1) -> UIFont {
+        let family = UIFontDescriptor(fontAttributes: [.family: "Caveat"])
+        let font = UIFont(descriptor: family.withSymbolicTraits(.traitBold) ?? family, size: size)
+        return UIFontMetrics(forTextStyle: style).scaledFont(for: font)
+    }
+}
+
+extension Font {
+    /// Handwriting, for screen titles and the user's notes only: it tires the eye in long text.
+    static func hand(_ size: CGFloat, relativeTo style: UIFont.TextStyle = .title1) -> Font {
+        Font(UIFont.hand(size, relativeTo: style))
+    }
+}
+
 /// A chunky button: the face sits on a solid edge 4 pt below it and presses down onto it.
 struct ChunkyButtonStyle: ButtonStyle {
-    enum Kind { case primary, secondary }
+    enum Kind { case primary, secondary, destructive }
     var kind: Kind = .primary
     var height: CGFloat = 54
     @Environment(\.isEnabled) private var enabled
@@ -43,7 +60,7 @@ struct ChunkyButtonStyle: ButtonStyle {
         let shape = RoundedRectangle(cornerRadius: 16, style: .continuous)
         return configuration.label
             .font(.system(.headline, design: .rounded).weight(.heavy))
-            .foregroundStyle(kind == .primary ? Color.white : Color.ink)
+            .foregroundStyle(kind == .primary ? Color.white : kind == .destructive ? Color.red : Color.ink)
             .frame(maxWidth: .infinity, minHeight: height)
             .background(face, in: shape)
             .overlay(shape.strokeBorder(edge, lineWidth: 2))
@@ -57,6 +74,19 @@ struct ChunkyButtonStyle: ButtonStyle {
 }
 
 extension View {
+    /// A native list or form on paper: cream rows (give each row `.listRowBackground(Color.card)`), the
+    /// system's swipe actions, search and pull-to-refresh untouched.
+    func notebookList() -> some View {
+        scrollContentBackground(.hidden).background(Color.paper)
+    }
+
+    /// A small ink-outlined label: a word's status, a badge.
+    func chip(fill: Color = .card) -> some View {
+        font(.system(.caption, design: .rounded).weight(.bold)).foregroundStyle(Color.ink)
+            .padding(.horizontal, 9).padding(.vertical, 3)
+            .background(fill, in: Capsule()).overlay(Capsule().strokeBorder(Color.ink, lineWidth: 1.5))
+    }
+
     /// A paper card: the card face, an ink outline and a thicker bottom edge, like a chunky button at rest.
     func paperCard(radius: CGFloat = 18, edge: CGFloat = 4) -> some View {
         let shape = RoundedRectangle(cornerRadius: radius, style: .continuous)
@@ -67,13 +97,17 @@ extension View {
     }
 
     /// A note card (D70: the only place with ruled lines): lined paper, a red margin, a strip of tape.
-    /// The content is padded clear of the margin; `line` is the ruled spacing (match the text's line height).
-    func noteCard(line: CGFloat = 30) -> some View {
-        padding(.leading, 40).padding(.trailing, 14).padding(.vertical, 10)
+    /// The rules sit under the note's lines: `text` is the note's font, `label` the small heading above it
+    /// (nil when there's none), so the spacing follows the real line height at any Dynamic Type size.
+    func noteCard(text: UIFont = .hand(26, relativeTo: .body), label: UIFont? = .hand(18, relativeTo: .caption1)) -> some View {
+        let top: CGFloat = 10, line = text.lineHeight
+        let first = top + (label?.lineHeight ?? 0) + text.ascender + 3  // just under the first line's baseline
+        return fontDesign(nil)  // the app-wide rounded design would otherwise replace the handwriting
+            .padding(.leading, 40).padding(.trailing, 14).padding(.vertical, top)
             .frame(maxWidth: .infinity, alignment: .leading)
             .background {
                 Canvas { g, size in
-                    var y = line + 8
+                    var y = first
                     while y < size.height - 2 {
                         g.fill(Path(CGRect(x: 0, y: y, width: size.width, height: 1)), with: .color(.ruled))
                         y += line

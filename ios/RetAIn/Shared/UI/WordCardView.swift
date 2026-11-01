@@ -44,15 +44,16 @@ struct WordCardView: View {
             }
             .padding()
         }
+        .background(Color.paper)   // D70
     }
 
     private var header: some View {
         VStack(alignment: .leading, spacing: 4) {
             HStack(alignment: .firstTextBaseline) {
-                Text(word.card?.headword ?? word.word).font(.title.weight(.semibold))
+                Text(word.card?.headword ?? word.word).font(.system(.largeTitle, design: .rounded).weight(.heavy))
                 if let h = word.card?.headword, h != word.word { Text("from “\(word.word)”").font(.subheadline).foregroundStyle(.secondary) }
                 Spacer()
-                Text(word.status).font(.caption).padding(.horizontal, 8).padding(.vertical, 3).background(.thinMaterial, in: Capsule())
+                Text(word.status).chip()
             }
             HStack(spacing: 8) {
                 if let ipa = word.card?.ipa, !ipa.isEmpty {
@@ -81,32 +82,33 @@ struct WordCardView: View {
         if editing {
             VStack(alignment: .leading, spacing: 8) {
                 TextField("A translation, an example of your own, anything", text: $draft, axis: .vertical)
-                    .lineLimit(3...10).textFieldStyle(.roundedBorder).focused($focused)
+                    .lineLimit(3...10).textFieldStyle(.plain).font(.hand(24, relativeTo: .body)).foregroundStyle(Color.brandText)
+                    .focused($focused).noteCard(text: .hand(24, relativeTo: .body), label: nil)
                     .onChange(of: draft) { _, d in if d.count > Self.noteLimit { draft = String(d.prefix(Self.noteLimit)) } }
                     .accessibilityIdentifier("note-field")
                 HStack {
-                    Button("Save") { Task { await save() } }.buttonStyle(.borderedProminent).disabled(saving)
+                    Button("Save") { Task { await save() } }.buttonStyle(ChunkyButtonStyle(height: 44)).disabled(saving)
                         .accessibilityIdentifier("note-save")
-                    Button("Cancel") { editing = false; noteError = nil }.buttonStyle(.bordered).disabled(saving)
+                    Button("Cancel") { editing = false; noteError = nil }.buttonStyle(ChunkyButtonStyle(kind: .secondary, height: 44)).disabled(saving)
                     if saving { ProgressView() }
                 }
                 if let noteError { Text(noteError).font(.caption).foregroundStyle(.red) }
             }
             .onAppear { focused = true }
         } else if let note, !note.isEmpty {
-            VStack(alignment: .leading, spacing: 4) {
+            VStack(alignment: .leading, spacing: 0) {  // D70: a note card, the one place with ruled lines
                 HStack {
-                    Label("Your note", systemImage: "note.text").font(.caption.smallCaps()).foregroundStyle(.secondary)
+                    Text("your note").font(.hand(18, relativeTo: .caption1)).foregroundStyle(Color.inkSoft)
                     Spacer()
-                    if onNote != nil { Button("Edit") { draft = note; editing = true }.font(.caption).buttonStyle(.borderless) }
+                    if onNote != nil { Button("Edit") { draft = note; editing = true }.font(.caption.weight(.bold)).buttonStyle(.borderless) }
                 }
-                Text(note).font(.body).textSelection(.enabled).accessibilityIdentifier("note-text")
+                Text(note).font(.hand(26, relativeTo: .body)).foregroundStyle(Color.brandText)
+                    .textSelection(.enabled).accessibilityIdentifier("note-text")
             }
-            .padding(12).frame(maxWidth: .infinity, alignment: .leading)
-            .background(.yellow.opacity(0.15), in: RoundedRectangle(cornerRadius: 10))
+            .noteCard()
         } else if onNote != nil {
             Button { draft = ""; editing = true } label: { Label("Add a note", systemImage: "square.and.pencil") }
-                .buttonStyle(.bordered).accessibilityIdentifier("note-add")
+                .buttonStyle(ChunkyButtonStyle(kind: .secondary, height: 44)).fixedSize().accessibilityIdentifier("note-add")
         }
     }
 
@@ -138,9 +140,10 @@ struct WordCardView: View {
         if let onStatus {
             HStack {
                 if !word.isUnverified, word.status == "learning" {
-                    Button("Got it — mark retained") { onStatus("retained") }.buttonStyle(.borderedProminent)
+                    Button("Got it — mark retained") { onStatus("retained") }.buttonStyle(ChunkyButtonStyle(height: 48))
                 }
-                Button("Delete", role: .destructive) { onStatus("deleted") }.buttonStyle(.bordered)
+                Button("Delete", role: .destructive) { onStatus("deleted") }.buttonStyle(ChunkyButtonStyle(kind: .destructive, height: 48))
+                    .frame(maxWidth: 110)
                     .accessibilityIdentifier("delete-word")
             }
         }
@@ -162,8 +165,7 @@ struct WordCardView: View {
     }
 
     private func badge(_ s: String) -> some View {
-        Text(s).font(.caption2.weight(.medium)).padding(.horizontal, 6).padding(.vertical, 2)
-            .background(.orange.opacity(0.18), in: Capsule())
+        Text(s).chip(fill: .highlighter.opacity(0.6))
     }
 
     /// Wiktionary qualifiers that read as noise on a card ("also", "usually"…).

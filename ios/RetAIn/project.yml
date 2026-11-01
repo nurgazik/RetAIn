@@ -55,6 +55,8 @@ targets:
       - Shared
       - path: ActionExt/RetAInPage.js
         buildPhase: resources
+      - path: App/Fonts/Caveat-Variable.ttf                 # handwriting for the word card's note (D70)
+        buildPhase: resources
     entitlements:
       path: Config/Share.entitlements
       properties:
@@ -63,6 +65,7 @@ targets:
       path: Config/Share-Info.plist
       properties:
         CFBundleDisplayName: RetAIn
+        UIAppFonts: [Caveat-Variable.ttf]
         RETAIN_SERVER: $(RETAIN_SERVER)
         RETAIN_DEV_TOKEN: $(RETAIN_DEV_TOKEN)
         NSAppTransportSecurity: {NSAllowsLocalNetworking: true}
@@ -84,6 +87,8 @@ targets:
       - Shared
       - path: ActionExt/RetAInPage.js
         buildPhase: resources
+      - path: App/Fonts/Caveat-Variable.ttf                 # handwriting for the word card's note (D70)
+        buildPhase: resources
     entitlements:
       path: Config/Action.entitlements
       properties:
@@ -92,6 +97,7 @@ targets:
       path: Config/Action-Info.plist
       properties:
         CFBundleDisplayName: RetAInize
+        UIAppFonts: [Caveat-Variable.ttf]
         RETAIN_SERVER: $(RETAIN_SERVER)
         RETAIN_DEV_TOKEN: $(RETAIN_DEV_TOKEN)
         NSAppTransportSecurity: {NSAllowsLocalNetworking: true}
