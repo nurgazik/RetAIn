@@ -2,7 +2,7 @@
 
 Catch-up file for founder and assistant alike. **Convention: update the "Now / Next"
 block and append a dated entry at the end of every working session.** Newest entries
-first. Decisions live in PRD.md's log (D1–D71); this file is the narrative timeline.
+first. Decisions live in PRD.md's log (D1–D72); this file is the narrative timeline.
 
 ---
 
@@ -22,6 +22,8 @@ usage). Code schedules the words; the list stays unlimited; the user marks retai
 scan done (docs/poc2-transform.md §10): AI-graded sentences already ship elsewhere (VORCA,
 ReadUnbound), so the combination with the transform is the differentiator.
 **Next up: TD-20 (sentence-judge eval) → UX-16 (exercise screens).** Founder to-do: try ReadUnbound.
+**2026-11-02 (D72): each exercise shuffles its round** — fill-in, sentence and hangman visit the round's words in their
+own order (fixed for the day), so one exercise doesn't reveal the next. Needs a fresh install from Xcode.
 **2026-11-01 (D71): Words show/sort menu + Learn again** — one filter icon: Show (All · Learning · Retained) and Sort by
 (A–Z · Newest · Oldest), remembered; a retained word's card has Learn again (starts over). Needs a fresh install from Xcode.
 **2026-11-01 (D70): the notebook look on every screen** — cream paper, chunky ink cards and buttons, ink blue + highlighter,
@@ -261,6 +263,15 @@ all needed for TestFlight and none waits on a decision.**
 vacation coding ends). Home Mac: clone normally with personal credentials; recreate
 `.env.local` (4 API keys — gitignored, never on GitHub) and `data/retain.db` refills
 itself via the fetchers.
+
+### 2026-11-02 — Each exercise shuffles its round (D72)
+
+- Founder: hangman's words should be randomized — after two exercises you remember the sequence. Agreed: shuffle inside
+  each round of 5, per exercise, fixed for the day (FNV-1a of day|exercise|word); rounds stay in priority order. All
+  three exercises (fill-in after sentences leaked the same way). Extras (bigger hangman pool, fresh words first): declined.
+- Built: `PracticeExercise.next(_:day:)` in `App/PracticeView.swift`; the four callers pass the set's day.
+- Tests: PracticeStepTests 13/13 (1 new: own order per exercise, rounds in order, stable on reopen); practice
+  walk-through passes against the live service.
 
 ### 2026-11-01 (night) — Words: show, sort, Learn again (D71)
 

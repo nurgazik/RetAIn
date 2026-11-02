@@ -41,6 +41,28 @@ final class PracticeStepTests: XCTestCase {
         XCTAssertEqual(s.items.first?.part, "ahead"); XCTAssertEqual(s.left, 40)
     }
 
+    /// D72: inside a round each exercise has its own fixed order; rounds still go in list order.
+    func testEachExerciseShufflesItsRoundOnItsOwn() {
+        let round1 = (1...5).map { item($0) }, round2 = (6...10).map { item($0) }
+        let items = round1 + round2
+        func walk(_ e: PracticeExercise) -> [Int] {  // answer words in the order the exercise offers them
+            var xs = items, out: [Int] = []
+            while let i = e.next(xs, day: "2026-11-02") {
+                out.append(xs[i].wordId)
+                let a = PracticeItem.Attempt(correct: 1, verdict: "natural", reason: nil, fix: nil, answer: "x")
+                switch e { case .fill: xs[i].attempts.fill = a; case .write: xs[i].attempts.write = a; case .hangman: xs[i].attempts.hangman = a }
+            }
+            return out
+        }
+        let fill = walk(.fill), hang = walk(.hangman)
+        XCTAssertEqual(Set(fill.prefix(5)), Set(1...5)); XCTAssertEqual(Set(fill.suffix(5)), Set(6...10))  // rounds in order
+        XCTAssertEqual(Set(hang.prefix(5)), Set(1...5))
+        XCTAssertNotEqual(fill, hang, "two exercises walk the same order")
+        XCTAssertNotEqual(fill, Array(1...10), "no shuffle at all")
+        XCTAssertEqual(walk(.fill), fill, "the order changes on reopening")
+        XCTAssertNotEqual(PracticeExercise.fill.next(items, day: "2026-11-03"), nil)
+    }
+
     func testEachExerciseWalksItsOwnWords() {
         let items = [item(1, filled: true), item(2, written: true)]
         XCTAssertEqual(PracticeExercise.fill.next(items), 1)

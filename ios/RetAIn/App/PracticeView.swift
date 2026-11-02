@@ -24,9 +24,24 @@ enum PracticeExercise: Equatable {
         }
     }
 
-    /// The next word to do in this exercise, if any.
-    func next(_ items: [PracticeItem]) -> Int? {
-        items.firstIndex(where: pending)
+    /// The next word to do in this exercise, if any (D72). Rounds still come in list order (D66: due words
+    /// first), but inside the round each exercise has its own shuffled order, so doing one exercise doesn't
+    /// tell you the next word of another. The shuffle is fixed for the day (seeded by day, exercise and word),
+    /// so reopening the app doesn't reorder a round. An empty `day` keeps list order (tests).
+    func next(_ items: [PracticeItem], day: String = "") -> Int? {
+        guard let first = items.firstIndex(where: pending) else { return nil }
+        guard !day.isEmpty else { return first }
+        let round = (first / Self.roundSize) * Self.roundSize
+        let inRound = items.indices.filter { $0 >= round && $0 < round + Self.roundSize && pending(items[$0]) }
+        return inRound.min { rank(items[$0], day) < rank(items[$1], day) }
+    }
+
+    /// Words per round, as the server prepares them (practice.ROUND_SIZE).
+    static let roundSize = 5
+
+    /// A fixed pseudo-random number for (day, exercise, word): FNV-1a, stable across launches.
+    private func rank(_ item: PracticeItem, _ day: String) -> UInt64 {
+        "\(day)|\(self)|\(item.wordId)".utf8.reduce(14695981039346656037) { ($0 ^ UInt64($1)) &* 1099511628211 }
     }
 
     /// Done / total for this exercise; words retained before they were tried drop out;
@@ -96,9 +111,9 @@ struct PracticeView: View {
         if set.items.isEmpty && set.left == 0 {
             ContentUnavailableView("Nothing to practise", systemImage: "checkmark.seal",
                                    description: Text("Add words in the Words tab, or come back when some are due."))
-        } else if let exercise, shown == nil, exercise.next(set.items) == nil, set.left > 0 {
+        } else if let exercise, shown == nil, exercise.next(set.items, day: set.day) == nil, set.left > 0 {
             checkpoint(set)
-        } else if let exercise, let i = shown ?? exercise.next(set.items) {
+        } else if let exercise, let i = shown ?? exercise.next(set.items, day: set.day) {
             let p = exercise.progress(set.items, remaining: set.left)
             VStack(spacing: 0) {
                 InkProgress(value: Double(p.done), total: Double(max(p.total, 1)))
@@ -473,7 +488,7 @@ struct PracticeView: View {
     /// when the list is finished, back to the chooser (the reminder is offered the first time).
     private func advance() {
         fillResult = nil; writeResult = nil; answer = ""; inputError = nil; shown = nil; misses = 0
-        guard let exercise, exercise.next(set?.items ?? []) == nil else { return }
+        guard let exercise, exercise.next(set?.items ?? [], day: set?.day ?? "") == nil else { return }
         if (set?.left ?? 0) > 0 { return }  // the checkpoint shows
         self.exercise = nil
         if !PracticeReminder.asked { PracticeReminder.asked = true; askReminder = true }
@@ -482,7 +497,7 @@ struct PracticeView: View {
     /// Into an exercise; with nothing ready, the next round is prepared first.
     private func start(_ kind: PracticeExercise) async {
         inputError = nil
-        if kind.next(set?.items ?? []) == nil, (set?.left ?? 0) > 0 {
+        if kind.next(set?.items ?? [], day: set?.day ?? "") == nil, (set?.left ?? 0) > 0 {
             guard await nextRound() else { return }
         }
         exercise = kind
