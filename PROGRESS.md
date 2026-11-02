@@ -2,7 +2,7 @@
 
 Catch-up file for founder and assistant alike. **Convention: update the "Now / Next"
 block and append a dated entry at the end of every working session.** Newest entries
-first. Decisions live in PRD.md's log (D1–D70); this file is the narrative timeline.
+first. Decisions live in PRD.md's log (D1–D71); this file is the narrative timeline.
 
 ---
 
@@ -22,6 +22,8 @@ usage). Code schedules the words; the list stays unlimited; the user marks retai
 scan done (docs/poc2-transform.md §10): AI-graded sentences already ship elsewhere (VORCA,
 ReadUnbound), so the combination with the transform is the differentiator.
 **Next up: TD-20 (sentence-judge eval) → UX-16 (exercise screens).** Founder to-do: try ReadUnbound.
+**2026-11-01 (D71): Words show/sort menu + Learn again** — one filter icon: Show (All · Learning · Retained) and Sort by
+(A–Z · Newest · Oldest), remembered; a retained word's card has Learn again (starts over). Needs a fresh install from Xcode.
 **2026-11-01 (D70): the notebook look on every screen** — cream paper, chunky ink cards and buttons, ink blue + highlighter,
 rounded type, handwritten titles, lined handwritten note cards; light and dark; native lists kept. Needs a fresh install from Xcode.
 **2026-11-01 (D69): hangman** — third exercise: guess the word from its meaning, 6 lives, sentence hint, stardust tiles;
@@ -259,6 +261,22 @@ all needed for TestFlight and none waits on a decision.**
 vacation coding ends). Home Mac: clone normally with personal credentials; recreate
 `.env.local` (4 API keys — gitignored, never on GitHub) and `data/retain.db` refills
 itself via the fetchers.
+
+### 2026-11-01 (night) — Words: show, sort, Learn again (D71)
+
+- Founder (before bed): filter by status, sort A–Z / newest / oldest, resurrect a retained word. Agreed: one standard
+  iOS menu behind a filter icon (founder's call), All by default, "Learning" kept, a returning word starts over.
+- Server: `PATCH /v1/words` retained → learning resets box 0 / due NULL (note and date kept); saving a retained word
+  again does the same. App: `WordsShow` / `WordsSort` (@AppStorage), `WordsView.groups(_:show:sort:)`, the toolbar
+  menu (sections with ticks; icon fills when not default), "Learn again" on the card, swipe renamed "Learn again".
+- Found while testing: menu Pickers hid their section titles → plain buttons with ticks; chunky buttons sized to
+  their label were clipped → 16 pt side padding. The dev account's words share one saved timestamp, so "Newest"
+  looks like reverse A–Z there; the founder's account has real dates (newest: precarious, exuberant, auspicious).
+- Tests: service 104/104 (1 new); iOS WordSearchTests 9/9 (1 new); new UI test `RetainedWordScreenTests` (retain →
+  filter → Learn again → sort) passes. The full run showed `DeleteWordScreenTests` flaky (scrolling a 235-word A–Z list
+  left the row under the search bar; the tour test also tapped the section header instead of the first word) →
+  both fixed; the delete test now goes through search and clears leftovers (3/3 passes, 25 s instead of 1–3 min).
+  Full iOS run: 71 — 68 pass, 1 skipped, TD-24, and the delete test before its fix.
 
 ### 2026-11-01 — The notebook look on every screen (D70)
 

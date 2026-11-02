@@ -142,6 +142,10 @@ struct WordCardView: View {
                 if !word.isUnverified, word.status == "learning" {
                     Button("Got it — mark retained") { onStatus("retained") }.buttonStyle(ChunkyButtonStyle(height: 48))
                 }
+                if word.status == "retained" {  // D71: back into practice, starting over like a new word
+                    Button("Learn again") { onStatus("learning") }.buttonStyle(ChunkyButtonStyle(height: 48))
+                        .accessibilityIdentifier("learn-again")
+                }
                 Button("Delete", role: .destructive) { onStatus("deleted") }.buttonStyle(ChunkyButtonStyle(kind: .destructive, height: 48))
                     .frame(maxWidth: 110)
                     .accessibilityIdentifier("delete-word")

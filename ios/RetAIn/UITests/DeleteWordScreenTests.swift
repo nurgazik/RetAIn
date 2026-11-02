@@ -19,20 +19,18 @@ final class DeleteWordScreenTests: XCTestCase {
         let tab = app.tabBars.buttons["Words"]
         guard tab.waitForExistence(timeout: 10) else { throw XCTSkip("not signed in on this simulator") }
         tab.tap()
-        func add() {
-            let field = app.textFields["Add a word"]
-            XCTAssertTrue(field.waitForExistence(timeout: 10))
-            field.tap(); field.typeText(word + "\n")
+        // Found through search, so it sits at the top: a long A–Z list puts it anywhere, and a row left under
+        // the floating search bar or the tab bar can't be swiped.
+        let search = app.searchFields.firstMatch
+        XCTAssertTrue(search.waitForExistence(timeout: 10))
+        search.tap(); search.typeText(word)
+        let addRow = app.buttons["search-add"], row = app.staticTexts[word]
+        if !addRow.waitForExistence(timeout: 5), row.exists {  // left saved by an earlier failed run: clear it first
+            row.swipeLeft(); app.buttons["Delete"].tap()
         }
-        let row = app.staticTexts[word]
-        func scrollToRow() -> Bool {  // new words go last; a long list renders only what's near the screen
-            for _ in 0..<25 where !row.exists { app.collectionViews.firstMatch.swipeUp(velocity: .fast) }
-            return row.waitForExistence(timeout: 5)
-        }
-
-        add()
-        sleep(3)  // the card is built server-side
-        XCTAssertTrue(scrollToRow(), "word wasn't added")
+        XCTAssertTrue(addRow.waitForExistence(timeout: 10), "no Add row for \(word)")
+        addRow.tap()  // saved from search (D63)
+        XCTAssertTrue(row.waitForExistence(timeout: 20), "word wasn't added")
         row.swipeLeft()
         XCTAssertTrue(app.buttons["Delete"].waitForExistence(timeout: 5))
         shot("swipe-delete")
@@ -40,11 +38,9 @@ final class DeleteWordScreenTests: XCTestCase {
         XCTAssertTrue(row.waitForNonExistence(timeout: 10), "deleted word still listed")
         shot("after-delete")
 
-        app.collectionViews.firstMatch.swipeDown(velocity: .fast)
-        for _ in 0..<25 where !app.textFields["Add a word"].isHittable { app.collectionViews.firstMatch.swipeDown(velocity: .fast) }
-        add()  // saved again: back, fresh
-        sleep(3)
-        XCTAssertTrue(scrollToRow(), "word didn't come back")
+        XCTAssertTrue(addRow.waitForExistence(timeout: 10), "a deleted word can be saved again")
+        addRow.tap()  // saved again: back, fresh
+        XCTAssertTrue(row.waitForExistence(timeout: 20), "word didn't come back")
         row.tap()
         XCTAssertTrue(app.buttons["delete-word"].waitForExistence(timeout: 10))
         shot("card-delete")

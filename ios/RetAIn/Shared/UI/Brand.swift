@@ -61,6 +61,7 @@ struct ChunkyButtonStyle: ButtonStyle {
         return configuration.label
             .font(.system(.headline, design: .rounded).weight(.heavy))
             .foregroundStyle(kind == .primary ? Color.white : kind == .destructive ? Color.red : Color.ink)
+            .padding(.horizontal, 16)   // room for a button sized to its label
             .frame(maxWidth: .infinity, minHeight: height)
             .background(face, in: shape)
             .overlay(shape.strokeBorder(edge, lineWidth: 2))

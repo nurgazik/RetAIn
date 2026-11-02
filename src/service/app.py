@@ -120,13 +120,14 @@ def add_word(body: WordIn, user=Depends(auth.current_user)):
             db.record_calls(con, user["id"], None, calls, engine.PRICES, day=user["day"])
             if lexicon_id and not pos:
                 pos = dictionary.cards(con, {lexicon_id})[lexicon_id]["senses"][0]["pos"]
-        # saved again: back to learning; a deleted word starts fresh (D62: no old note, schedule or date)
+        # saved again: back to learning; a deleted word starts fresh (D62: no old note, schedule or date);
+        # a retained one starts its schedule over (D71) and keeps its note and date
         con.execute("INSERT INTO words (user_id, word, pos, definition, status, added, lexicon_id, day) "
                     "VALUES (?,?,?,?,?,?,?,?) ON CONFLICT(user_id, word) DO UPDATE SET status='learning', "
                     "pos=excluded.pos, definition=excluded.definition, lexicon_id=excluded.lexicon_id, "
                     "note=CASE WHEN words.status='deleted' THEN NULL ELSE words.note END, "
-                    "box=CASE WHEN words.status='deleted' THEN 0 ELSE words.box END, "
-                    "due_day=CASE WHEN words.status='deleted' THEN NULL ELSE words.due_day END, "
+                    "box=CASE WHEN words.status IN ('deleted', 'retained') THEN 0 ELSE words.box END, "
+                    "due_day=CASE WHEN words.status IN ('deleted', 'retained') THEN NULL ELSE words.due_day END, "
                     "added=CASE WHEN words.status='deleted' THEN excluded.added ELSE words.added END, "
                     "day=CASE WHEN words.status='deleted' THEN excluded.day ELSE words.day END",
                     (user["id"], word, pos, definition, "learning", db.now(), lexicon_id, user["day"]))
@@ -148,6 +149,9 @@ def patch_word(word_id: int, body: WordPatch, user=Depends(auth.current_user)):
             sent["note"] = (sent["note"] or "").strip() or None
         if sent.get("status") == "archived":  # an app build from before D62: Archive meant what Delete means now
             sent["status"] = "deleted"
+        was = con.execute("SELECT status FROM words WHERE id=? AND user_id=?", (word_id, user["id"])).fetchone()
+        if sent.get("status") == "learning" and was and was["status"] == "retained":
+            sent |= {"box": 0, "due_day": None}  # D71: learning it again starts over, like a newly saved word
         cur = con.execute(f"UPDATE words SET {', '.join(f'{k}=?' for k in sent)} WHERE id=? AND user_id=? "
                           "AND status!='deleted'", (*sent.values(), word_id, user["id"]))
         con.commit()

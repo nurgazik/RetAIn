@@ -1,6 +1,16 @@
 import SwiftUI
 import WidgetKit
 
+/// What the Words list shows and in what order (D71); both remembered between launches.
+enum WordsShow: String, CaseIterable {
+    case all, learning, retained
+    var label: String { ["all": "All", "learning": "Learning", "retained": "Retained"][rawValue]! }
+}
+enum WordsSort: String, CaseIterable {
+    case az, newest, oldest
+    var label: String { ["az": "A–Z", "newest": "Newest first", "oldest": "Oldest first"][rawValue]! }
+}
+
 struct WordsView: View {
     /// Set by a widget tap (retain://word/<id>): open that word's card once the list is loaded.
     @Binding var openWordId: Int?
@@ -9,7 +19,9 @@ struct WordsView: View {
     @State private var newWord = ""
     @State private var error: String?
     @State private var busy = false
-    @State private var query = ""      // search (App/WordSearch.swift)
+    @State private var query = ""      // search (App/WordSearch.swift); it looks across all words, whatever the filter
+    @AppStorage("wordsShow") private var show: WordsShow = .all
+    @AppStorage("wordsSort") private var sort: WordsSort = .az
     @Environment(\.scenePhase) private var scenePhase
 
     var body: some View {
@@ -23,6 +35,26 @@ struct WordsView: View {
                         prompt: "Search words, meanings, notes")
             .autocorrectionDisabled().textInputAutocapitalization(.never)
             .navigationTitle("Words")
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {  // D71: one standard menu instead of controls in the list
+                    Menu {
+                        Section("Show") {  // buttons with a tick, so each section keeps its heading
+                            ForEach(WordsShow.allCases, id: \.self) { o in
+                                Button { show = o } label: { if show == o { Label(o.label, systemImage: "checkmark") } else { Text(o.label) } }
+                            }
+                        }
+                        Section("Sort by") {
+                            ForEach(WordsSort.allCases, id: \.self) { o in
+                                Button { sort = o } label: { if sort == o { Label(o.label, systemImage: "checkmark") } else { Text(o.label) } }
+                            }
+                        }
+                    } label: {  // filled while anything but the default is on, so a hidden filter isn't forgotten
+                        Image(systemName: show == .all && sort == .az ? "line.3.horizontal.decrease.circle"
+                                                                      : "line.3.horizontal.decrease.circle.fill")
+                    }
+                    .accessibilityLabel("Show and sort").accessibilityIdentifier("words-filter")
+                }
+            }
             .navigationDestination(for: Word.self) { w in
                 WordCardView(word: w, onStatus: { status in Task { await set(w, status); path.removeAll() } },
                              onNote: { text in let saved = try await RetAInClient.shared.setNote(w.id, text); await load(); return saved })
@@ -46,6 +78,10 @@ struct WordsView: View {
                     .buttonStyle(ChunkyButtonStyle(height: 36)).frame(width: 76)
             }
             .listRowBackground(Color.card)
+        }
+        if groups.isEmpty, !words.isEmpty {
+            Text(show == .retained ? "No retained words yet." : "No words here.").foregroundStyle(Color.inkSoft)
+                .listRowBackground(Color.card)
         }
         ForEach(groups, id: \.0) { status, list in
             Section("\(status) · \(list.count)") {
@@ -107,7 +143,7 @@ struct WordsView: View {
         .swipeActions(edge: .trailing) {
             Button("Delete", role: .destructive) { Task { await set(w, "deleted") } }
             if w.status != "retained" { Button("Retained") { Task { await set(w, "retained") } }.tint(.green) }
-            if w.status != "learning" { Button("Learning") { Task { await set(w, "learning") } }.tint(.orange) }
+            if w.status != "learning" { Button("Learn again") { Task { await set(w, "learning") } }.tint(.orange) }  // D71: starts over
         }
     }
 
@@ -125,13 +161,20 @@ struct WordsView: View {
         return out
     }
 
-    private var groups: [(String, [Word])] { Self.groups(words) }
+    private var groups: [(String, [Word])] { Self.groups(words, show: show, sort: sort) }
 
-    /// Learning, then retained, each A–Z ignoring case and accents (search keeps its own ranking, D63).
-    static func groups(_ words: [Word]) -> [(String, [Word])] {
-        ["learning", "retained"].compactMap { s in  // deleted words never come back from the server (D62)
-            let l = words.filter { $0.status == s }
-                .sorted { $0.word.localizedStandardCompare($1.word) == .orderedAscending }
+    /// Learning, then retained (or just one of them), each sorted A–Z ignoring case and accents, or by when
+    /// it was saved (the id breaks same-day ties). Search keeps its own ranking (D63).
+    static func groups(_ words: [Word], show: WordsShow = .all, sort: WordsSort = .az) -> [(String, [Word])] {
+        let statuses = show == .all ? ["learning", "retained"] : [show.rawValue]
+        return statuses.compactMap { s in  // deleted words never come back from the server (D62)
+            let l = words.filter { $0.status == s }.sorted { a, b in
+                switch sort {
+                case .az: return a.word.localizedStandardCompare(b.word) == .orderedAscending
+                case .newest: return (a.added, a.id) > (b.added, b.id)
+                case .oldest: return (a.added, a.id) < (b.added, b.id)
+                }
+            }
             return l.isEmpty ? nil : (s, l)
         }
     }

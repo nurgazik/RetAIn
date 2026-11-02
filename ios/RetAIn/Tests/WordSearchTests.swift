@@ -39,6 +39,21 @@ final class WordSearchTests: XCTestCase {
         XCTAssertEqual(g[1].1.map(\.word), ["bolster"])
     }
 
+    /// D71: the filter keeps one group or both; sorting by when it was saved, newest or oldest first.
+    func testFilterAndSortByDateAdded() {
+        func d(_ id: Int, _ word: String, _ added: String, _ status: String = "learning") -> Word {
+            Word(id: id, word: word, pos: nil, definition: "", status: status, added: added, servings: nil)
+        }
+        let all = [d(1, "candor", "2026-10-01"), d(2, "acumen", "2026-10-20"), d(3, "bolster", "2026-10-20"),
+                   d(4, "zeal", "2026-09-01", "retained")]
+        XCTAssertEqual(WordsView.groups(all, show: .retained).map(\.0), ["retained"])
+        XCTAssertEqual(WordsView.groups(all, show: .learning).map(\.0), ["learning"])
+        XCTAssertEqual(WordsView.groups(all, sort: .newest)[0].1.map(\.word), ["bolster", "acumen", "candor"])  // same day: later id first
+        XCTAssertEqual(WordsView.groups(all, sort: .oldest)[0].1.map(\.word), ["candor", "acumen", "bolster"])
+        XCTAssertEqual(WordsView.groups(all).map(\.0), ["learning", "retained"])
+        XCTAssertTrue(WordsView.groups(all.filter { $0.status == "learning" }, show: .retained).isEmpty)
+    }
+
     func testInflectedFormsFindTheWord() {
         XCTAssertEqual(ids("bolstered").first, 1)
         XCTAssertEqual(ids("exigencies").first, 5)

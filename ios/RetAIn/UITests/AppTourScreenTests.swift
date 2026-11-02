@@ -16,7 +16,7 @@ final class AppTourScreenTests: XCTestCase {
         app.tabBars.buttons["Words"].tap()
         XCTAssertTrue(app.navigationBars["Words"].waitForExistence(timeout: 10))
         sleep(2); shot("1-words")
-        let firstWord = app.cells.element(boundBy: 1)
+        let firstWord = app.cells.element(boundBy: 2)  // 0: the Add row, 1: the section header
         if firstWord.waitForExistence(timeout: 5) { firstWord.tap(); sleep(2); shot("2-word-card") }
 
         app.tabBars.buttons["My Reads"].tap()

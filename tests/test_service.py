@@ -23,6 +23,28 @@ def test_word_lifecycle(client):
     assert client.patch(f"/v1/words/{w['id']}", json={"status": "bogus"}).status_code == 422
 
 
+def test_learning_a_retained_word_again_starts_its_schedule_over(client):
+    """D71: back from retained (the card's Learn again, the list's swipe, or saving it again) = a new word's
+    schedule (box 0, never practised); its note and saved date stay. A learning word isn't reset."""
+    import service.db as db
+    w = client.post("/v1/words", json={"word": "galvanize", "definition": "x"}).json()
+    client.patch(f"/v1/words/{w['id']}", json={"note": "mine"})
+    con = db.connect()
+    sched = lambda: tuple(con.execute("SELECT box, due_day FROM words WHERE id=?", (w["id"],)).fetchone())
+    con.execute("UPDATE words SET box=3, due_day='2026-12-01' WHERE id=?", (w["id"],)); con.commit()
+    client.patch(f"/v1/words/{w['id']}", json={"status": "learning"})
+    assert sched() == (3, "2026-12-01")                       # already learning: nothing to restart
+    client.patch(f"/v1/words/{w['id']}", json={"status": "retained"})
+    r = client.patch(f"/v1/words/{w['id']}", json={"status": "learning"}).json()
+    assert r["status"] == "learning" and r["note"] == "mine" and r["added"] == w["added"]
+    assert sched() == (0, None)
+    con.execute("UPDATE words SET box=2, due_day='2026-12-01' WHERE id=?", (w["id"],)); con.commit()
+    client.patch(f"/v1/words/{w['id']}", json={"status": "retained"})
+    client.post("/v1/words", json={"word": "galvanize"})      # saved again from search
+    assert sched() == (0, None)
+    con.close()
+
+
 def test_note_is_set_cleared_and_kept_when_the_word_is_saved_again(client):
     w = client.post("/v1/words", json={"word": "galvanize", "definition": "x"}).json()
     assert w["note"] is None
