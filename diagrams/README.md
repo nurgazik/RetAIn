@@ -44,4 +44,4 @@ choice or score step also gets a Jev run (D54).
 |---|---|---|
 | [infra-model-fallback.md](infra-model-fallback.md) | How any model call stays fast: fixed host order, a backup model races a slow one | D49 |
 | [infra-user-day.md](infra-user-day.md) | How each request works out the user's "today" (timezone, 4 am start, never back) | D51 |
-| [infra-practice-day.md](infra-practice-day.md) | What starts the daily practice, how rounds are prepared, and what carries over to the next day | D56, D57, D60, D66 |
+| [infra-practice-day.md](infra-practice-day.md) | What starts the daily practice, how rounds are prepared, and what carries over to the next day | D56, D57, D60, D66, D72 |

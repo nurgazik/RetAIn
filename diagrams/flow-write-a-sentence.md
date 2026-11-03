@@ -4,7 +4,7 @@
 
 ```mermaid
 flowchart TD
-    A["Code: today's word<br/>(same daily set as fill-in)"]:::code --> B([You write a sentence using the word<br/>typing or dictation])
+    A["Code: today's word<br/>(same rounds as fill-in, its own shuffled order inside the round, D72)"]:::code --> B([You write a sentence using the word<br/>typing or dictation])
     B --> CK{"Code: does the sentence<br/>use the word?"}:::code
     CK -- no --> B
     CK -- yes --> J["<b>JEV</b> · model, choice of three<br/>how sure is it the sentence is natural?"]:::gate
@@ -32,6 +32,7 @@ grey = plain code, no model.
 
 ## Why
 
+- **Order inside a round (D72):** each exercise visits the round's 5 words in its own shuffled order, fixed for the day (seeded by day, exercise and word), so one exercise doesn't give away the next word of another; rounds still come in priority order.
 - **No arguing with a verdict** (founder 2026-10-04). The verdict is final in the UX, so the
   judge never sees a second, persuasive turn.
 - **Feedback only where it teaches.** A natural sentence needs no explanation; paying an LLM to

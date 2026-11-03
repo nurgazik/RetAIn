@@ -62,6 +62,7 @@ sentence the bank has for that word (~$0.00006 a sentence: Gemma + Jev).
   they repeated (always the newest) and came from the rewrite engine, whose checker passes ~12% wrong usages.
 - **No limit (D66).** One prioritised list of every learning word, due ones first; rounds of 5 with a
   checkpoint (Next round / Back to exercises) run down the whole list, no locked section.
+- **Order inside a round (D72):** each exercise visits the round's 5 words in its own shuffled order, fixed for the day (seeded by day, exercise and word), so one exercise doesn't give away the next word of another; rounds still come in priority order.
 - **A word practised before it's due never moves up** (early recall is easy recall); a miss still sends it back
   to tomorrow. The user doesn't see this distinction.
 - **A word whose sentences were all rejected** gets one more try in the background on the next open (once a day);

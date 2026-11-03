@@ -1,6 +1,6 @@
 # A practice day: what starts it, and what carries over
 
-Decisions: PRD D56 (daily practice), D57 (any order), D60 (rounds, sentence bank), D66 (one list, no limit),
+Decisions: PRD D56 (daily practice), D57 (any order), D60 (rounds, sentence bank), D66 (one list, no limit), D72 (each exercise shuffles its round),
 D51 (the user's day). Code: `src/service/practice.py`, `ios/RetAIn/App/PracticeView.swift`.
 
 **The one idea to hold on to:** the schedule lives on each **word** (`words.box` = which gap it's on,
@@ -37,6 +37,7 @@ flowchart TD
 - **Coming back to the app** (from the background) asks again; the same day returns the saved set,
   a new day (past 4 am) builds a new one.
 - **The 7 pm reminder** is only a phone notification; it prepares nothing.
+- **Order inside a round (D72):** each exercise visits the round's 5 words in its own shuffled order, fixed for the day (seeded by day, exercise and word), so one exercise doesn't give away the next word of another; rounds still come in priority order. The shuffle is worked out on the phone; the saved set keeps list order.
 
 ## 2. What carries over to the next day
 
