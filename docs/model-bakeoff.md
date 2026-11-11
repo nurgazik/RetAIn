@@ -431,6 +431,40 @@ the blank. Then Jev scored each lookalike in the blank. Total cost of the eval �
 - **Pick: Gemma.** Better and a third of the cost; it is already the production chain (with the
   Flash-Lite fallback).
 
+### Fill-in writer v2: rotating settings (D73) — 2026-11-10/11
+
+Trigger: the founder saw the same *temerity* sentence on several days. The bank never repeated a sentence
+(ids 49, 62, 74, 103, 137, 157, each answered once), but the writer got identical input every time and wrote
+near-copies: in service.db (178 sentences, 64 words) *temerity* 5 of 6 "The young intern had the temerity
+to…", *acumen* 5 of 5 "Her sharp business acumen allowed her to navigate…". Founder: no earlier sentences in
+the prompt; rotate through 20+ settings.
+
+Two measures: `fill run` (one sentence per golden word, 51; graded blind by Claude Code, one rater) and the new
+`fill variety` (5 sentences each for the first 10 golden words, as a word's 1st–5th bank sentences; distinct
+openings = distinct first four words). Runs 5–11 in `data/evals.db`.
+
+| Variant | Model | Good exercises | Bad that pass Jev | Usable blanks | Openings per word (of 5) |
+|---|---|---|---|---|---|
+| no setting (before) | Flash-Lite | 45/51 | 0 | 48/51 | 2.5 (min 1) |
+| one forced setting | Flash-Lite | 39/51 | 4 | 49/51 | 5.0 |
+| pick 1 of 3 settings | Flash-Lite | 45/51 | 2 | 51/51 | 4.7 |
+| no setting (before) | Gemma | 47/51 | 1 | 50/51 | 3.6 (min 1) |
+| one forced setting | Gemma | 45/51 | 3 | 51/51 | 4.7 |
+| pick 1 of 3 (scratch label "Setting:") | Gemma | 45/51 | 2 | 50/51 | 4.6 |
+| **pick 1 of 3, as shipped** | **Gemma** | **47/51** | **2** | **51/51** | **4.5 (min 3)** |
+
+- **One forced setting writes forced sentences:** "mitigate the heat of the spices", "the zeitgeist… through
+  the city streets", "financial acumen… market haggling during the trip". Some pass Jev (it scores fluency,
+  not fit), so they would ship.
+- **Offering three and letting the model pick** keeps most of the variety and the quality. Shipped.
+- **Grading note:** "clear blank" was graded with the card's meaning cue in mind, more leniently than the
+  2026-10-04 eval (14/51 there); compare these rows with each other, not with that table. n = 51, one rater,
+  and the setting is visible in each sentence, so 1–2 sentence gaps are noise.
+- **Found on the way:** the OpenRouter key had returned 401 since 2026-10-26, so every model step silently ran
+  on the Flash-Lite fallback for 15 days (no Gemma call in `calls` after 2026-10-26 14:51 UTC). The founder
+  replaced the key 2026-11-11; service restarted. Backlog TD-25: alert when the primary keeps failing.
+- Cost: $0.00003/sentence (Gemma), unchanged; the settings add ~15 input tokens.
+
 ### Sentence judge v2: any meaning counts, only the word is judged (D67) — 2026-11-01
 
 Trigger: the founder's *uncouth* sentence ("Despite missing a limb he was not uncouth at all") was called wrong

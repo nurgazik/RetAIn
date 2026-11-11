@@ -461,3 +461,22 @@ def test_a_lost_game_is_a_miss_and_a_won_game_alone_never_moves_a_word_up(client
     s = {i["word_id"]: i for i in today(client)["items"]}
     assert s[won["word_id"]]["attempts"]["hangman"]["correct"] == 1 and s[lost["word_id"]]["attempts"]["hangman"]["correct"] == 0
     assert client.post("/v1/practice/hangman", json={"word_id": won["word_id"], "guesses": ["a"]}).status_code == 409
+
+
+def test_a_words_new_sentences_rotate_through_settings(client, stubs, monkeypatch):
+    """D73: each new bank sentence for a word is offered the next settings of the list."""
+    import service.db as db
+    import service.practice as practice
+    me = client.get("/v1/me").json()["user_id"]
+    sent, real = [], practice.G.call_model
+    monkeypatch.setattr(practice.G, "call_model", lambda s, u, *a, **k: (sent.append(u), real(s, u, *a, **k))[1])
+    con = db.connect()
+    for _ in range(3):
+        f, _ = practice.model_sentence(con, me, "bolster", "to support", {})
+        con.execute("INSERT INTO sentence_views VALUES (?, ?, '2026-10-01')", (me, f["sentence_id"])); con.commit()
+    topics = [r[0] for r in con.execute("SELECT topic FROM practice_sentences WHERE word='bolster' ORDER BY id")]
+    con.close()
+    offered = [practice.topics_for("bolster", n) for n in range(3)]
+    assert topics == [" | ".join(o) for o in offered] and len({t for o in offered for t in o}) == 9  # no repeats
+    assert all(f"\nSettings to choose from: {t}" in u for t, u in zip(topics, sent))
+    assert len(practice.TOPICS) >= 20

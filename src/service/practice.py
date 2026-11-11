@@ -13,6 +13,7 @@ again. A miss (wrong fill-in, or a sentence judged wrong) sends it back to box 0
 a clean pass moves it up a box; "could be better" keeps its box. A word practised before it's due never
 moves up (early review helps memory less): only a miss counts (back to tomorrow).
 """
+import hashlib
 import json
 import re
 import threading
@@ -31,6 +32,8 @@ LIVES = 6                           # hangman: wrong guesses allowed, the same f
 LETTERS = set("abcdefghijklmnopqrstuvwxyz")  # the hangman keyboard; anything else in a word is shown from the start
 NATURAL_AT = 0.9                    # Jev ✓ only when this sure (TD-21: 0/35 wrong passed on the eval set)
 FILL_PROMPT = (ROOT / "prompts" / "exercises" / "fill-sentence.md").read_text()
+TOPICS = [t.strip() for t in (ROOT / "prompts" / "exercises" / "fill-topics.md").read_text().splitlines()
+          if t.strip() and not t.startswith("#")]  # settings a word's fill-in sentences rotate through (D73)
 JUDGE_PROMPT = (ROOT / "prompts" / "exercises" / "sentence-judge.md").read_text()
 BLANK = "_____"
 
@@ -55,11 +58,27 @@ def _blank(sentence: str, answer: str) -> str | None:
     return sentence[:h.start()] + BLANK + sentence[h.end():]
 
 
-def write_sentence(word: str, definition: str, env: dict) -> tuple:
-    """Model writes one fill-in sentence; Jev checks it's natural. → (dict | None, call rows)."""
+OFFERED = 3  # settings offered per sentence; the model picks the one where the word is most at home (D73)
+
+
+def topics_for(word: str, n: int) -> list:
+    """The settings offered for a word's n-th bank sentence (D73): each word walks the list from its own fixed
+    start, OFFERED at a time, so its sentences land in different scenes; the model may skip settings that
+    don't suit the word (one forced setting wrote "mitigate the heat of the spices")."""
+    start = int(hashlib.sha1(word.lower().encode()).hexdigest()[:8], 16)
+    return [TOPICS[(start + OFFERED * n + j) % len(TOPICS)] for j in range(OFFERED)]
+
+
+def fill_message(word: str, definition: str, topics: list | None) -> str:
+    """The writer's input; the eval sends the same."""
+    return f"Target word: {word} — {definition}" + (f"\nSettings to choose from: {' | '.join(topics)}" if topics else "")
+
+
+def write_sentence(word: str, definition: str, env: dict, topics: list | None = None) -> tuple:
+    """Model writes one fill-in sentence in one of the settings offered; Jev checks it's natural. → (dict | None, call rows)."""
     calls = []
     try:
-        raw, _ = G.call_model(FILL_PROMPT, f"Target word: {word} — {definition}", env, purpose="fill-sentence")
+        raw, _ = G.call_model(FILL_PROMPT, fill_message(word, definition, topics), env, purpose="fill-sentence")
         calls = [G.last_call()]
         d = json.loads(raw[raw.index("{"):raw.rindex("}") + 1])
         sentence, answer = d["sentence"].strip(), d["answer"].strip()
@@ -67,7 +86,8 @@ def write_sentence(word: str, definition: str, env: dict) -> tuple:
             return None, calls
         p, row = typesafe.p_natural(word, definition, sentence)
         calls.append(row)
-        return ({"sentence": sentence, "answer": answer, "p_natural": p} if p >= NATURAL_AT else None), calls
+        return ({"sentence": sentence, "answer": answer, "p_natural": p, "topic": " | ".join(topics) if topics else None}
+                if p >= NATURAL_AT else None), calls
     except Exception as exc:
         print(f"[practice] fill sentence for {word!r} failed ({exc})")
         return None, calls
@@ -81,13 +101,15 @@ def model_sentence(con, user_id: str, word: str, definition: str, env: dict) -> 
                       (word, user_id)).fetchone()
     calls = []
     if not row:
-        for _ in range(2):
-            got, c = write_sentence(word, definition, env)
+        n = con.execute("SELECT COUNT(*) FROM practice_sentences WHERE word=?", (word,)).fetchone()[0]
+        for i in range(2):  # a rejected try moves on to the next settings
+            got, c = write_sentence(word, definition, env, topics_for(word, n + i))
             calls += c
             if got:
                 with db._lock:
-                    cur = con.execute("INSERT INTO practice_sentences (word, sentence, answer, p_natural, created_at) "
-                                      "VALUES (?,?,?,?,?)", (word, got["sentence"], got["answer"], got["p_natural"], db.now()))
+                    cur = con.execute("INSERT INTO practice_sentences (word, sentence, answer, p_natural, topic, "
+                                      "created_at) VALUES (?,?,?,?,?,?)", (word, got["sentence"], got["answer"],
+                                                                           got["p_natural"], got["topic"], db.now()))
                     con.commit()
                 row = {"id": cur.lastrowid, **got}
                 break

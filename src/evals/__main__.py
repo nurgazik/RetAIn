@@ -31,6 +31,8 @@ Sentence judge (TD-20, D53; golden set data/evals/golden/sentences.json):
 
 Fill-in sentence writer (D55; prompts/exercises/fill-sentence.md):
   .venv/bin/python src/evals fill run <name>        one sentence per golden word + blank check + Jev gate score
+  .venv/bin/python src/evals fill variety <name>    5 sentences each for 10 golden words: distinct openings (D73)
+      both take --prompt <file> (another writer prompt) and --no-settings (no rotating setting, pre-D73)
   .venv/bin/python src/evals fill export <run> [run ...]   blind packet (natural / right sense / clear blank)
   .venv/bin/python src/evals fill import <folder> <grader>
   .venv/bin/python src/evals fill report
@@ -107,8 +109,12 @@ def main(argv: list) -> None:
         sentences.feedback_export([int(a) for a in args[1:]])
     elif cmd == "sentences" and args[:1] == ["feedback-import"]:
         sentences.feedback_import(args[1], args[2])
-    elif cmd == "fill" and args[:1] == ["run"]:
-        fillin.run(args[1])
+    elif cmd == "fill" and args[:1] in (["run"], ["variety"]):
+        if "--prompt" in args:  # another writer prompt, e.g. production's previous one for a baseline
+            fillin.use(prompt=args[args.index("--prompt") + 1])
+        if "--no-settings" in args:  # no setting in the input (before D73)
+            fillin.use(topics=False)
+        (fillin.run if args[0] == "run" else fillin.variety)(args[1])
     elif cmd == "fill" and args[:1] == ["export"]:
         fillin.export([int(a) for a in args[1:]])
     elif cmd == "fill" and args[:1] == ["import"]:

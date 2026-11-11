@@ -2,11 +2,11 @@
 
 Catch-up file for founder and assistant alike. **Convention: update the "Now / Next"
 block and append a dated entry at the end of every working session.** Newest entries
-first. Decisions live in PRD.md's log (D1–D72); this file is the narrative timeline.
+first. Decisions live in PRD.md's log (D1–D73); this file is the narrative timeline.
 
 ---
 
-## NOW (as of 2026-10-31)
+## NOW (as of 2026-11-11)
 
 **Phase: MVP build (Phase 2) — M1–M6 built and verified on the founder's phone; Sign in
 with Apple live; membership active; M8 (monetization) and M9 (TestFlight) remain.**
@@ -22,6 +22,9 @@ usage). Code schedules the words; the list stays unlimited; the user marks retai
 scan done (docs/poc2-transform.md §10): AI-graded sentences already ship elsewhere (VORCA,
 ReadUnbound), so the combination with the transform is the differentiator.
 **Next up: TD-20 (sentence-judge eval) → UX-16 (exercise screens).** Founder to-do: try ReadUnbound.
+**2026-11-11 (D73): fill-in sentences rotate through 24 settings** — a word's new sentences are each written in one of
+three settings offered (work, history, sport, food…), so they stop being near-copies. Server only; live now. **OpenRouter
+key replaced by the founder 11-11:** Gemma is the primary again (it had been on the Flash-Lite fallback since 10-26); TD-25 = an alert.
 **2026-11-02 (D72): each exercise shuffles its round** — fill-in, sentence and hangman visit the round's words in their
 own order (fixed for the day), so one exercise doesn't reveal the next. Needs a fresh install from Xcode.
 **2026-11-01 (D71): Words show/sort menu + Learn again** — one filter icon: Show (All · Learning · Retained) and Sort by
@@ -263,6 +266,20 @@ all needed for TestFlight and none waits on a decision.**
 vacation coding ends). Home Mac: clone normally with personal credentials; recreate
 `.env.local` (4 API keys — gitignored, never on GitHub) and `data/retain.db` refills
 itself via the fetchers.
+
+### 2026-11-11 — Fill-in sentences rotate through settings (D73)
+
+- Founder: the same *temerity* sentence on several days. Diagnosis: the bank (D60) never repeated a sentence (ids 49, 62,
+  74, 103, 137, 157, each answered once), but the writer got identical input and wrote near-copies (temerity 5/6 "young
+  intern…board meeting"; acumen 5/5 "Her sharp business acumen allowed her to navigate…"). Founder: no bank sentences in
+  the prompt; rotate 20+ topics.
+- Built: `prompts/exercises/fill-topics.md` (24), `practice.topics_for` / `fill_message`, prompt rule, `practice_sentences.topic`
+  (+ migration); eval `fill variety` and `--prompt` / `--no-settings` on `fill run`.
+- Eval (runs 5–11, blind, Claude Code): one forced setting hurt (Flash-Lite good 45 → 39/51, 4 bad past Jev); three offered,
+  model picks → Gemma good 47 → 47/51, openings per word 3.6 → 4.5 of 5. Founder approved three offered.
+- OpenRouter: the eval's Gemma runs hit 401 (known since 11-01, left then). Founder replaced the key mid-session; restarted
+  the service on the committed code first so the new key went live before D73 was approved, then again with D73. TD-25 (alert).
+- Tests: service 105/105 (1 new: a word's sentences get the next settings, no repeats in 3 sentences).
 
 ### 2026-11-02 — Each exercise shuffles its round (D72)
 

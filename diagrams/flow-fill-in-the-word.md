@@ -1,6 +1,6 @@
 # User flow: fill in the word (daily exercise)
 
-**Status: built 2026-10-04** (PRD D56; any order since D57: the user picks this exercise on the Practice chooser, and may skip it; **rounds and the sentence bank since D60**, 2026-10-28; **one list, no limit since D66**, 2026-10-31; backlog UX-16): `src/service/practice.py`, `ios/RetAIn/App/PracticeView.swift`.
+**Status: built 2026-10-04** (PRD D56; any order since D57: the user picks this exercise on the Practice chooser, and may skip it; **rounds and the sentence bank since D60**, 2026-10-28; **one list, no limit since D66**, 2026-10-31; **rotating settings since D73**, 2026-11-11; backlog UX-16): `src/service/practice.py`, `ios/RetAIn/App/PracticeView.swift`.
 
 ```mermaid
 flowchart TD
@@ -9,9 +9,10 @@ flowchart TD
         P0["Code: one list, no limit (D66)<br/>every learning word: due (most overdue first) → never practised (oldest first)<br/>→ not due yet (soonest first) · go as far as you like"]:::code --> P1
         P1["Code: the next 5 words"]:::code --> P2{"Code: a sentence in the bank for this word<br/>that you haven't answered yet?"}:::code
         P2 -- yes --> P3["Use it (oldest first),<br/>blank out the word"]:::code
-        P2 -- "no: you've answered them all" --> P4["<b>SENTENCE WRITER</b> · model writes text<br/>one natural sentence using the word"]:::writer
+        P2 -- "no: you've answered them all" --> PT["Code: the next 3 settings for this word (D73)<br/>from a list of 24 (work, family, history, sport…),<br/>each word from its own start · stored on the sentence"]:::code
+        PT --> P4["<b>SENTENCE WRITER</b> · model writes text<br/>one natural sentence using the word,<br/>in whichever offered setting suits it best"]:::writer
         P6 --> P5["Added to the bank:<br/>shared by everyone, no cap, no user data"]:::code
-        P4 --> P6["<b>JEV CHECK</b> · natural? P ≥ 0.9<br/>else one retry, else no fill-in today"]:::gate
+        P4 --> P6["<b>JEV CHECK</b> · natural? P ≥ 0.9<br/>else one retry with the next 3 settings, else no fill-in today"]:::gate
         P7["<b>LOOKALIKE WRITER</b> · DeepSeek · model writes text<br/>5 words that look like the lemma, mean something else<br/>only if this lemma has none stored yet (D58)"]:::writer --> P8["Code: real word? same part of speech?<br/>spelled alike (≥ 0.4)? not a form of it?<br/>stored per lemma, shared by everyone"]:::code
     end
 
@@ -55,6 +56,15 @@ sentence the bank has for that word (~$0.00006 a sentence: Gemma + Jev).
 - **Word forms:** the blanked form is right, and so is the base word (shown the form used).
 - **One try**, then the answer; a miss sends the word back to tomorrow. No hints beyond the meaning.
 - **Prep runs on the first open of the day** (1.6 s measured with four sentences to write).
+
+## Decided (D73, 2026-11-11)
+
+- **Why:** the writer got the same input every time, so it wrote the same sentence with small edits
+  (temerity: 5 of 6 banked sentences were "The young intern had the temerity to challenge…").
+- **Settings:** `prompts/exercises/fill-topics.md` (24, editable by hand). A word's n-th sentence is
+  offered settings 3n…3n+2 from its own start, so its first 8 sentences never share a setting.
+- **Three offered, not one:** one forced setting wrote "mitigate the heat of the spices"
+  (good exercises 45 → 39 of 51 on Flash-Lite); letting the model pick kept quality (Gemma 47 → 47).
 
 ## Decided (D60, 2026-10-28)
 

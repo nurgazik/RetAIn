@@ -130,6 +130,7 @@ CREATE TABLE IF NOT EXISTS practice_sentences (
     sentence    TEXT NOT NULL,
     answer      TEXT NOT NULL,      -- the word as it appears in the sentence
     p_natural   REAL,               -- Jev's check when written
+    topic       TEXT,               -- the settings offered, "a | b | c" (D73); NULL before
     created_at  TEXT NOT NULL
 );
 -- one row per hangman game (D69): the whole guess log, so stats (games per word, wrong guesses, hint rate,
@@ -270,6 +271,7 @@ def init() -> None:
                  "ALTER TABLE practice_attempts ADD COLUMN hint TEXT",           # fill hint (D58)
                  "ALTER TABLE words ADD COLUMN note TEXT",                       # the user's note (D59)
                  "ALTER TABLE lexicon ADD COLUMN zipf REAL",                     # rarity (D61)
+                 "ALTER TABLE practice_sentences ADD COLUMN topic TEXT",         # fill-in setting (D73)
                  *(f"ALTER TABLE {t} ADD COLUMN day TEXT NOT NULL DEFAULT ''" for t in ("pieces", "calls", "events", "words"))):
         try:  # migrations for DBs created before these columns
             con.execute(stmt)
