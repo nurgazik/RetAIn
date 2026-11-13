@@ -6,7 +6,7 @@ first. Decisions live in PRD.md's log (D1–D73); this file is the narrative tim
 
 ---
 
-## NOW (as of 2026-11-11)
+## NOW (as of 2026-11-13)
 
 **Phase: MVP build (Phase 2) — M1–M6 built and verified on the founder's phone; Sign in
 with Apple live; membership active; M8 (monetization) and M9 (TestFlight) remain.**
@@ -22,6 +22,9 @@ usage). Code schedules the words; the list stays unlimited; the user marks retai
 scan done (docs/poc2-transform.md §10): AI-graded sentences already ship elsewhere (VORCA,
 ReadUnbound), so the combination with the transform is the differentiator.
 **Next up: TD-20 (sentence-judge eval) → UX-16 (exercise screens).** Founder to-do: try ReadUnbound.
+**2026-11-13 (UX-25): streaks and stats — research done, design not decided.** docs/streaks-stats-research.md
+(competitors, streak evidence, data-model practice). PRD's "no streaks" line marked superseded. Waiting on founder:
+streak rule, protection, daily vs weekly, what counts as shown.
 **2026-11-11 (D73): fill-in sentences rotate through 24 settings** — a word's new sentences are each written in one of
 three settings offered (work, history, sport, food…), so they stop being near-copies. Server only; live now. **OpenRouter
 key replaced by the founder 11-11:** Gemma is the primary again (it had been on the Flash-Lite fallback since 10-26); TD-25 = an alert.
@@ -266,6 +269,19 @@ all needed for TestFlight and none waits on a decision.**
 vacation coding ends). Home Mac: clone normally with personal credentials; recreate
 `.env.local` (4 API keys — gitignored, never on GitHub) and `data/retain.db` refills
 itself via the fetchers.
+
+### 2026-11-13 — Streaks and stats: research (UX-25)
+
+- Founder: time for streaks, daily progress and stats (user, word, exercise); data model first, UX later.
+  PRD's "no streaks or daily goal" line was outdated → marked superseded. Founder's rules: a day counts on
+  practice or opening the app; "shown" only when the user actually saw it; full research before design.
+- Research (three parallel passes, checked against the repo) → docs/streaks-stats-research.md. Headlines:
+  no competitor counts just opening the app; streaks raise engagement, their effect on learning is barely
+  measured (one weak RCT, weekly streaks); broken streaks drive quitting, and allowed skips / repair /
+  rewarding the comeback soften it; streaks must not push review-ahead.
+- Data gaps found: no box before/after on answers, status changes unlogged, no app-open or seen facts,
+  taps stamped with arrival day (app.py:414), no account deletion or enforced foreign keys.
+- Also: the Mac's disk filled up mid-session (3.5 GB free when it came back); service healthy.
 
 ### 2026-11-11 — Fill-in sentences rotate through settings (D73)
 

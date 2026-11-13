@@ -298,8 +298,10 @@ itself). Reading happens in a RetAIn sheet over the host app; a copy lands in My
   no tap = exposure (D7 semantics without interval logic).
 - Graduation to retained is manual (D12); lifecycle learning | retained | archived, all
   reversible (D26).
-- No streaks or daily goal: there is no daily ritual to gamify. Exposure scales with
-  reading volume (D18's spirit).
+- ~~No streaks or daily goal~~ **Superseded (founder, 2026-11-13):** streaks and stats are
+  in scope now that daily practice exists (D56). Founder's rules so far: a day counts if the
+  user practised or opened the app; a word counts as "shown" only when the user actually saw
+  it (not when it was queued and never reached). Design waits on the research (UX-25).
 
 **Service** (backlog M1)
 - The engine as a hosted API: Sign in with Apple, per-user word lists, `/transform` with
