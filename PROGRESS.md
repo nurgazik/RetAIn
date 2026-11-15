@@ -2,7 +2,7 @@
 
 Catch-up file for founder and assistant alike. **Convention: update the "Now / Next"
 block and append a dated entry at the end of every working session.** Newest entries
-first. Decisions live in PRD.md's log (D1–D73); this file is the narrative timeline.
+first. Decisions live in PRD.md's log (D1–D74); this file is the narrative timeline.
 
 ---
 
