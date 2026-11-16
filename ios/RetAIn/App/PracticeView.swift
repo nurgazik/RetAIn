@@ -186,9 +186,11 @@ struct PracticeView: View {
             Text("Meaning: \(item.definition)").font(.callout).foregroundStyle(Color.inkSoft)
             if let note = item.note, !note.isEmpty {   // in the card, so the keyboard doesn't cover it
                 let shown = fillResult == nil ? YourNote.hidingWord(note, word: item.word) : note  // blanked until solved
-                (Text("Your note: ").font(.callout).foregroundStyle(Color.inkSoft)
-                    + Text(shown).font(.callout).foregroundStyle(Color.brandText))
-                    .accessibilityIdentifier("practice-note")
+                (Text("your note: ").font(.hand(18, relativeTo: .caption1)).foregroundStyle(Color.inkSoft)   // handwritten,
+                    + Text(shown).font(.hand(22, relativeTo: .body)).foregroundStyle(Color.brandText))          // as on the note card (D70)
+                .fontDesign(nil)   // the app-wide rounded design would otherwise replace the handwriting
+                .accessibilityElement(children: .combine)
+                .accessibilityIdentifier("practice-note")
             }
             }
             .padding(16)
