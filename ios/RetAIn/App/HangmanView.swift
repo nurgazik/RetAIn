@@ -25,17 +25,6 @@ struct HangmanGame: Equatable {
         guesses.append(c)
         return letters.contains(c)
     }
-
-    /// The user's note with the word and its forms blanked (a note often holds the word itself): any token
-    /// starting with the first 6 letters of a word in the entry ("adversity" → also "adverse", "Adversities").
-    static func hidingWord(_ note: String, word: String) -> String {
-        word.lowercased().split(whereSeparator: { !$0.isLetter }).filter { $0.count >= 2 }
-            .reduce(note) { text, part in
-                let stem = NSRegularExpression.escapedPattern(for: String(part.prefix(6)))
-                return text.replacingOccurrences(of: "\\b\(stem)\\w*", with: "_____",
-                                                 options: [.regularExpression, .caseInsensitive])
-            }
-    }
 }
 
 struct HangmanCard: View {
@@ -69,7 +58,7 @@ struct HangmanCard: View {
                 result
             } else if hinted, let text = item.fill?.text {
                 if let note = item.note, !note.isEmpty {
-                    YourNote(note: HangmanGame.hidingWord(note, word: item.word))
+                    YourNote(note: YourNote.hidingWord(note, word: item.word))
                 }
                 Text(text).font(.system(.body, design: .serif)).fontDesign(.serif).padding(12)
                     .frame(maxWidth: .infinity, alignment: .leading)

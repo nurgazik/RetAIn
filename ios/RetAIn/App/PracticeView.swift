@@ -174,9 +174,9 @@ struct PracticeView: View {
             }
             .padding(16)
             .paperCard()
+            yourNote(item, hidingWord: fillResult == nil)   // the word blanked until solved: notes often hold it
             if let r = fillResult {
                 resultBanner(ok: true, title: "Correct", detail: r.note)
-                yourNote(item)   // only once solved: the note may hold the word itself
                 nextButton()
             } else {
                 if lastWrong != nil {
@@ -192,8 +192,10 @@ struct PracticeView: View {
     }
 
     /// The user's own note on the word (D59), as on its card.
-    @ViewBuilder private func yourNote(_ item: PracticeItem) -> some View {
-        if let note = item.note, !note.isEmpty { YourNote(note: note) }
+    @ViewBuilder private func yourNote(_ item: PracticeItem, hidingWord: Bool = false) -> some View {
+        if let note = item.note, !note.isEmpty {
+            YourNote(note: hidingWord ? YourNote.hidingWord(note, word: item.word) : note)
+        }
     }
 
     /// D58: the word among lookalikes; tapping one is the same as typing it and tapping Check.
@@ -556,5 +558,16 @@ struct YourNote: View {
         .noteCard()
         .accessibilityElement(children: .combine)
         .accessibilityIdentifier("practice-note")
+    }
+
+    /// The user's note with the word and its forms blanked (a note often holds the word itself): any token
+    /// starting with the first 6 letters of a word in the entry ("adversity" → also "adverse", "Adversities").
+    static func hidingWord(_ note: String, word: String) -> String {
+        word.lowercased().split(whereSeparator: { !$0.isLetter }).filter { $0.count >= 2 }
+            .reduce(note) { text, part in
+                let stem = NSRegularExpression.escapedPattern(for: String(part.prefix(6)))
+                return text.replacingOccurrences(of: "\\b\(stem)\\w*", with: "_____",
+                                                 options: [.regularExpression, .caseInsensitive])
+            }
     }
 }
