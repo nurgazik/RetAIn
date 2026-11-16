@@ -54,7 +54,10 @@ struct WordStatsView: View {
         }
         r += [
             ("Confused with", s.confusedWith.isEmpty ? dash : s.confusedWith.map { "\($0.answer) ×\($0.times)" }.joined(separator: ", ")),
-            ("Hints", s.fillDays == 0 ? dash : "\(s.hintDays) of \(s.fillDays) fill-in days"),
+            ("Fill-in days with a hint", s.fillDays == 0 ? dash : "\(s.hintDays) of \(s.fillDays)"),
+            ("Hints asked", s.hintRequests.isEmpty ? dash : list(s.hintRequests)),
+            ("Time before hint", s.secondsToHint.isEmpty ? dash
+                : s.secondsToHint.sorted { $0.key < $1.key }.map { "\($0.key) \(Int($0.value.rounded())) s" }.joined(separator: ", ")),
             ("Median time", s.medianSeconds.isEmpty ? dash
                 : s.medianSeconds.sorted { $0.key < $1.key }.map { "\($0.key) \(Int($0.value.rounded())) s" }.joined(separator: ", ")),
             ("Hangman", s.hangman.map { h in

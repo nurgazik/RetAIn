@@ -73,4 +73,12 @@ final class EventQueueTests: XCTestCase {
         var batches: [[EventQueue.Event]] = []
         func append(_ b: [EventQueue.Event]) { batches.append(b) }
     }
+
+    func testAHintCarriesWhatItShowedInSnakeCase() throws {
+        let e = EventQueue.Event(id: "h1234567", kind: "hint", surface: "practice", at: EventQueue.now(),
+                                 exercise: "hangman", wordId: 7, detail: "sentence+note")
+        let json = try JSONSerialization.jsonObject(with: JSONEncoder().encode(e)) as? [String: Any]
+        XCTAssertEqual(json?["detail"] as? String, "sentence+note")
+        XCTAssertEqual(json?["word_id"] as? Int, 7)
+    }
 }

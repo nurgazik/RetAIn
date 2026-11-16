@@ -204,3 +204,28 @@ def test_hangman_games_show_on_the_word(client, stubs):
     assert s["median_seconds"]["hangman"] == 40.0 and s["answers"]["hangman"] == {"tries": 1, "won": 1}
     other = today(client)["items"][1]["word_id"]
     assert client.get(f"/v1/words/{other}/stats").json()["hangman"] is None   # never played
+
+
+def test_hint_requests_are_recorded_with_what_they_showed(client, stubs):
+    """A hint asked for is its own event (answered or not), with what it showed and how long after the
+    exercise appeared; only fill-in and hangman have one."""
+    item = today(client)["items"][0]
+    wid = item["word_id"]
+    t0 = datetime.now(timezone.utc) - timedelta(minutes=5)
+    r = client.post("/v1/events", json={"events": [
+        ev("shown", at=t0, surface="practice", exercise="fill", word_id=wid),
+        ev("hint", at=t0 + timedelta(seconds=12), surface="practice", exercise="fill", word_id=wid,
+           detail='["bolster", "bluster"]'),
+        ev("shown", at=t0 + timedelta(seconds=60), surface="practice", exercise="hangman", word_id=wid),
+        ev("hint", at=t0 + timedelta(seconds=90), surface="practice", exercise="hangman", word_id=wid,
+           detail="sentence+note"),
+        ev("hint", surface="practice", exercise="write", word_id=wid)]}).json()   # the sentence exercise has none
+    assert r["kept"] == 4 and [x["reason"] for x in r["rejected"]] == ["kind"]
+    s = client.get(f"/v1/words/{wid}/stats").json()
+    assert s["hint_requests"] == {"fill": 1, "hangman": 1}
+    assert s["seconds_to_hint"] == {"fill": 12.0, "hangman": 30.0}
+    import service.db as db
+    con = db.connect()
+    assert [r[0] for r in con.execute("SELECT detail FROM events WHERE kind='hint' ORDER BY at")] == \
+        ['["bolster", "bluster"]', "sentence+note"]
+    con.close()

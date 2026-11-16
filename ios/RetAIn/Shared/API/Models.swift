@@ -196,6 +196,8 @@ struct WordStats: Codable {
     let fillDays: Int
     let medianSeconds: [String: Double]
     let hangman: Hangman?
+    let hintRequests: [String: Int]
+    let secondsToHint: [String: Double]
     let sentences: [Verdict]
     let readIn: [ReadIn]
     let lastSeen: String?

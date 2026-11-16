@@ -465,10 +465,13 @@ struct PracticeView: View {
 
     private func askHint(_ item: PracticeItem) async {
         hinting = true; defer { hinting = false }
+        let asked = EventQueue.now()
         do {
             let r = try await RetAInClient.shared.practiceHint(wordId: item.wordId)
             inputError = nil
             update(item.wordId) { $0.fill?.hint = r.options }
+            let shown = (try? JSONEncoder().encode(r.options)).flatMap { String(data: $0, encoding: .utf8) }
+            EventQueue.shared.hinted(exercise: "fill", wordId: item.wordId, detail: shown, at: asked)
         } catch { inputError = error.localizedDescription }
     }
 

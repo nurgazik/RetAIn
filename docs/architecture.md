@@ -331,7 +331,10 @@ Server-decided changes have their own logs; everything the phone reports goes in
   confused_with (top wrong fill-ins), hint_days / fill_days, median_seconds per exercise, sentences
   (verdicts in order), read_in (pieces it was shown in), last_seen, days_since_seen, days_to_retain,
   card_opens and listens (look-ups: event kinds `card` and `listen`, surface reader | practice | words;
-  not "shown" and not a streak day).
+  not "shown" and not a streak day). Added 2026-11-16: hangman (games, won, avg_wrong, hints, from
+  hangman_games; hangman time comes from there too); hint_requests and seconds_to_hint per exercise from
+  event kind `hint` (practice, fill | hangman; `events.detail` = what it showed: the fill options as JSON,
+  or `sentence` | `sentence+note` for hangman), recorded when asked, answered or not.
 - `POST /v1/practice/fill` and `/write` accept `seconds`. `POST /v1/pieces/{id}/taps` stays for older
   builds (dated on arrival).
 

@@ -10,15 +10,16 @@ actor EventQueue {
 
     struct Event: Codable, Equatable {
         let id: String
-        let kind: String         // tap | open | shown
-        let surface: String      // reader | practice
+        let kind: String         // tap | open | shown | card | listen | hint
+        let surface: String      // reader | practice | words
         let at: String           // ISO 8601 with zone
         var pieceId: String?
         var word: String?
         var exercise: String?    // fill | write | hangman
         var wordId: Int?
+        var detail: String?      // hint: what it showed
         enum CodingKeys: String, CodingKey {
-            case id, kind, surface, at, word, exercise
+            case id, kind, surface, at, word, exercise, detail
             case pieceId = "piece_id", wordId = "word_id"
         }
     }
@@ -52,6 +53,11 @@ actor EventQueue {
     /// The word's card opened ("card") or its pronunciation played ("listen"): a look-up, not "shown" (D74).
     nonisolated func lookedUp(_ kind: String, wordId: Int, surface: String) {
         Task { await add(.init(id: Self.newId(), kind: kind, surface: surface, at: Self.now(), wordId: wordId)) }
+    }
+    /// A practice hint asked for (fill, hangman), answered or not, with what it showed; `at` = when it was tapped.
+    nonisolated func hinted(exercise: String, wordId: Int, detail: String?, at: String = EventQueue.now()) {
+        Task { await add(.init(id: Self.newId(), kind: "hint", surface: "practice", at: at, exercise: exercise,
+                               wordId: wordId, detail: detail)) }
     }
     nonisolated func shownInPractice(exercise: String, wordId: Int) {
         Task { await add(.init(id: Self.newId(), kind: "shown", surface: "practice", at: Self.now(), exercise: exercise, wordId: wordId)) }

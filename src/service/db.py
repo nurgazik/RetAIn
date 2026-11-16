@@ -83,15 +83,16 @@ CREATE TABLE IF NOT EXISTS events (
     id          INTEGER PRIMARY KEY AUTOINCREMENT,
     user_id     TEXT NOT NULL,
     client_id   TEXT UNIQUE,         -- NULL for rows before D74 and the old taps route
-    kind        TEXT NOT NULL,       -- tap | open | shown
-    surface     TEXT NOT NULL DEFAULT 'reader',   -- reader | practice
+    kind        TEXT NOT NULL,       -- tap | open | shown | card | listen | hint
+    surface     TEXT NOT NULL DEFAULT 'reader',   -- reader | practice | words
     piece_id    TEXT,                -- reader events
     exercise    TEXT,                -- practice: fill | write | hangman
     word        TEXT,                -- the word as printed ("bolstered"); NULL for open
     word_id     INTEGER,             -- the user's word it matched; NULL if none
     at          TEXT NOT NULL,       -- when it happened (the phone's clock, checked)
     day         TEXT NOT NULL DEFAULT '',   -- the user's day it happened in
-    received_at TEXT                 -- when the server got it
+    received_at TEXT,                -- when the server got it
+    detail      TEXT                 -- hint: what it showed (fill: the options; hangman: sentence | sentence+note)
 );
 CREATE TABLE IF NOT EXISTS diagnostics (
     id        INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -342,6 +343,7 @@ def init() -> None:
                  "ALTER TABLE practice_attempts ADD COLUMN due_after TEXT",
                  "ALTER TABLE practice_attempts ADD COLUMN sentence_id INTEGER",
                  "ALTER TABLE practice_attempts ADD COLUMN seconds REAL",
+                 "ALTER TABLE events ADD COLUMN detail TEXT",                    # what a hint showed
                  *(f"ALTER TABLE {t} ADD COLUMN day TEXT NOT NULL DEFAULT ''" for t in ("pieces", "calls", "events", "words"))):
         try:  # migrations for DBs created before these columns
             con.execute(stmt)

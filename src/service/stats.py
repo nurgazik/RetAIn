@@ -9,7 +9,9 @@ from statistics import median
 from . import db
 from .config import TZ
 
-KINDS = {"tap", "open", "shown", "card", "listen"}   # card: the word's card opened; listen: its pronunciation played
+KINDS = {"tap", "open", "shown", "card", "listen", "hint"}  # card: its card opened; listen: pronunciation played;
+                                                            # hint: a practice hint asked for (with what it showed)
+HINTED = {"fill", "hangman"}                                # the exercises that have a hint
 SURFACES = {"reader", "practice", "words"}          # where it happened (words = the Words tab or a widget link)
 EXERCISES = {"fill", "write", "hangman"}
 FUTURE = timedelta(minutes=10)   # phone clocks run a little fast
@@ -51,6 +53,7 @@ def _check(con, user: dict, e: dict, now: datetime, owned_pieces: dict, words: l
     if at < now - LATE:
         return None, "too old"
     word, word_id, piece_id, exercise = None, None, None, None
+    detail = str(e["detail"])[:500] if kind == "hint" and e.get("detail") else None
     if kind in ("card", "listen"):  # looked the word up (not "shown", D74): any surface, by the word's id
         word_id = e.get("word_id")
         if not any(w[0] == word_id for w in words):
@@ -71,7 +74,7 @@ def _check(con, user: dict, e: dict, now: datetime, owned_pieces: dict, words: l
             word_id = db.match_word(word, words)
     elif surface == "practice":
         exercise, word_id = e.get("exercise"), e.get("word_id")
-        if kind != "shown" or exercise not in EXERCISES:
+        if not (kind == "shown" and exercise in EXERCISES or kind == "hint" and exercise in HINTED):
             return None, "kind"
         if not any(w[0] == word_id for w in words):
             return None, "word"
@@ -80,7 +83,7 @@ def _check(con, user: dict, e: dict, now: datetime, owned_pieces: dict, words: l
         return None, "kind"
     day = db.day_of(at, db.zone(user["tz"]) or TZ)
     return (user["id"], e["id"], kind, surface, piece_id, exercise, word, word_id,
-            at.astimezone(timezone.utc).isoformat(timespec="microseconds"), day, db.now()), None
+            at.astimezone(timezone.utc).isoformat(timespec="microseconds"), day, db.now(), detail), None
 
 
 def ingest(con, user: dict, events: list) -> dict:
@@ -97,7 +100,7 @@ def ingest(con, user: dict, events: list) -> dict:
                 rejected.append({"id": e.get("id"), "reason": why})
                 continue
             cur = con.execute("INSERT OR IGNORE INTO events (user_id, client_id, kind, surface, piece_id, exercise, "
-                              "word, word_id, at, day, received_at) VALUES (?,?,?,?,?,?,?,?,?,?,?)", row)
+                              "word, word_id, at, day, received_at, detail) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)", row)
             kept, again = kept + cur.rowcount, again + (1 - cur.rowcount)
         con.commit()
     return {"kept": kept, "duplicates": again, "rejected": rejected}
@@ -214,6 +217,18 @@ def word_stats(con, user: dict, word_id: int) -> dict | None:
         "SELECT day FROM events WHERE user_id=? AND word_id=? AND kind='shown' UNION "
         "SELECT day FROM practice_attempts WHERE user_id=? AND word_id=? ORDER BY 1 DESC LIMIT 1",
         (user["id"], word_id, user["id"], word_id))]
+    hints, to_hint = {}, {}
+    shown_at = {}   # (day, exercise) → when the exercise last appeared
+    for r in con.execute("SELECT kind, exercise, day, at FROM events WHERE user_id=? AND word_id=? AND "
+                         "surface='practice' AND kind IN ('shown', 'hint') ORDER BY at", (user["id"], word_id)):
+        if r["kind"] == "shown":
+            shown_at[(r["day"], r["exercise"])] = r["at"]
+            continue
+        hints[r["exercise"]] = hints.get(r["exercise"], 0) + 1
+        start = shown_at.pop((r["day"], r["exercise"]), None)   # the first hint after it appeared
+        if start:
+            gap = (datetime.fromisoformat(r["at"]) - datetime.fromisoformat(start)).total_seconds()
+            to_hint.setdefault(r["exercise"], []).append(gap)
     read_in = [dict(r) for r in con.execute(
         "SELECT p.id AS piece_id, p.title, MAX(e.day) AS day FROM events e JOIN pieces p ON p.id = e.piece_id "
         "WHERE e.user_id=? AND e.word_id=? AND e.kind='shown' AND e.surface='reader' "
@@ -249,6 +264,8 @@ def word_stats(con, user: dict, word_id: int) -> dict | None:
         "hangman": {"games": len(games), "won": sum(g["won"] for g in games),
                     "avg_wrong": round(sum(g["wrong"] for g in games) / len(games), 1),
                     "hints": sum(g["hint"] for g in games)} if games else None,
+        "hint_requests": dict(sorted(hints.items())),                    # asked for, answered or not
+        "seconds_to_hint": {k: round(median(v), 1) for k, v in sorted(to_hint.items())},
         "sentences": [{"day": a["day"], "verdict": a["verdict"]} for a in attempts if a["kind"] == "write"],
         # where and when
         "read_in": read_in,
