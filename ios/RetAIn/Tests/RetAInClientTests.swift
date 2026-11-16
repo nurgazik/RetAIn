@@ -32,6 +32,17 @@ final class RetAInClientTests: XCTestCase {
         _ = try await RetAInClient.shared.setNote(w.id, w.note ?? "")
     }
 
+    /// D74: a word's stats decode from the live server and every row has a label and a value.
+    func testWordStatsDecodeIntoTheCardList() async throws {
+        let words = try await RetAInClient.shared.words()
+        for w in words.prefix(5) {
+            let s = try await RetAInClient.shared.wordStats(w.id)
+            let rows = WordStatsView(wordId: w.id).rows(s)
+            XCTAssertGreaterThan(rows.count, 20)
+            XCTAssertTrue(rows.allSatisfy { !$0.0.isEmpty && !$0.1.isEmpty })
+        }
+    }
+
     func testTransformStreamsPhasesThenPiece() async throws {
         let accepted = try await RetAInClient.shared.transform(text: Sample.text, title: "Test", url: nil, source: "unit-test")
         var phases: [String] = []

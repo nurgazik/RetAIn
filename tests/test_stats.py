@@ -185,6 +185,8 @@ def test_recall_stats_from_the_logs(client, stubs):
     assert s["confused_with"] == [{"answer": "bolsterous", "times": 1}]
     assert (s["hint_days"], s["fill_days"]) == (1, 1) and s["median_seconds"] == {"fill": 7.0}
     assert [r["piece_id"] for r in s["read_in"]] == [pid]
+    placed = sum(word in p["words_used"] for p in client.get("/v1/pieces").json()["pieces"])
+    assert s["placed_in_reads"] == placed == 1   # the engine used it in the one piece (placed, not necessarily seen)
     assert s["last_seen"] == client.get("/v1/me").json()["day"] and s["days_since_seen"] == 0
     assert (s["card_opens"], s["listens"]) == (1, 1)
     assert s["days_to_retain"] is None and s["sentences"] == []

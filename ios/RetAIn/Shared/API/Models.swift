@@ -164,3 +164,41 @@ struct FillResult: Codable, Hashable {
 }
 struct HintResult: Codable, Hashable { let options: [String] }
 struct WriteResult: Codable, Hashable { let verdict: String; let reason: String?; let fix: String? }
+
+/// One word's stats (D74), worked out by the server from its logs: GET /v1/words/{id}/stats.
+struct WordStats: Codable {
+    struct Answer: Codable { let day: String; let kind: String; let result: String; let boxBefore: Int?; let boxAfter: Int? }
+    struct Change: Codable { let day: String; let kind: String; let statusBefore: String?; let statusAfter: String }
+    struct Confusion: Codable { let answer: String; let times: Int }
+    struct FirstTry: Codable { let tries: Int; let clean: Int }
+    struct Verdict: Codable { let day: String; let verdict: String? }
+    struct ReadIn: Codable { let pieceId: String; let title: String?; let day: String }
+    struct Shown: Codable { let reader: Int; let practice: Int }
+
+    let added: String
+    let box: Int
+    let shown: Shown
+    let taps: Int
+    let placedInReads: Int
+    let answers: [String: [String: Int]]
+    let firstPractised: String?
+    let lastPractised: String?
+    let history: [Answer]
+    let changes: [Change]
+    let retainedOn: String?
+    let timesRelearned: Int
+    let tapRate: Double?
+    let lapses: Int
+    let firstTry: [String: FirstTry]
+    let confusedWith: [Confusion]
+    let hintDays: Int
+    let fillDays: Int
+    let medianSeconds: [String: Double]
+    let sentences: [Verdict]
+    let readIn: [ReadIn]
+    let lastSeen: String?
+    let daysSinceSeen: Int?
+    let daysToRetain: Int?
+    let cardOpens: Int
+    let listens: Int
+}

@@ -148,6 +148,7 @@ final class RetAInClient {
     func piece(_ id: String) async throws -> Piece { try await send(request("v1/pieces/\(id)"), as: Piece.self) }
 
     // MARK: events and stats (D74)
+    func wordStats(_ id: Int) async throws -> WordStats { try await send(request("v1/words/\(id)/stats"), as: WordStats.self) }
     /// A batch from the event queue; the server keeps, ignores (resent) or rejects each one.
     func postEvents(_ events: [EventQueue.Event]) async throws {
         let list = try JSONSerialization.jsonObject(with: JSONEncoder().encode(events))

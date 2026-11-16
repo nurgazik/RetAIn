@@ -220,6 +220,7 @@ def word_stats(con, user: dict, word_id: int) -> dict | None:
                   "practice": one("SELECT COUNT(*) FROM (SELECT DISTINCT day, exercise FROM events WHERE user_id=? "
                                   "AND word_id=? AND kind='shown' AND surface='practice')")},
         "taps": one("SELECT COUNT(*) FROM events WHERE user_id=? AND word_id=? AND kind='tap'"),
+        "placed_in_reads": db.serving_counts(con, user["id"]).get(w["word"], 0),  # the engine used it (not seen)
         "answers": answers,
         "first_practised": attempts[0]["day"] if attempts else None,
         "last_practised": attempts[-1]["day"] if attempts else None,

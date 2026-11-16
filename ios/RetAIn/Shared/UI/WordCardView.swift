@@ -51,6 +51,7 @@ struct WordCardView: View {
                 if let n = word.servings { Text("Seen in \(n) read\(n == 1 ? "" : "s")").font(.caption).foregroundStyle(.secondary) }
                 actions
                 credits
+                if surface != nil { WordStatsView(wordId: word.id).padding(.top, 8) }  // D74: every stat, for review
             }
             .padding()
         }
