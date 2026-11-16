@@ -27,4 +27,11 @@ final class HangmanTests: XCTestCase {
         for c in "adhoc" { g.guess(c) }
         XCTAssertTrue(g.won)
     }
+
+    func testTheHintNoteHidesTheWordAndItsForms() {
+        XCTAssertEqual(HangmanGame.hidingWord("Adversities make us — невзгоды; adverse winds", word: "adversity"),
+                       "_____ make us — невзгоды; _____ winds")
+        XCTAssertEqual(HangmanGame.hidingWord("to give UP hope", word: "give up"), "to _____ _____ hope")
+        XCTAssertEqual(HangmanGame.hidingWord("смелость", word: "temerity"), "смелость")
+    }
 }

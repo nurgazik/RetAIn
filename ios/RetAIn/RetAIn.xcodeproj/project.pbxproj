@@ -66,6 +66,7 @@
 		7ED24A5AB3E3032347480A7D /* Brand.swift in Sources */ = {isa = PBXBuildFile; fileRef = D986F5680916F251B2BA9D7E /* Brand.swift */; };
 		7F4C1E21F53865D9E3EB4055 /* WordStatsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C43C9DD76E65D95ED4DA9818 /* WordStatsView.swift */; };
 		809D5DA9F5627AC5D72925B9 /* WordsStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 89B99CAAFDC861F17C71587F /* WordsStore.swift */; };
+		81EB00AF0D2C5B8D1EFD8A82 /* HangmanNoteScreenTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49E362BEEB3BDAC3D7914576 /* HangmanNoteScreenTests.swift */; };
 		824F0F48455FC38A816CDD1A /* SourceReader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3990B0E5EE1BEBC61D4BBCEF /* SourceReader.swift */; };
 		83348BDC949556922B76A799 /* PlainTextReader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3119962DDACEB36DE6A99A58 /* PlainTextReader.swift */; };
 		851F263921EB1D504F1622D9 /* SafariPageReader.swift in Sources */ = {isa = PBXBuildFile; fileRef = D195EDAB7D89B0CFA8C9CB3E /* SafariPageReader.swift */; };
@@ -214,6 +215,7 @@
 		3937445F467B7669CD60B2ED /* SharingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharingTests.swift; sourceTree = "<group>"; };
 		3990B0E5EE1BEBC61D4BBCEF /* SourceReader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SourceReader.swift; sourceTree = "<group>"; };
 		3C2A57F69AB9CC53F9AF4AA3 /* ShareRouter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareRouter.swift; sourceTree = "<group>"; };
+		49E362BEEB3BDAC3D7914576 /* HangmanNoteScreenTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HangmanNoteScreenTests.swift; sourceTree = "<group>"; };
 		4A57E76970271F8BE0C34F12 /* NextWordIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NextWordIntent.swift; sourceTree = "<group>"; };
 		50ADD8EE0AC3F92D504CDBF6 /* FacebookReader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FacebookReader.swift; sourceTree = "<group>"; };
 		5469DA26719F2A9BF63488DA /* ShareViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareViewController.swift; sourceTree = "<group>"; };
@@ -276,6 +278,7 @@
 			children = (
 				3841C4B2D7783855FCC5945B /* AppTourScreenTests.swift */,
 				E0E48237D0A6D41A66811D72 /* DeleteWordScreenTests.swift */,
+				49E362BEEB3BDAC3D7914576 /* HangmanNoteScreenTests.swift */,
 				A4AEC0117D5FE4580BDA0B12 /* PracticeScreenTests.swift */,
 				EB6A12EC0896C5BC493ADAC4 /* RetainedWordScreenTests.swift */,
 				EC2284CBBFDB316905ADFE18 /* SafariActionTests.swift */,
@@ -830,6 +833,7 @@
 			files = (
 				DE554DA948E114C3F07C698F /* AppTourScreenTests.swift in Sources */,
 				BA089F9A6A6945251C6FDFDA /* DeleteWordScreenTests.swift in Sources */,
+				81EB00AF0D2C5B8D1EFD8A82 /* HangmanNoteScreenTests.swift in Sources */,
 				E0E1E697C645628DF68D5595 /* PracticeScreenTests.swift in Sources */,
 				C388BF865F6ADEC8F14B9A29 /* RetainedWordScreenTests.swift in Sources */,
 				0049CC32258152B7D7718EB9 /* SafariActionTests.swift in Sources */,

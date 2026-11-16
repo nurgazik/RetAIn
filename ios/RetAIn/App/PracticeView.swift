@@ -193,15 +193,7 @@ struct PracticeView: View {
 
     /// The user's own note on the word (D59), as on its card.
     @ViewBuilder private func yourNote(_ item: PracticeItem) -> some View {
-        if let note = item.note, !note.isEmpty {
-            VStack(alignment: .leading, spacing: 0) {  // D70: a note card, the one place with ruled lines
-                Text("your note").font(.hand(18, relativeTo: .caption1)).foregroundStyle(Color.inkSoft)
-                Text(note).font(.hand(26, relativeTo: .body)).foregroundStyle(Color.brandText)
-            }
-            .noteCard()
-            .accessibilityElement(children: .combine)
-            .accessibilityIdentifier("practice-note")
-        }
+        if let note = item.note, !note.isEmpty { YourNote(note: note) }
     }
 
     /// D58: the word among lookalikes; tapping one is the same as typing it and tapping Check.
@@ -547,5 +539,19 @@ struct PracticeView: View {
     private func update(_ wordId: Int, _ change: (inout PracticeItem) -> Void) {
         guard let i = set?.items.firstIndex(where: { $0.wordId == wordId }) else { return }
         change(&set!.items[i])
+    }
+}
+
+/// The user's own note on a word (D59) in practice: a note card, the one place with ruled lines (D70).
+struct YourNote: View {
+    let note: String
+    var body: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            Text("your note").font(.hand(18, relativeTo: .caption1)).foregroundStyle(Color.inkSoft)
+            Text(note).font(.hand(26, relativeTo: .body)).foregroundStyle(Color.brandText)
+        }
+        .noteCard()
+        .accessibilityElement(children: .combine)
+        .accessibilityIdentifier("practice-note")
     }
 }
