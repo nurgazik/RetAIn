@@ -79,7 +79,7 @@ struct HangmanCard: View {
                     hinted = true
                     EventQueue.shared.hinted(exercise: "hangman", wordId: item.wordId,
                                              detail: item.note?.isEmpty == false ? "sentence+note" : "sentence")
-                } label: { Label("Show a hint", systemImage: "lightbulb").frame(maxWidth: .infinity) }
+                } label: { Label("Hint", systemImage: "lightbulb").frame(maxWidth: .infinity) }
                     .buttonStyle(ChunkyButtonStyle(kind: .secondary)).accessibilityIdentifier("hangman-hint")
             }
             keyboard
