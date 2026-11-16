@@ -6,7 +6,7 @@ first. Decisions live in PRD.md's log (D1–D74); this file is the narrative tim
 
 ---
 
-## NOW (as of 2026-11-15)
+## NOW (as of 2026-11-16)
 
 **Phase: MVP build (Phase 2) — M1–M6 built and verified on the founder's phone; Sign in
 with Apple live; membership active; M8 (monetization) and M9 (TestFlight) remain.**
@@ -22,6 +22,7 @@ usage). Code schedules the words; the list stays unlimited; the user marks retai
 scan done (docs/poc2-transform.md §10): AI-graded sentences already ship elsewhere (VORCA,
 ReadUnbound), so the combination with the transform is the differentiator.
 **Next up: TD-20 (sentence-judge eval) → UX-16 (exercise screens).** Founder to-do: try ReadUnbound.
+**2026-11-16: word stats on the card + practice polish.** Every word stat is listed at the end of the word card (for the founder to review before stats screens are designed), now incl. hangman games and hint requests (new `hint` event: when asked and what it showed). Practice: the user's note shows with hangman's Hint and under fill-in's meaning (word blanked until solved); hangman's button says "Hint"; the sentence field + Check stay above the keyboard; Polished/Try mark what changed (added highlighted, removed struck through). **Needs a fresh install from Xcode.** Open: fill-in's note is mostly under the keyboard (proposal: move it inside the sentence card); backfill "shown in practice" from old answers?
 **2026-11-15 (D74): streaks and stats — data built, no screens yet.** Daily streak = a day with a practice
 answer or a read; no protection until points exist; "shown" only in the reader (≥ half the word for 1 s) and practice.
 Server records facts (review log, word_log, one events table from the phone) and works out `/v1/stats` and
@@ -270,6 +271,29 @@ all needed for TestFlight and none waits on a decision.**
 vacation coding ends). Home Mac: clone normally with personal credentials; recreate
 `.env.local` (4 API keys — gitignored, never on GitHub) and `data/retain.db` refills
 itself via the fetchers.
+
+### 2026-11-16 — Word stats on the card; hints recorded; practice polish
+
+- **Word card stats list** (built 11-15, extended today): hangman line (games, won, wrong letters avg, hints; time from
+  `hangman_games`). Founder questions answered: box = Leitner level 0–4 (gaps 1/3/7/14/30 days; "3 of 4" label is
+  misleading, relabel offered); "shown in practice" is 0 for older words because the event only exists from this build
+  (adversity: 17 answers on 12 days, 0 shown events; backfill offered, not decided); lapses = box 2+ → 0.
+- **Hint events** (founder: "lets do it"): kind `hint`, practice, fill | hangman, `events.detail` = what it showed
+  (fill options JSON; hangman `sentence` | `sentence+note`), timed from the tap, answered or not. Card: "Hints asked",
+  "Time before hint". Not used by the schedule (later, with FSRS/grading). Assistant's view recorded: collect data that
+  can change what the user sees, not everything.
+- **Notes in practice:** hangman's Hint shows the note with the word and its forms blanked (any token starting with the
+  word's first 6 letters); fill-in shows it under the meaning from the start, blanked until solved, full after (the old
+  after-"Correct" note card removed). Button text "Hint" in both (founder caught the mismatch).
+- **Sentence field above the keyboard:** SwiftUI only scrolls a focused field until the caret peeks out; the field + Check
+  now scroll into view on focus and as the sentence wraps. Missed because screen tests used words without notes.
+  `WriteKeyboardScreenTests` checks it with a note.
+- **Polished/Try marks:** word-level diff on the phone (`SentenceDiff`, Swift's `difference(from:)`): added → highlighter,
+  removed → struck faint red; no marks when under half the sentence is kept. No model step.
+- Founder's sentence verdicts so far: 29 (14 natural, 3 with a polish; 9 could-be-better; 6 wrong). The "Try:" for
+  *pervasive* swapped in *invasive* (dropped the target word); founder: fine as is, no change.
+- Tests: service 116 pass; iOS unit all pass but TD-24 (date); new UI tests `HangmanNoteScreenTests`,
+  `WriteKeyboardScreenTests` pass. Not yet on the founder's phone.
 
 ### 2026-11-15 — Streaks and stats: data model built (D74)
 
