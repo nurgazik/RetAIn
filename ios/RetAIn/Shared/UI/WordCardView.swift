@@ -10,6 +10,9 @@ struct WordCardView: View {
     var onStatus: ((String) -> Void)?
     /// Saves the note and returns the saved word; nil makes the note read-only.
     var onNote: ((String) async throws -> Word)?
+    /// Where the card was opened (reader | practice | words): opening it and playing the pronunciation are
+    /// recorded as look-ups (D74). nil records nothing (the capture screen right after saving).
+    var surface: String?
 
     @State private var note: String?   // as last saved from this card
     @State private var draft = ""
@@ -19,12 +22,19 @@ struct WordCardView: View {
     @FocusState private var focused: Bool
     static let noteLimit = 1000   // the service's limit
 
-    init(word: Word, onStatus: ((String) -> Void)? = nil, onNote: ((String) async throws -> Word)? = nil) {
-        self.word = word; self.onStatus = onStatus; self.onNote = onNote
+    init(word: Word, surface: String? = nil, onStatus: ((String) -> Void)? = nil,
+         onNote: ((String) async throws -> Word)? = nil) {
+        self.word = word; self.surface = surface; self.onStatus = onStatus; self.onNote = onNote
         _note = State(initialValue: word.note)
     }
 
     var body: some View {
+        content.task(id: word.id) {
+            if let surface { EventQueue.shared.lookedUp("card", wordId: word.id, surface: surface) }
+        }
+    }
+
+    private var content: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 14) {
                 header
@@ -60,7 +70,10 @@ struct WordCardView: View {
                     Text(ipa.map(\.ipa).joined(separator: "  ")).font(.callout).foregroundStyle(.secondary)
                 }
                 if !word.isUnverified {
-                    Button { Speech.say(word.card?.headword ?? word.word) } label: { Image(systemName: "speaker.wave.2") }
+                    Button {
+                        Speech.say(word.card?.headword ?? word.word)
+                        if let surface { EventQueue.shared.lookedUp("listen", wordId: word.id, surface: surface) }
+                    } label: { Image(systemName: "speaker.wave.2") }
                         .buttonStyle(.borderless).accessibilityLabel("Pronounce")
                 }
                 if word.card?.source == "model" { badge("Written by AI") }

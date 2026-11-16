@@ -27,7 +27,7 @@ struct ReaderView: View {
             }
         }
         .sheet(item: $shown) { w in
-            WordCardView(word: w, onStatus: { status in
+            WordCardView(word: w, surface: "reader", onStatus: { status in
                 Task {
                     if status == "deleted" {  // D62: gone from the user's words; its highlight stays in this read
                         if (try? await RetAInClient.shared.deleteWord(w.id)) != nil { words.removeAll { $0.id == w.id } }

@@ -2,12 +2,15 @@
 the server logs what it decides (answers in practice_attempts, other word changes in word_log). Every stat is
 worked out here when it's asked for; nothing is stored as a counter, so a counting rule can change later
 without losing history. See docs/streaks-stats-research.md and diagrams/flow-streaks-and-shown.md."""
+from collections import Counter
 from datetime import date, datetime, timedelta, timezone
+from statistics import median
 
 from . import db
 from .config import TZ
 
-KINDS = {"tap", "open", "shown"}
+KINDS = {"tap", "open", "shown", "card", "listen"}   # card: the word's card opened; listen: its pronunciation played
+SURFACES = {"reader", "practice", "words"}          # where it happened (words = the Words tab or a widget link)
 EXERCISES = {"fill", "write", "hangman"}
 FUTURE = timedelta(minutes=10)   # phone clocks run a little fast
 LATE = timedelta(days=3)         # an event queued offline longer than this is dropped
@@ -38,7 +41,7 @@ def _check(con, user: dict, e: dict, now: datetime, owned_pieces: dict, words: l
     kind, surface = e.get("kind"), e.get("surface") or "reader"
     if not isinstance(e.get("id"), str) or not 8 <= len(e["id"]) <= 64:
         return None, "id"
-    if kind not in KINDS or surface not in ("reader", "practice"):
+    if kind not in KINDS or surface not in SURFACES:
         return None, "kind"
     at = _parse_at(e.get("at"))
     if at is None:
@@ -48,7 +51,12 @@ def _check(con, user: dict, e: dict, now: datetime, owned_pieces: dict, words: l
     if at < now - LATE:
         return None, "too old"
     word, word_id, piece_id, exercise = None, None, None, None
-    if surface == "reader":
+    if kind in ("card", "listen"):  # looked the word up (not "shown", D74): any surface, by the word's id
+        word_id = e.get("word_id")
+        if not any(w[0] == word_id for w in words):
+            return None, "word"
+        word = next(w[1] for w in words if w[0] == word_id)
+    elif surface == "reader":
         piece_id = e.get("piece_id")
         if piece_id not in owned_pieces:
             ok = piece_id and con.execute("SELECT 1 FROM pieces WHERE id=? AND user_id=?",
@@ -61,13 +69,15 @@ def _check(con, user: dict, e: dict, now: datetime, owned_pieces: dict, words: l
             if not word:
                 return None, "word"
             word_id = db.match_word(word, words)
-    else:
+    elif surface == "practice":
         exercise, word_id = e.get("exercise"), e.get("word_id")
         if kind != "shown" or exercise not in EXERCISES:
             return None, "kind"
         if not any(w[0] == word_id for w in words):
             return None, "word"
         word = next(w[1] for w in words if w[0] == word_id)
+    else:
+        return None, "kind"
     day = db.day_of(at, db.zone(user["tz"]) or TZ)
     return (user["id"], e["id"], kind, surface, piece_id, exercise, word, word_id,
             at.astimezone(timezone.utc).isoformat(timespec="microseconds"), day, db.now()), None
@@ -147,6 +157,24 @@ def _result(a) -> str:
     return "right" if a["correct"] else "wrong"
 
 
+def _first_tries(attempts) -> list:
+    """The first try of each exercise on each day: what the schedule judges (D58)."""
+    seen, out = set(), []
+    for a in attempts:
+        if (a["day"], a["kind"]) not in seen:
+            seen.add((a["day"], a["kind"]))
+            out.append(a)
+    return out
+
+
+def _clean(a) -> bool:
+    return bool(a["correct"]) if a["kind"] != "write" else a["verdict"] == "natural"
+
+
+def _days_between(a: str, b: str) -> int:
+    return (date.fromisoformat(b) - date.fromisoformat(a)).days
+
+
 def word_stats(con, user: dict, word_id: int) -> dict | None:
     """One word's history. "Shown" counts once per piece per day in the reader and once per exercise per day
     in practice (D74; the rule is applied here, the raw events are all kept)."""
@@ -166,6 +194,25 @@ def word_stats(con, user: dict, word_id: int) -> dict | None:
         "SELECT day, kind, status_before, status_after FROM word_log WHERE user_id=? AND word_id=? ORDER BY id",
         (user["id"], word_id))]
     retained = [c["day"] for c in changes if c["kind"] == "retained"]
+    firsts = _first_tries(attempts)
+    fills = [a for a in attempts if a["kind"] == "fill"]
+    fill_days = {a["day"] for a in fills}
+    secs = {}
+    for a in attempts:
+        if a["seconds"] is not None:
+            secs.setdefault(a["kind"], []).append(a["seconds"])
+    shown_reader = one("SELECT COUNT(*) FROM (SELECT DISTINCT day, piece_id FROM events WHERE user_id=? "
+                       "AND word_id=? AND kind='shown' AND surface='reader')")
+    taps_counted = one("SELECT COUNT(*) FROM (SELECT DISTINCT day, piece_id FROM events WHERE user_id=? "
+                       "AND word_id=? AND kind='tap')")
+    seen_days = [r[0] for r in con.execute(
+        "SELECT day FROM events WHERE user_id=? AND word_id=? AND kind='shown' UNION "
+        "SELECT day FROM practice_attempts WHERE user_id=? AND word_id=? ORDER BY 1 DESC LIMIT 1",
+        (user["id"], word_id, user["id"], word_id))]
+    read_in = [dict(r) for r in con.execute(
+        "SELECT p.id AS piece_id, p.title, MAX(e.day) AS day FROM events e JOIN pieces p ON p.id = e.piece_id "
+        "WHERE e.user_id=? AND e.word_id=? AND e.kind='shown' AND e.surface='reader' "
+        "GROUP BY p.id ORDER BY day DESC LIMIT 20", (user["id"], word_id))]
     return {
         "word_id": word_id, "word": w["word"], "status": w["status"], "added": w["day"], "box": w["box"],
         "shown": {"reader": one("SELECT COUNT(*) FROM (SELECT DISTINCT day, piece_id FROM events WHERE user_id=? "
@@ -181,4 +228,26 @@ def word_stats(con, user: dict, word_id: int) -> dict | None:
         "changes": changes,
         "retained_on": retained[-1] if retained else None,
         "times_relearned": sum(c["status_before"] == "retained" and c["status_after"] == "learning" for c in changes),
+        # how well it's remembered
+        "tap_rate": round(taps_counted / shown_reader, 2) if shown_reader else None,   # taps ÷ times shown in reading
+        "lapses": len({a["day"] for a in attempts                                      # forgotten after box 2+
+                       if a["box_before"] is not None and a["box_before"] >= 2 and a["box_after"] == 0}),
+        "first_try": {k: {"tries": sum(a["kind"] == k for a in firsts),
+                          "clean": sum(a["kind"] == k and _clean(a) for a in firsts)}
+                      for k in sorted({a["kind"] for a in firsts})},
+        "confused_with": [{"answer": w, "times": n} for w, n in Counter(
+            a["answer"].lower() for a in fills if not a["correct"]).most_common(5)],
+        "hint_days": sum(any(a["hint"] for a in fills if a["day"] == d) for d in fill_days),
+        "fill_days": len(fill_days),
+        "median_seconds": {k: round(median(v), 1) for k, v in sorted(secs.items())},
+        "sentences": [{"day": a["day"], "verdict": a["verdict"]} for a in attempts if a["kind"] == "write"],
+        # where and when
+        "read_in": read_in,
+        "last_seen": seen_days[0] if seen_days else None,
+        "days_since_seen": _days_between(seen_days[0], user["day"]) if seen_days else None,
+        "days_to_retain": (_days_between(w["day"], retained[-1])  # since it was (last) saved
+                           if retained and w["day"] and retained[-1] >= w["day"] else None),
+        # looked it up (not "shown", D74)
+        "card_opens": one("SELECT COUNT(*) FROM events WHERE user_id=? AND word_id=? AND kind='card'"),
+        "listens": one("SELECT COUNT(*) FROM events WHERE user_id=? AND word_id=? AND kind='listen'"),
     }

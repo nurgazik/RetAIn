@@ -56,7 +56,7 @@ struct WordsView: View {
                 }
             }
             .navigationDestination(for: Word.self) { w in
-                WordCardView(word: w, onStatus: { status in Task { await set(w, status); path.removeAll() } },
+                WordCardView(word: w, surface: "words", onStatus: { status in Task { await set(w, status); path.removeAll() } },
                              onNote: { text in let saved = try await RetAInClient.shared.setNote(w.id, text); await load(); return saved })
             }
             .onChange(of: openWordId, initial: true) { _, _ in openPending() }

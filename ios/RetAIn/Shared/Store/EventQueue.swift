@@ -49,6 +49,10 @@ actor EventQueue {
     nonisolated func shownInReader(pieceId: String, word: String) {
         Task { await add(.init(id: Self.newId(), kind: "shown", surface: "reader", at: Self.now(), pieceId: pieceId, word: word)) }
     }
+    /// The word's card opened ("card") or its pronunciation played ("listen"): a look-up, not "shown" (D74).
+    nonisolated func lookedUp(_ kind: String, wordId: Int, surface: String) {
+        Task { await add(.init(id: Self.newId(), kind: kind, surface: surface, at: Self.now(), wordId: wordId)) }
+    }
     nonisolated func shownInPractice(exercise: String, wordId: Int) {
         Task { await add(.init(id: Self.newId(), kind: "shown", surface: "practice", at: Self.now(), exercise: exercise, wordId: wordId)) }
     }

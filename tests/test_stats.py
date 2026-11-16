@@ -159,3 +159,32 @@ def test_an_older_events_table_is_rebuilt_with_its_taps(client):
     assert r["word_id"] == words(client)["bolster"]["id"]
     assert con.execute("SELECT COUNT(*) FROM word_log WHERE kind='added'").fetchone()[0] > 0  # older words backfilled
     con.close()
+
+
+def test_recall_stats_from_the_logs(client, stubs):
+    """D74 word stats: tap rate, lapses, first tries, confusions, hints, time, where it was read, look-ups."""
+    pid = piece(client)
+    item = today(client)["items"][0]
+    wid, word = item["word_id"], item["word"]
+    import service.db as db
+    con = db.connect()
+    con.execute("UPDATE words SET box=3 WHERE id=?", (wid,))   # a word that seemed known…
+    con.commit(); con.close()
+    client.post("/v1/events", json={"events": [
+        ev("shown", surface="reader", piece_id=pid, word=word),
+        ev("tap", surface="reader", piece_id=pid, word=word),
+        ev("tap", surface="reader", piece_id=pid, word=word),          # same piece, same day: one "didn't remember"
+        ev("card", surface="words", word_id=wid), ev("listen", surface="reader", word_id=wid),
+        ev("card", surface="words", word_id=999999)]})                  # not the user's word: rejected
+    client.post("/v1/practice/hint", json={"word_id": wid})
+    client.post("/v1/practice/fill", json={"word_id": wid, "answer": "Bolsterous", "seconds": 4})  # …forgotten
+    client.post("/v1/practice/fill", json={"word_id": wid, "answer": word, "seconds": 10})
+    s = client.get(f"/v1/words/{wid}/stats").json()
+    assert s["tap_rate"] == 1.0 and s["lapses"] == 1
+    assert s["first_try"] == {"fill": {"tries": 1, "clean": 0}}
+    assert s["confused_with"] == [{"answer": "bolsterous", "times": 1}]
+    assert (s["hint_days"], s["fill_days"]) == (1, 1) and s["median_seconds"] == {"fill": 7.0}
+    assert [r["piece_id"] for r in s["read_in"]] == [pid]
+    assert s["last_seen"] == client.get("/v1/me").json()["day"] and s["days_since_seen"] == 0
+    assert (s["card_opens"], s["listens"]) == (1, 1)
+    assert s["days_to_retain"] is None and s["sentences"] == []

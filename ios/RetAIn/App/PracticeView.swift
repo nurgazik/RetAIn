@@ -93,7 +93,7 @@ struct PracticeView: View {
             .task { await load() }
             .onChange(of: scenePhase) { _, p in if p == .active, set != nil { Task { await load() } } }
             .sheet(item: $card) { w in  // as the reader's word sheet (D48)
-                WordCardView(word: w, onStatus: { status in Task { await cardStatus(w, status) } }, onNote: { text in
+                WordCardView(word: w, surface: "practice", onStatus: { status in Task { await cardStatus(w, status) } }, onNote: { text in
                     let saved = try await RetAInClient.shared.setNote(w.id, text)
                     update(w.id) { $0.note = saved.note }
                     return saved

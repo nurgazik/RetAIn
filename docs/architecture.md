@@ -326,7 +326,12 @@ Server-decided changes have their own logs; everything the phone reports goes in
   words_practised, pieces_read, words_shown}}`.
 - `GET /v1/words/{id}/stats` → added, box, shown `{reader, practice}`, taps, answers per exercise,
   first/last practised, history (each answer with box before/after), changes (word_log),
-  retained_on, times_relearned.
+  retained_on, times_relearned; and (added 2026-11-15) tap_rate (taps ÷ times shown in reading, both once
+  per piece per day), lapses (days a word in box 2+ fell to 0), first_try per exercise (tries, clean),
+  confused_with (top wrong fill-ins), hint_days / fill_days, median_seconds per exercise, sentences
+  (verdicts in order), read_in (pieces it was shown in), last_seen, days_since_seen, days_to_retain,
+  card_opens and listens (look-ups: event kinds `card` and `listen`, surface reader | practice | words;
+  not "shown" and not a streak day).
 - `POST /v1/practice/fill` and `/write` accept `seconds`. `POST /v1/pieces/{id}/taps` stays for older
   builds (dated on arrival).
 
