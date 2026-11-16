@@ -57,6 +57,10 @@ struct WordStatsView: View {
             ("Hints", s.fillDays == 0 ? dash : "\(s.hintDays) of \(s.fillDays) fill-in days"),
             ("Median time", s.medianSeconds.isEmpty ? dash
                 : s.medianSeconds.sorted { $0.key < $1.key }.map { "\($0.key) \(Int($0.value.rounded())) s" }.joined(separator: ", ")),
+            ("Hangman", s.hangman.map { h in
+                let avg = h.avgWrong == h.avgWrong.rounded() ? "\(Int(h.avgWrong))" : String(format: "%.1f", h.avgWrong)
+                return "\(h.games) game\(h.games == 1 ? "" : "s"), won \(h.won) · \(avg) wrong letters avg · hint in \(h.hints)"
+            } ?? dash),
             ("Sentence verdicts", s.sentences.isEmpty ? dash : s.sentences.map { $0.verdict ?? "?" }.joined(separator: " → ")),
             ("First practised", s.firstPractised ?? dash),
             ("Last practised", s.lastPractised ?? dash),

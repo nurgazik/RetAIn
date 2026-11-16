@@ -174,6 +174,7 @@ struct WordStats: Codable {
     struct Verdict: Codable { let day: String; let verdict: String? }
     struct ReadIn: Codable { let pieceId: String; let title: String?; let day: String }
     struct Shown: Codable { let reader: Int; let practice: Int }
+    struct Hangman: Codable { let games: Int; let won: Int; let avgWrong: Double; let hints: Int }
 
     let added: String
     let box: Int
@@ -194,6 +195,7 @@ struct WordStats: Codable {
     let hintDays: Int
     let fillDays: Int
     let medianSeconds: [String: Double]
+    let hangman: Hangman?
     let sentences: [Verdict]
     let readIn: [ReadIn]
     let lastSeen: String?

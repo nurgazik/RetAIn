@@ -190,3 +190,17 @@ def test_recall_stats_from_the_logs(client, stubs):
     assert s["last_seen"] == client.get("/v1/me").json()["day"] and s["days_since_seen"] == 0
     assert (s["card_opens"], s["listens"]) == (1, 1)
     assert s["days_to_retain"] is None and s["sentences"] == []
+
+
+def test_hangman_games_show_on_the_word(client, stubs):
+    """Each game's wrong letters, hint and time come from hangman_games (D69), not just won/lost."""
+    item = today(client)["items"][0]
+    wid, word = item["word_id"], item["word"]
+    wrong = [c for c in "qxzj" if c not in word][:2]
+    client.post("/v1/practice/hangman", json={"word_id": wid, "guesses": wrong + list(dict.fromkeys(word)),
+                                              "hint": True, "seconds": 40})
+    s = client.get(f"/v1/words/{wid}/stats").json()
+    assert s["hangman"] == {"games": 1, "won": 1, "avg_wrong": 2.0, "hints": 1}
+    assert s["median_seconds"]["hangman"] == 40.0 and s["answers"]["hangman"] == {"tries": 1, "won": 1}
+    other = today(client)["items"][1]["word_id"]
+    assert client.get(f"/v1/words/{other}/stats").json()["hangman"] is None   # never played

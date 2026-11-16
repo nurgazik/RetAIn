@@ -197,10 +197,15 @@ def word_stats(con, user: dict, word_id: int) -> dict | None:
     firsts = _first_tries(attempts)
     fills = [a for a in attempts if a["kind"] == "fill"]
     fill_days = {a["day"] for a in fills}
+    games = con.execute("SELECT wrong, hint, won, seconds FROM hangman_games WHERE user_id=? AND word_id=? "
+                        "ORDER BY id", (user["id"], word_id)).fetchall()
     secs = {}
     for a in attempts:
-        if a["seconds"] is not None:
+        if a["seconds"] is not None and a["kind"] != "hangman":   # hangman's time lives on its game row (D69)
             secs.setdefault(a["kind"], []).append(a["seconds"])
+    for g in games:
+        if g["seconds"] is not None:
+            secs.setdefault("hangman", []).append(g["seconds"])
     shown_reader = one("SELECT COUNT(*) FROM (SELECT DISTINCT day, piece_id FROM events WHERE user_id=? "
                        "AND word_id=? AND kind='shown' AND surface='reader')")
     taps_counted = one("SELECT COUNT(*) FROM (SELECT DISTINCT day, piece_id FROM events WHERE user_id=? "
@@ -241,6 +246,9 @@ def word_stats(con, user: dict, word_id: int) -> dict | None:
         "hint_days": sum(any(a["hint"] for a in fills if a["day"] == d) for d in fill_days),
         "fill_days": len(fill_days),
         "median_seconds": {k: round(median(v), 1) for k, v in sorted(secs.items())},
+        "hangman": {"games": len(games), "won": sum(g["won"] for g in games),
+                    "avg_wrong": round(sum(g["wrong"] for g in games) / len(games), 1),
+                    "hints": sum(g["hint"] for g in games)} if games else None,
         "sentences": [{"day": a["day"], "verdict": a["verdict"]} for a in attempts if a["kind"] == "write"],
         # where and when
         "read_in": read_in,
