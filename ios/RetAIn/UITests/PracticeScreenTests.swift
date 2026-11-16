@@ -38,7 +38,7 @@ final class PracticeScreenTests: XCTestCase {
             shot("write-result")
             app.buttons["Next"].tap()
             if app.alerts.firstMatch.waitForExistence(timeout: 2) { app.alerts.buttons["Not now"].tap() }
-            if app.buttons["Exercises"].exists { app.buttons["Exercises"].tap() }  // leave part-way
+            if app.navigationBars.buttons.firstMatch.exists { app.navigationBars.buttons.firstMatch.tap() }  // leave part-way
             XCTAssertTrue(writeCard.waitForExistence(timeout: 5))
             shot("chooser-after-one-sentence")
         }
@@ -98,7 +98,7 @@ final class PracticeScreenTests: XCTestCase {
             app.buttons["next-round"].tap()
             XCTAssertTrue(app.staticTexts["FILL IN THE WORD"].waitForExistence(timeout: 30), "next round didn't start")
             shot("next-round")
-            app.buttons["Exercises"].tap()
+            app.navigationBars.buttons.firstMatch.tap()
         }
         XCTAssertTrue(writeCard.waitForExistence(timeout: 5), "back on the chooser")
         let hangmanCard = app.buttons.containing(.staticText, identifier: "Hangman").firstMatch  // D69
@@ -114,7 +114,7 @@ final class PracticeScreenTests: XCTestCase {
             }
             XCTAssertTrue(app.buttons["Next"].waitForExistence(timeout: 15), "hangman didn't end")
             shot("hangman-result")
-            app.buttons["Exercises"].tap()
+            app.navigationBars.buttons.firstMatch.tap()
         }
         shot("chooser-end")
     }

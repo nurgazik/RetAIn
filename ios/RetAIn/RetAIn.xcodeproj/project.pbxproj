@@ -18,6 +18,7 @@
 		0D0A0209457333E5C17D118C /* WordSearchScreenTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C54CFBD784ED2E7EF073902C /* WordSearchScreenTests.swift */; };
 		0E1E6DE3164324D83AA04E0B /* SafariPageReader.swift in Sources */ = {isa = PBXBuildFile; fileRef = D195EDAB7D89B0CFA8C9CB3E /* SafariPageReader.swift */; };
 		12AA05A8BF79F622413417F3 /* RetAInClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 075C0D559D6C67C564CE18E8 /* RetAInClient.swift */; };
+		16B47DFB817E83B87D14908A /* SwipeBackScreenTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 90CCA31DAFE928002C639119 /* SwipeBackScreenTests.swift */; };
 		1A2BF3817B25324FFD7DF7C7 /* Models.swift in Sources */ = {isa = PBXBuildFile; fileRef = 08606ADADCC454623CF9B809 /* Models.swift */; };
 		1BD02597CE376698CCA1C1A5 /* PieceWebView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9E0D70C43F12FCE9F01B048 /* PieceWebView.swift */; };
 		1F13638DD291291DA3301922 /* RetAInWidget.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 2D3A65785807160CAEF10C1E /* RetAInWidget.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
@@ -237,6 +238,7 @@
 		8890CC0A9D4FE57E778ECA7A /* RetAInClientTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RetAInClientTests.swift; sourceTree = "<group>"; };
 		89B99CAAFDC861F17C71587F /* WordsStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WordsStore.swift; sourceTree = "<group>"; };
 		9012445A3258DAECDEBFA316 /* WordSearchTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WordSearchTests.swift; sourceTree = "<group>"; };
+		90CCA31DAFE928002C639119 /* SwipeBackScreenTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwipeBackScreenTests.swift; sourceTree = "<group>"; };
 		95771CB064C3DCC0F0FCE3EE /* RetAInAction.appex */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = "wrapper.app-extension"; path = RetAInAction.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		A06BE42068ACE7F5066AEE3F /* SentenceDiff.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SentenceDiff.swift; sourceTree = "<group>"; };
 		A4AEC0117D5FE4580BDA0B12 /* PracticeScreenTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PracticeScreenTests.swift; sourceTree = "<group>"; };
@@ -288,6 +290,7 @@
 				A4AEC0117D5FE4580BDA0B12 /* PracticeScreenTests.swift */,
 				EB6A12EC0896C5BC493ADAC4 /* RetainedWordScreenTests.swift */,
 				EC2284CBBFDB316905ADFE18 /* SafariActionTests.swift */,
+				90CCA31DAFE928002C639119 /* SwipeBackScreenTests.swift */,
 				298F565A72357320D03411B0 /* WordNoteScreenTests.swift */,
 				C54CFBD784ED2E7EF073902C /* WordSearchScreenTests.swift */,
 				EDA4C80FFB789A7131D60349 /* WordStatsScreenTests.swift */,
@@ -848,6 +851,7 @@
 				E0E1E697C645628DF68D5595 /* PracticeScreenTests.swift in Sources */,
 				C388BF865F6ADEC8F14B9A29 /* RetainedWordScreenTests.swift in Sources */,
 				0049CC32258152B7D7718EB9 /* SafariActionTests.swift in Sources */,
+				16B47DFB817E83B87D14908A /* SwipeBackScreenTests.swift in Sources */,
 				022A500221881208BDE58EC5 /* WordNoteScreenTests.swift in Sources */,
 				0D0A0209457333E5C17D118C /* WordSearchScreenTests.swift in Sources */,
 				338428178CE12270E766F70C /* WordStatsScreenTests.swift in Sources */,

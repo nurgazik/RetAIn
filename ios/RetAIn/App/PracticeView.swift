@@ -4,7 +4,7 @@ import SwiftUI
 /// Opens on a chooser: the user picks fill-in or sentences, in any order, and may skip either (D57).
 /// One list, no limit (D66): every learning word, due ones first; the user goes as far as they like, in
 /// rounds of five with a checkpoint between them. Words so far sit below, with Mark retained.
-enum PracticeExercise: String, Equatable {
+enum PracticeExercise: String, Hashable {
     case fill, write, hangman
 
     /// Whether this word still has this exercise to do today.
@@ -84,13 +84,15 @@ struct PracticeView: View {
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .background(Color.paper.ignoresSafeArea())   // D70: cream paper behind every screen
             .navigationTitle("Practice")
-            .toolbar {
-                if exercise != nil {
-                    ToolbarItem(placement: .topBarLeading) {
-                        Button { leave() } label: { Label("Exercises", systemImage: "chevron.left").labelStyle(.titleAndIcon) }
-                    }
-                }
+            // An exercise is a real pushed screen: the system back button and edge swipe come with it.
+            // (Until 2026-11-16 it swapped in place behind a hand-made "<", which had no swipe.)
+            .navigationDestination(item: $exercise) { kind in
+                exerciseScreen(kind)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .background(Color.paper.ignoresSafeArea())
+                    .navigationTitle("Practice")
             }
+            .onChange(of: exercise) { _, now in if now == nil { reset() } }   // back by button, swipe or code
             .task { await load() }
             .onChange(of: scenePhase) { _, p in if p == .active, set != nil { Task { await load() } } }
             .sheet(item: $card) { w in  // as the reader's word sheet (D48)
@@ -113,9 +115,16 @@ struct PracticeView: View {
         if set.items.isEmpty && set.left == 0 {
             ContentUnavailableView("Nothing to practise", systemImage: "checkmark.seal",
                                    description: Text("Add words in the Words tab, or come back when some are due."))
-        } else if let exercise, shown == nil, exercise.next(set.items, day: set.day) == nil, set.left > 0 {
+        } else {
+            ScrollView { chooser(set) }
+        }
+    }
+
+    /// One exercise: its words one by one, the checkpoint between rounds.
+    @ViewBuilder private func exerciseScreen(_ exercise: PracticeExercise) -> some View {
+        if let set, shown == nil, exercise.next(set.items, day: set.day) == nil, set.left > 0 {
             checkpoint(set)
-        } else if let exercise, let i = shown ?? exercise.next(set.items, day: set.day) {
+        } else if let set, let i = shown ?? exercise.next(set.items, day: set.day) {
             let p = exercise.progress(set.items, remaining: set.left)
             VStack(spacing: 0) {
                 InkProgress(value: Double(p.done), total: Double(max(p.total, 1)))
@@ -146,7 +155,7 @@ struct PracticeView: View {
                 }
             }
         } else {
-            ScrollView { chooser(set) }
+            Color.clear.task { leave() }   // nothing left in this exercise: back to the chooser
         }
     }
 
@@ -174,7 +183,14 @@ struct PracticeView: View {
                         .frame(width: 1, height: 1).clipped().opacity(0.02)
                         .accessibilityIdentifier("fill-input")
                 }
-                .task(id: item.wordId) { if fillResult == nil { typing = true } }
+                .task(id: item.wordId) {   // the keyboard up on arrival. Focus asked for while the pushed screen
+                    for _ in 0..<10 {      // is still sliding in is dropped, so ask until it holds (up to 1.5 s)
+                        guard fillResult == nil, !Task.isCancelled else { return }
+                        typing = true
+                        try? await Task.sleep(for: .milliseconds(150))
+                        if typing { return }
+                    }
+                }
                 .popover(item: $meaningShown) { w in
                     VStack(alignment: .leading, spacing: 6) {
                         Text(w.answer).font(.system(.title3, design: .serif)).fontDesign(.serif).bold()
@@ -534,8 +550,11 @@ struct PracticeView: View {
         catch { inputError = error.localizedDescription; return false }
     }
 
-    private func leave() {
-        typing = false; fillResult = nil; writeResult = nil; answer = ""; inputError = nil; shown = nil; exercise = nil; misses = 0
+    private func leave() { exercise = nil }   // pops the exercise screen; reset() follows
+
+    /// What an exercise leaves behind, cleared however the user goes back (button, edge swipe, end of the list).
+    private func reset() {
+        typing = false; fillResult = nil; writeResult = nil; answer = ""; inputError = nil; shown = nil; misses = 0
     }
 
     /// The word's full card, from the user's word list (cards aren't part of the practice set).

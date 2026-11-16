@@ -294,6 +294,11 @@ itself via the fetchers.
   *pervasive* swapped in *invasive* (dropped the target word); founder: fine as is, no change.
 - **Fill-in's note moved inside the sentence card** ("Your note: …" under the meaning, word blanked until solved): the
   auto-opened keyboard hid the separate note card. Founder: don't backfill "shown in practice" from old answers.
+- **Practice exercises are real pushed screens** (system back button + edge swipe; founder asked for swipe-back). Until now an
+  exercise swapped in place behind a hand-made "<" (a D57 shortcut, never decided). Word cards were already pushed (swipe
+  verified). Fill-in's auto-keyboard broke on the pushed screen (focus asked mid-slide is dropped): it now asks until
+  it holds (≤ 1.5 s). Tests: `SwipeBackScreenTests` (exercise, word card, keyboard on arrival); walk-through passes.
+- In-card fill-in note is handwritten (the app-wide rounded design was replacing the font).
 - Tests: service 116 pass; iOS unit all pass but TD-24 (date); new UI tests `HangmanNoteScreenTests`,
   `WriteKeyboardScreenTests` pass. Not yet on the founder's phone.
 
