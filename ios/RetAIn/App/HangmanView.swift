@@ -75,7 +75,7 @@ struct HangmanCard: View {
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .paperCard(radius: 14, edge: 2)
             } else if item.fill != nil {
-                Button { hinted = true } label: { Label("Show a sentence", systemImage: "lightbulb").frame(maxWidth: .infinity) }
+                Button { hinted = true } label: { Label("Show a hint", systemImage: "lightbulb").frame(maxWidth: .infinity) }
                     .buttonStyle(ChunkyButtonStyle(kind: .secondary)).accessibilityIdentifier("hangman-hint")
             }
             keyboard
