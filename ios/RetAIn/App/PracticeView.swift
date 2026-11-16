@@ -290,8 +290,8 @@ struct PracticeView: View {
             Label(title, systemImage: icon).font(.headline).foregroundStyle(color)
             if let reason = r.reason, !reason.isEmpty { Text(reason).font(.callout) }
             if let fix = r.fix, !fix.isEmpty {
-                Text(r.verdict == "natural" ? "Polished: " : "Try: ").font(.callout).bold()
-                    + Text(fix).font(.system(.callout, design: .serif)).fontDesign(.serif)
+                Text(r.verdict == "natural" ? "Polished:" : "Try:").font(.callout).bold()
+                MarkedFix(mine: answer, fixed: fix)   // what changed in the user's sentence, marked
             }
         }
         .padding(12).frame(maxWidth: .infinity, alignment: .leading)
