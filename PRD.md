@@ -339,7 +339,7 @@ M5 capture via the extension → M6 clipboard intake → M8 monetization → M9 
 - **Cloze mode:** highlighted blank instead of the word; user types it or picks from a multi-choice of their own words. Strongest form of retrieval practice; natural difficulty ramp after tap-to-reveal.
 - **Micro-production prompts:** one per digest — "reply to this post in one sentence using *perfunctory*." The bridge from recognition to conversational use.
 - **AI conversation partner:** practice using retained words in dialogue; the full answer to the productive-use gap.
-- **Sentence-context capture:** share a whole sentence; LLM extracts the target word and stores the original context (shown later on the word card — encoding-specificity boost).
+- **Sentence-context capture:** share a whole sentence; LLM extracts the target word and stores the original context (shown later on the word card — encoding-specificity boost). *Considered again 2026-11-15 for word stats and left here (founder): only Safari can hand over the sentence around a saved word; the share sheet from other apps, Siri and the Words tab can't, so it wouldn't be consistent.*
 - **Kindle integration:** Vocabulary Builder import or highlight sync.
 - ~~**Siri / App Intents:** "Hey Siri, add *X* to RetAIn" for physical-book and conversation captures.~~ Promoted and built 2026-09-28 (D50, backlog UX-15).
 - **In-digest lookup & capture:** tap any unknown word in a digest piece to look it up and add it to the list (Kindle-style reading loop inside the app).
