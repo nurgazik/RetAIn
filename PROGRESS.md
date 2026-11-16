@@ -22,7 +22,7 @@ usage). Code schedules the words; the list stays unlimited; the user marks retai
 scan done (docs/poc2-transform.md §10): AI-graded sentences already ship elsewhere (VORCA,
 ReadUnbound), so the combination with the transform is the differentiator.
 **Next up: TD-20 (sentence-judge eval) → UX-16 (exercise screens).** Founder to-do: try ReadUnbound.
-**2026-11-16: word stats on the card + practice polish.** Every word stat is listed at the end of the word card (for the founder to review before stats screens are designed), now incl. hangman games and hint requests (new `hint` event: when asked and what it showed). Practice: the user's note shows with hangman's Hint and under fill-in's meaning (word blanked until solved); hangman's button says "Hint"; the sentence field + Check stay above the keyboard; Polished/Try mark what changed (added highlighted, removed struck through). **Needs a fresh install from Xcode.** Open: fill-in's note is mostly under the keyboard (proposal: move it inside the sentence card); backfill "shown in practice" from old answers?
+**2026-11-16: word stats on the card + practice polish.** Every word stat is listed at the end of the word card (for the founder to review before stats screens are designed), now incl. hangman games and hint requests (new `hint` event: when asked and what it showed). Practice: the user's note shows with hangman's Hint and under fill-in's meaning (word blanked until solved); hangman's button says "Hint"; the sentence field + Check stay above the keyboard; Polished/Try mark what changed (added highlighted, removed struck through). **Needs a fresh install from Xcode.** Fill-in's note sits inside the sentence card (founder 11-16), so the keyboard doesn't cover it; "shown in practice" is not backfilled (founder: no).
 **2026-11-15 (D74): streaks and stats — data built, no screens yet.** Daily streak = a day with a practice
 answer or a read; no protection until points exist; "shown" only in the reader (≥ half the word for 1 s) and practice.
 Server records facts (review log, word_log, one events table from the phone) and works out `/v1/stats` and
@@ -292,6 +292,8 @@ itself via the fetchers.
   removed → struck faint red; no marks when under half the sentence is kept. No model step.
 - Founder's sentence verdicts so far: 29 (14 natural, 3 with a polish; 9 could-be-better; 6 wrong). The "Try:" for
   *pervasive* swapped in *invasive* (dropped the target word); founder: fine as is, no change.
+- **Fill-in's note moved inside the sentence card** ("Your note: …" under the meaning, word blanked until solved): the
+  auto-opened keyboard hid the separate note card. Founder: don't backfill "shown in practice" from old answers.
 - Tests: service 116 pass; iOS unit all pass but TD-24 (date); new UI tests `HangmanNoteScreenTests`,
   `WriteKeyboardScreenTests` pass. Not yet on the founder's phone.
 

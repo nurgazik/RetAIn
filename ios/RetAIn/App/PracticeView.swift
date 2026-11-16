@@ -184,10 +184,15 @@ struct PracticeView: View {
                     .presentationCompactAdaptation(.popover)
                 }
             Text("Meaning: \(item.definition)").font(.callout).foregroundStyle(Color.inkSoft)
+            if let note = item.note, !note.isEmpty {   // in the card, so the keyboard doesn't cover it
+                let shown = fillResult == nil ? YourNote.hidingWord(note, word: item.word) : note  // blanked until solved
+                (Text("Your note: ").font(.callout).foregroundStyle(Color.inkSoft)
+                    + Text(shown).font(.callout).foregroundStyle(Color.brandText))
+                    .accessibilityIdentifier("practice-note")
+            }
             }
             .padding(16)
             .paperCard()
-            yourNote(item, hidingWord: fillResult == nil)   // the word blanked until solved: notes often hold it
             if let r = fillResult {
                 resultBanner(ok: true, title: "Correct", detail: r.note)
                 nextButton()
@@ -205,10 +210,8 @@ struct PracticeView: View {
     }
 
     /// The user's own note on the word (D59), as on its card.
-    @ViewBuilder private func yourNote(_ item: PracticeItem, hidingWord: Bool = false) -> some View {
-        if let note = item.note, !note.isEmpty {
-            YourNote(note: hidingWord ? YourNote.hidingWord(note, word: item.word) : note)
-        }
+    @ViewBuilder private func yourNote(_ item: PracticeItem) -> some View {
+        if let note = item.note, !note.isEmpty { YourNote(note: note) }
     }
 
     /// D58: the word among lookalikes; tapping one is the same as typing it and tapping Check.
