@@ -71,6 +71,7 @@ struct PracticeView: View {
     @State private var appearedAt = Date()          // when the exercise on screen appeared: answers carry the time (D74)
     @State private var askReminder = false
     @FocusState private var typing: Bool
+    private static let writeInput = "write-input"   // the sentence field + Check, kept above the keyboard
     @Environment(\.scenePhase) private var scenePhase
 
     var body: some View {
@@ -119,14 +120,26 @@ struct PracticeView: View {
             VStack(spacing: 0) {
                 InkProgress(value: Double(p.done), total: Double(max(p.total, 1)))
                     .padding(.horizontal).padding(.top, 4)
-                ScrollView {
-                    switch exercise {
-                    case .fill: fillCard(set.items[i])
-                    case .write: writeCard(set.items[i])
-                    case .hangman: hangmanCard(set.items[i])
+                ScrollViewReader { proxy in
+                    ScrollView {
+                        switch exercise {
+                        case .fill: fillCard(set.items[i])
+                        case .write: writeCard(set.items[i])
+                        case .hangman: hangmanCard(set.items[i])
+                        }
                     }
+                    .scrollDismissesKeyboard(.interactively)
+                    // SwiftUI only scrolls a focused field until its caret peeks above the keyboard; the sentence
+                    // and its Check button belong in view together (the field grows as it wraps, so again on typing)
+                    .onChange(of: typing) { _, on in
+                        guard on, exercise == .write else { return }
+                        Task {
+                            try? await Task.sleep(for: .milliseconds(350))   // after the keyboard has come up
+                            withAnimation { proxy.scrollTo(Self.writeInput, anchor: .bottom) }
+                        }
+                    }
+                    .onChange(of: answer) { if typing, exercise == .write { proxy.scrollTo(Self.writeInput, anchor: .bottom) } }
                 }
-                .scrollDismissesKeyboard(.interactively)
                 .task(id: "\(exercise.rawValue)-\(set.items[i].wordId)") {  // D74: this exercise appeared = shown
                     appearedAt = Date()
                     EventQueue.shared.shownInPractice(exercise: exercise.rawValue, wordId: set.items[i].wordId)
@@ -250,11 +263,14 @@ struct PracticeView: View {
                 verdictBanner(r)
                 nextButton()
             } else {
-                TextField("Write your own sentence with “\(item.word)”", text: $answer, axis: .vertical)
-                    .focused($typing)
-                    .lineLimit(3...6).textFieldStyle(.plain).font(.system(.body, design: .serif)).fontDesign(.serif)
-                    .padding(12).paperCard(radius: 14, edge: 2)
-                checkButton(disabled: answer.split(separator: " ").count < 3) { await submitWrite(item) }
+                VStack(spacing: 16) {
+                    TextField("Write your own sentence with “\(item.word)”", text: $answer, axis: .vertical)
+                        .focused($typing)
+                        .lineLimit(3...6).textFieldStyle(.plain).font(.system(.body, design: .serif)).fontDesign(.serif)
+                        .padding(12).paperCard(radius: 14, edge: 2)
+                    checkButton(disabled: answer.split(separator: " ").count < 3) { await submitWrite(item) }
+                }
+                .id(Self.writeInput)
                 Text("Dictation works too: tap the mic on the keyboard.").font(.caption).foregroundStyle(.secondary)
             }
             if let error = inputError { Text(error).font(.callout).foregroundStyle(.red) }

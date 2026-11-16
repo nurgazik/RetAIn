@@ -58,6 +58,7 @@
 		6E97B6EFEB3F480B80684A05 /* WordInput.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6D5EA44A1819CA367E35D593 /* WordInput.swift */; };
 		6F2E9C5F92700555A16AAC35 /* WordInput.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6D5EA44A1819CA367E35D593 /* WordInput.swift */; };
 		70E8F11C99997B8EF9B30F6B /* WordSearchTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9012445A3258DAECDEBFA316 /* WordSearchTests.swift */; };
+		715BC6FE8E52A1B04908F7E1 /* WriteKeyboardScreenTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C9099A36E675670DDF9C0F42 /* WriteKeyboardScreenTests.swift */; };
 		746B734785713EB4E9905B50 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7841D581AED07D5C5D9DA657 /* SettingsView.swift */; };
 		77DCB73ED87D31E044598367 /* ReadsStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = C31DA02FC3DE821DB8C935EB /* ReadsStore.swift */; };
 		7C6E50F427554B5D8562100C /* Caveat-OFL.txt in Resources */ = {isa = PBXBuildFile; fileRef = A8E493A638F27493128012E4 /* Caveat-OFL.txt */; };
@@ -247,6 +248,7 @@
 		C31DA02FC3DE821DB8C935EB /* ReadsStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReadsStore.swift; sourceTree = "<group>"; };
 		C43C9DD76E65D95ED4DA9818 /* WordStatsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WordStatsView.swift; sourceTree = "<group>"; };
 		C54CFBD784ED2E7EF073902C /* WordSearchScreenTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WordSearchScreenTests.swift; sourceTree = "<group>"; };
+		C9099A36E675670DDF9C0F42 /* WriteKeyboardScreenTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WriteKeyboardScreenTests.swift; sourceTree = "<group>"; };
 		CBB26978C3569E90A1F2A08E /* PracticeReminder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PracticeReminder.swift; sourceTree = "<group>"; };
 		CBED22FDEE6758F6AACE316C /* AddWordIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddWordIntent.swift; sourceTree = "<group>"; };
 		CC3A20A78E389B481F0B403E /* SessionStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionStore.swift; sourceTree = "<group>"; };
@@ -285,6 +287,7 @@
 				298F565A72357320D03411B0 /* WordNoteScreenTests.swift */,
 				C54CFBD784ED2E7EF073902C /* WordSearchScreenTests.swift */,
 				EDA4C80FFB789A7131D60349 /* WordStatsScreenTests.swift */,
+				C9099A36E675670DDF9C0F42 /* WriteKeyboardScreenTests.swift */,
 			);
 			path = UITests;
 			sourceTree = "<group>";
@@ -840,6 +843,7 @@
 				022A500221881208BDE58EC5 /* WordNoteScreenTests.swift in Sources */,
 				0D0A0209457333E5C17D118C /* WordSearchScreenTests.swift in Sources */,
 				338428178CE12270E766F70C /* WordStatsScreenTests.swift in Sources */,
+				715BC6FE8E52A1B04908F7E1 /* WriteKeyboardScreenTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
