@@ -363,20 +363,38 @@ def uses_word(sentence: str, word: str) -> bool:
     return any(t.startswith(stem(word)) for t in re.findall(r"[a-z]+", sentence.lower()))
 
 
-def record(con, user: dict, item: dict, kind: str, answer: str, result: dict) -> int:
-    """Store the attempt (with Jev's score and who judged, for sentences) → its id."""
+def record(con, user: dict, item: dict, kind: str, answer: str, result: dict, seconds: float | None = None,
+           also: tuple = ()) -> int:
+    """Store the attempt (with Jev's score and who judged, for sentences) and move the word on the schedule,
+    in one transaction (D74): the answer row carries the box before and after, so the log and the word's
+    state never disagree. `also`: (sql, params) written in the same transaction (the hangman game) → its id."""
+    hinted = kind == "fill" and item["fill"].get("hint")
+    sentence_id = item["fill"].get("sentence_id") if kind == "fill" and item.get("fill") else None
+    seconds = seconds if seconds is not None and 0 <= seconds <= 3600 else None
     with db._lock:
-        hinted = kind == "fill" and item["fill"].get("hint")
-        cur = con.execute("INSERT INTO practice_attempts (user_id, word_id, day, kind, answer, correct, verdict, reason, "
-                          "fix, p_natural, judged_by, hint, created_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)",
-                          (user["id"], item["word_id"], user["day"], kind, answer, result.get("correct"),
-                           result.get("verdict"), result.get("reason"), result.get("fix"), result.get("p_natural"),
-                           result.get("by"), json.dumps(hinted) if hinted else None, db.now()))
-        if kind == "fill" and item["fill"].get("sentence_id"):  # answered = seen (D60): not shown to them again
-            con.execute("INSERT OR IGNORE INTO sentence_views (user_id, sentence_id, day) VALUES (?,?,?)",
-                        (user["id"], item["fill"]["sentence_id"], user["day"]))
-        con.commit()
-    reschedule(con, user, item)
+        try:
+            for sql, params in also:
+                con.execute(sql, params)
+            box_before = con.execute("SELECT box FROM words WHERE id=?", (item["word_id"],)).fetchone()[0]
+            cur = con.execute("INSERT INTO practice_attempts (user_id, word_id, day, kind, answer, correct, verdict, "
+                              "reason, fix, p_natural, judged_by, hint, created_at, box_before, sentence_id, seconds) "
+                              "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+                              (user["id"], item["word_id"], user["day"], kind, answer, result.get("correct"),
+                               result.get("verdict"), result.get("reason"), result.get("fix"), result.get("p_natural"),
+                               result.get("by"), json.dumps(hinted) if hinted else None, db.now(), box_before,
+                               sentence_id, seconds))
+            if sentence_id:  # answered = seen (D60): not shown to them again
+                con.execute("INSERT OR IGNORE INTO sentence_views (user_id, sentence_id, day) VALUES (?,?,?)",
+                            (user["id"], sentence_id, user["day"]))
+            moved = reschedule(con, user, item)
+            box_after, due_after = moved or con.execute("SELECT box, due_day FROM words WHERE id=?",
+                                                        (item["word_id"],)).fetchone()
+            con.execute("UPDATE practice_attempts SET box_after=?, due_after=? WHERE id=?",
+                        (box_after, due_after, cur.lastrowid))
+            con.commit()
+        except Exception:
+            con.rollback()
+            raise
     return cur.lastrowid
 
 
@@ -398,23 +416,23 @@ def hangman_result(word: str, guesses: list) -> dict:
 def play_hangman(con, user: dict, item: dict, guesses: list, hint: bool, seconds: float | None) -> dict:
     """Store one finished game (its full log) and count it like any exercise attempt → the result."""
     r = hangman_result(item["word"], guesses)
-    with db._lock:
-        con.execute("INSERT INTO hangman_games (user_id, word_id, day, word, guesses, wrong, hint, won, seconds, created_at) "
-                    "VALUES (?,?,?,?,?,?,?,?,?,?)", (user["id"], item["word_id"], user["day"], item["word"],
-                                                      json.dumps([str(g).lower() for g in guesses]), r["wrong"],
-                                                      int(hint), int(r["won"]), seconds, db.now()))
-        con.commit()
-    record(con, user, item, "hangman", "".join(str(g).lower() for g in guesses), {"correct": int(r["won"])})
+    game = ("INSERT INTO hangman_games (user_id, word_id, day, word, guesses, wrong, hint, won, seconds, created_at) "
+            "VALUES (?,?,?,?,?,?,?,?,?,?)", (user["id"], item["word_id"], user["day"], item["word"],
+                                             json.dumps([str(g).lower() for g in guesses]), r["wrong"],
+                                             int(hint), int(r["won"]), seconds, db.now()))
+    record(con, user, item, "hangman", "".join(str(g).lower() for g in guesses), {"correct": int(r["won"])},
+           seconds=seconds, also=(game,))
     return r | {"word": item["word"]}
 
 
-def reschedule(con, user: dict, item: dict) -> None:
+def reschedule(con, user: dict, item: dict) -> tuple | None:
     """After every attempt, from all of today's attempts on the word (D57: either exercise counts on
     its own): a miss → box 0, due tomorrow; a "could be better" → same box; otherwise up one box.
     The base is the box when the word joined today's set, so two clean exercises are still one step.
     A fill-in is judged on its first try (D58): wrong first, right later is still a miss.
     A word that wasn't due when it joined (part "ahead") only ever moves back: a miss → tomorrow (D60, D66).
-    Hangman (D69) is easier recall: a lost game is a miss; a won game alone never moves the word up."""
+    Hangman (D69) is easier recall: a lost game is a miss; a won game alone never moves the word up.
+    Runs inside record()'s transaction (D74) → the new (box, due), or None when the word stays put."""
     tries = {}
     for a in con.execute("SELECT kind, correct, verdict FROM practice_attempts WHERE user_id=? AND word_id=? AND day=? "
                          "ORDER BY id", (user["id"], item["word_id"], user["day"])):
@@ -424,13 +442,12 @@ def reschedule(con, user: dict, item: dict) -> None:
     if (fill and not fill["correct"]) or (write and write["verdict"] == "wrong") or (hangman and not hangman["correct"]):
         box = 0
     elif item.get("part") == "ahead" or not (fill or write):
-        return
+        return None
     elif not (write and write["verdict"] == "could-be-better"):
         box = min(box + 1, len(GAPS) - 1)
     due = add_days(user["day"], GAPS[box])
-    with db._lock:
-        con.execute("UPDATE words SET box=?, due_day=? WHERE id=?", (box, due, item["word_id"]))
-        con.commit()
+    con.execute("UPDATE words SET box=?, due_day=? WHERE id=?", (box, due, item["word_id"]))
+    return box, due
 
 
 def prices() -> dict:

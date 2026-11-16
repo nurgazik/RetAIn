@@ -43,6 +43,7 @@ def dev_user(con):
             con.execute("INSERT OR IGNORE INTO words (user_id, word, pos, definition, status, added, day) "
                         "VALUES (?,?,?,?,?,?,?)", (row["id"], w["word"], w.get("pos"), w["definition"],
                                                    w.get("status", "learning"), added, added[:10]))
+        db.backfill_word_log(con)  # seeded words get their "added" history row (D74)
         con.commit()
     return row
 

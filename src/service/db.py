@@ -76,14 +76,22 @@ CREATE TABLE IF NOT EXISTS pieces (
     day           TEXT NOT NULL DEFAULT ''   -- the user's day (D51); the cap counts it
 );
 CREATE INDEX IF NOT EXISTS idx_pieces_user ON pieces (user_id, created_at);
+-- What the phone reports (D74): reader taps, piece opens, and words shown (reader: at least half the word on
+-- screen for 1 s; practice: its exercise appeared). Stored raw; counting rules ("once per piece per day")
+-- are applied when stats are read. `client_id` is the phone's id for the event: a resend is ignored.
 CREATE TABLE IF NOT EXISTS events (
-    id        INTEGER PRIMARY KEY AUTOINCREMENT,
-    user_id   TEXT NOT NULL,
-    piece_id  TEXT NOT NULL,
-    word      TEXT,
-    kind      TEXT NOT NULL,        -- tap | impression
-    at        TEXT NOT NULL,
-    day       TEXT NOT NULL DEFAULT ''
+    id          INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id     TEXT NOT NULL,
+    client_id   TEXT UNIQUE,         -- NULL for rows before D74 and the old taps route
+    kind        TEXT NOT NULL,       -- tap | open | shown
+    surface     TEXT NOT NULL DEFAULT 'reader',   -- reader | practice
+    piece_id    TEXT,                -- reader events
+    exercise    TEXT,                -- practice: fill | write | hangman
+    word        TEXT,                -- the word as printed ("bolstered"); NULL for open
+    word_id     INTEGER,             -- the user's word it matched; NULL if none
+    at          TEXT NOT NULL,       -- when it happened (the phone's clock, checked)
+    day         TEXT NOT NULL DEFAULT '',   -- the user's day it happened in
+    received_at TEXT                 -- when the server got it
 );
 CREATE TABLE IF NOT EXISTS diagnostics (
     id        INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -115,7 +123,27 @@ CREATE TABLE IF NOT EXISTS practice_attempts (
     p_natural   REAL,               -- write: Jev's P(natural); NULL if Jev failed
     judged_by   TEXT,               -- write: jev (✓ at the threshold) | llm
     hint        TEXT,               -- fill: the options the Hint showed (JSON); NULL = no hint
-    created_at  TEXT NOT NULL
+    created_at  TEXT NOT NULL,
+    -- the review log (D74): the word's schedule before and after this answer, as saved with it
+    box_before  INTEGER,
+    box_after   INTEGER,
+    due_after   TEXT,
+    sentence_id INTEGER,            -- fill: the bank sentence answered
+    seconds     REAL                -- from the exercise appearing to this answer, as the phone timed it
+);
+-- every change to a word that isn't an answer (D74): saved, saved again, retained, learn again, deleted.
+-- `words.status`, `box` and `due_day` are the latest state; this and practice_attempts are its history.
+CREATE TABLE IF NOT EXISTS word_log (
+    id            INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id       TEXT NOT NULL REFERENCES users(id),
+    word_id       INTEGER NOT NULL REFERENCES words(id),
+    day           TEXT NOT NULL,
+    kind          TEXT NOT NULL,    -- added | saved-again | retained | learn-again | deleted
+    status_before TEXT,
+    status_after  TEXT NOT NULL,
+    box_before    INTEGER,
+    box_after     INTEGER,
+    at            TEXT NOT NULL
 );
 -- hint lookalikes per lemma, shared by all users (no user data, like practice_sentences; D58).
 CREATE TABLE IF NOT EXISTS lookalikes (
@@ -244,6 +272,43 @@ def _backfill_days(con) -> None:
             print(f"[db] {table}: day set on {len(rows)} older rows")
 
 
+def _rebuild_events(con) -> None:
+    """D74: `events` from before D74 (taps only, piece and word required) → the new shape, rows kept.
+    SQLite can't drop NOT NULL or add UNIQUE in place, so the table is copied once."""
+    if "client_id" in [r[1] for r in con.execute("PRAGMA table_info(events)")]:
+        return
+    con.execute("ALTER TABLE events RENAME TO events_old")
+    con.executescript(SCHEMA)  # creates the new `events`; every other table already exists
+    con.execute("INSERT INTO events (user_id, kind, surface, piece_id, word, at, day) "
+                "SELECT user_id, kind, 'reader', piece_id, word, at, day FROM events_old ORDER BY id")
+    con.execute("DROP TABLE events_old")
+    for r in con.execute("SELECT DISTINCT user_id FROM events").fetchall():  # taps → the user's word they matched
+        words = con.execute("SELECT id, word FROM words WHERE user_id=?", (r[0],)).fetchall()
+        for e in con.execute("SELECT id, word FROM events WHERE user_id=? AND word IS NOT NULL", (r[0],)).fetchall():
+            wid = match_word(e[1], words)
+            if wid:
+                con.execute("UPDATE events SET word_id=? WHERE id=?", (wid, e[0]))
+    print("[db] events: rebuilt for D74")
+
+
+def backfill_word_log(con) -> None:
+    """Words saved without a history row (before D74, or seeded) get their "added" row from their save date."""
+    n = con.execute("INSERT INTO word_log (user_id, word_id, day, kind, status_after, box_after, at) "
+                    "SELECT user_id, id, day, 'added', 'learning', 0, added FROM words w "
+                    "WHERE NOT EXISTS (SELECT 1 FROM word_log l WHERE l.word_id = w.id)").rowcount
+    if n:
+        print(f"[db] word_log: 'added' for {n} older words")
+
+
+def match_word(text: str | None, words) -> int | None:
+    """A printed form ("bolstered") → the id of the user's word ("bolster"): exact first, then the engine's
+    six-letter stem rule (generate.py annotate_marks; the app's ReaderView.match). `words`: (id, word) rows."""
+    t = (text or "").strip().lower()
+    if not t:
+        return None
+    return next((w[0] for w in words if w[1] == t), None) or next((w[0] for w in words if t.startswith(w[1][:6])), None)
+
+
 def connect() -> sqlite3.Connection:
     DB_PATH.parent.mkdir(exist_ok=True)
     con = sqlite3.connect(DB_PATH, check_same_thread=False)
@@ -272,14 +337,23 @@ def init() -> None:
                  "ALTER TABLE words ADD COLUMN note TEXT",                       # the user's note (D59)
                  "ALTER TABLE lexicon ADD COLUMN zipf REAL",                     # rarity (D61)
                  "ALTER TABLE practice_sentences ADD COLUMN topic TEXT",         # fill-in setting (D73)
+                 "ALTER TABLE practice_attempts ADD COLUMN box_before INTEGER",  # review log (D74)
+                 "ALTER TABLE practice_attempts ADD COLUMN box_after INTEGER",
+                 "ALTER TABLE practice_attempts ADD COLUMN due_after TEXT",
+                 "ALTER TABLE practice_attempts ADD COLUMN sentence_id INTEGER",
+                 "ALTER TABLE practice_attempts ADD COLUMN seconds REAL",
                  *(f"ALTER TABLE {t} ADD COLUMN day TEXT NOT NULL DEFAULT ''" for t in ("pieces", "calls", "events", "words"))):
         try:  # migrations for DBs created before these columns
             con.execute(stmt)
         except sqlite3.OperationalError:
             pass
-    for t in ("pieces", "calls", "events", "words"):  # after the migrations: old DBs lack `day` until then
+    _rebuild_events(con)
+    for t in ("pieces", "calls", "events", "words", "word_log"):  # after the migrations: old DBs lack `day` until then
         con.execute(f"CREATE INDEX IF NOT EXISTS idx_{t}_day ON {t} (user_id, day)")
+    con.execute("CREATE INDEX IF NOT EXISTS idx_events_word ON events (user_id, word_id)")
+    con.execute("CREATE INDEX IF NOT EXISTS idx_word_log_word ON word_log (word_id)")
     _backfill_days(con)
+    backfill_word_log(con)
     con.execute("UPDATE words SET status='deleted' WHERE status='archived'")  # D62: Delete replaced Archive
     con.commit()
     con.close()

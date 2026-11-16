@@ -8,7 +8,7 @@ from fastapi import Depends, FastAPI, HTTPException
 from fastapi.sse import EventSourceResponse, ServerSentEvent
 from pydantic import BaseModel, Field
 
-from . import auth, db, dictionary, engine, practice, rarity
+from . import auth, db, dictionary, engine, practice, rarity, stats
 from .config import DAILY_CAP, MAX_CHARS, MIN_WORDS
 
 
@@ -131,8 +131,13 @@ def add_word(body: WordIn, user=Depends(auth.current_user)):
                     "added=CASE WHEN words.status='deleted' THEN excluded.added ELSE words.added END, "
                     "day=CASE WHEN words.status='deleted' THEN excluded.day ELSE words.day END",
                     (user["id"], word, pos, definition, "learning", db.now(), lexicon_id, user["day"]))
-        con.commit()
         row = dict(con.execute("SELECT * FROM words WHERE user_id=? AND word=?", (user["id"], word)).fetchone())
+        if existing is None:  # word history (D74), committed with the save
+            stats.log_word(con, user, row["id"], "added", None, "learning", None, 0)
+        elif existing["status"] != "learning":
+            stats.log_word(con, user, row["id"], "saved-again", existing["status"], "learning",
+                           existing["box"], row["box"])
+        con.commit()
         return with_cards(con, [row])[0]
     finally:
         con.close()
@@ -149,14 +154,19 @@ def patch_word(word_id: int, body: WordPatch, user=Depends(auth.current_user)):
             sent["note"] = (sent["note"] or "").strip() or None
         if sent.get("status") == "archived":  # an app build from before D62: Archive meant what Delete means now
             sent["status"] = "deleted"
-        was = con.execute("SELECT status FROM words WHERE id=? AND user_id=?", (word_id, user["id"])).fetchone()
+        was = con.execute("SELECT status, box FROM words WHERE id=? AND user_id=?", (word_id, user["id"])).fetchone()
         if sent.get("status") == "learning" and was and was["status"] == "retained":
             sent |= {"box": 0, "due_day": None}  # D71: learning it again starts over, like a newly saved word
         cur = con.execute(f"UPDATE words SET {', '.join(f'{k}=?' for k in sent)} WHERE id=? AND user_id=? "
                           "AND status!='deleted'", (*sent.values(), word_id, user["id"]))
-        con.commit()
         if cur.rowcount == 0:
+            con.rollback()
             raise HTTPException(404, "no such word")
+        new = sent.get("status")
+        if new and new != was["status"]:  # word history (D74), committed with the change
+            kind = {"retained": "retained", "deleted": "deleted"}.get(new, "learn-again")
+            stats.log_word(con, user, word_id, kind, was["status"], new, was["box"], sent.get("box", was["box"]))
+        con.commit()
         return with_cards(con, [dict(con.execute("SELECT * FROM words WHERE id=?", (word_id,)).fetchone())])[0]
     finally:
         con.close()
@@ -168,11 +178,14 @@ def delete_word(word_id: int, user=Depends(auth.current_user)):
     history stays. Saving it again starts fresh."""
     con = db.connect()
     try:
+        was = con.execute("SELECT status, box FROM words WHERE id=? AND user_id=?", (word_id, user["id"])).fetchone()
         cur = con.execute("UPDATE words SET status='deleted' WHERE id=? AND user_id=? AND status!='deleted'",
                           (word_id, user["id"]))
-        con.commit()
         if cur.rowcount == 0:
+            con.rollback()
             raise HTTPException(404, "no such word")
+        stats.log_word(con, user, word_id, "deleted", was["status"], "deleted", was["box"], was["box"])
+        con.commit()
         return with_cards(con, [dict(con.execute("SELECT * FROM words WHERE id=?", (word_id,)).fetchone())])[0]
     finally:
         con.close()
@@ -183,6 +196,7 @@ def delete_word(word_id: int, user=Depends(auth.current_user)):
 class FillIn(BaseModel):
     word_id: int
     answer: str = Field(min_length=1, max_length=60)
+    seconds: float | None = None   # from the exercise appearing to this answer (D74)
 
 
 class HintIn(BaseModel):
@@ -199,6 +213,7 @@ class HangmanIn(BaseModel):
 class WriteIn(BaseModel):
     word_id: int
     sentence: str = Field(min_length=3, max_length=400)
+    seconds: float | None = None
 
 
 class RoundIn(BaseModel):
@@ -241,7 +256,7 @@ def practice_fill(body: FillIn, user=Depends(auth.current_user)):
         if not item.get("fill"):
             raise HTTPException(409, "no fill-in for this word today")
         result = practice.check_fill(item, body.answer)
-        practice.record(con, user, item, "fill", body.answer.strip(), result)  # every try is a row (D58)
+        practice.record(con, user, item, "fill", body.answer.strip(), result, seconds=body.seconds)  # every try is a row (D58)
         return result
     finally:
         con.close()
@@ -287,7 +302,7 @@ def practice_write(body: WriteIn, user=Depends(auth.current_user)):
             raise HTTPException(422, f"Use “{item['word']}” in your sentence.")
         result, calls = practice.judge_sentence(item["word"], item["definition"], sentence, engine.model_env(),
                                                 practice.meanings(con, body.word_id, item["definition"]))
-        attempt = practice.record(con, user, item, "write", sentence, result)
+        attempt = practice.record(con, user, item, "write", sentence, result, seconds=body.seconds)
         db.record_calls(con, user["id"], None, calls, practice.prices(), day=user["day"], attempt_id=attempt)
         return {k: result[k] for k in ("verdict", "reason", "fix")}
     finally:
@@ -410,10 +425,53 @@ def tap(piece_id: str, body: TapIn, user=Depends(auth.current_user)):
     try:
         if con.execute("SELECT 1 FROM pieces WHERE id=? AND user_id=?", (piece_id, user["id"])).fetchone() is None:
             raise HTTPException(404, "no such piece")
-        con.execute("INSERT INTO events (user_id, piece_id, word, kind, at, day) VALUES (?,?,?,?,?,?)",
-                    (user["id"], piece_id, body.word.strip().lower(), "tap", db.now(), user["day"]))
+        word = body.word.strip().lower()  # builds before D74; newer ones send taps through /v1/events
+        words = con.execute("SELECT id, word FROM words WHERE user_id=?", (user["id"],)).fetchall()
+        con.execute("INSERT INTO events (user_id, piece_id, word, word_id, kind, at, day, received_at) "
+                    "VALUES (?,?,?,?,?,?,?,?)", (user["id"], piece_id, word, db.match_word(word, words), "tap",
+                                                 db.now(), user["day"], db.now()))
         con.commit()
         return {"ok": True}
+    finally:
+        con.close()
+
+
+# ---------------------------------------------------------------- events and stats (D74)
+
+class EventsIn(BaseModel):
+    """A batch from the phone's event queue. Each event: id (the phone's, so a resend is ignored), kind
+    (tap | open | shown), surface (reader | practice), at (ISO time with zone), and piece_id + word (reader)
+    or exercise + word_id (practice). Checked one by one, so one bad event never blocks the queue."""
+    events: list[dict] = Field(max_length=500)
+
+
+@app.post("/v1/events")
+def post_events(body: EventsIn, user=Depends(auth.current_user)):
+    con = db.connect()
+    try:
+        return stats.ingest(con, user, body.events)
+    finally:
+        con.close()
+
+
+@app.get("/v1/stats")
+def get_stats(user=Depends(auth.current_user)):
+    """Streak, best, total days and today's activity, worked out from the logs (D74)."""
+    con = db.connect()
+    try:
+        return stats.user_stats(con, user)
+    finally:
+        con.close()
+
+
+@app.get("/v1/words/{word_id}/stats")
+def get_word_stats(word_id: int, user=Depends(auth.current_user)):
+    con = db.connect()
+    try:
+        out = stats.word_stats(con, user, word_id)
+        if out is None:
+            raise HTTPException(404, "no such word")
+        return out
     finally:
         con.close()
 

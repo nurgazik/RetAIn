@@ -1,0 +1,184 @@
+"""Streaks and stats (D74). The phone reports what happened (taps, piece opens, words shown) into `events`;
+the server logs what it decides (answers in practice_attempts, other word changes in word_log). Every stat is
+worked out here when it's asked for; nothing is stored as a counter, so a counting rule can change later
+without losing history. See docs/streaks-stats-research.md and diagrams/flow-streaks-and-shown.md."""
+from datetime import date, datetime, timedelta, timezone
+
+from . import db
+from .config import TZ
+
+KINDS = {"tap", "open", "shown"}
+EXERCISES = {"fill", "write", "hangman"}
+FUTURE = timedelta(minutes=10)   # phone clocks run a little fast
+LATE = timedelta(days=3)         # an event queued offline longer than this is dropped
+
+
+# ---------------------------------------------------------------- word history (server-decided changes)
+
+def log_word(con, user: dict, word_id: int, kind: str, status_before: str | None, status_after: str,
+             box_before: int | None = None, box_after: int | None = None) -> None:
+    """One word_log row. The caller commits, so the change and its log row land together."""
+    con.execute("INSERT INTO word_log (user_id, word_id, day, kind, status_before, status_after, box_before, "
+                "box_after, at) VALUES (?,?,?,?,?,?,?,?,?)",
+                (user["id"], word_id, user["day"], kind, status_before, status_after, box_before, box_after, db.now()))
+
+
+# ---------------------------------------------------------------- events from the phone
+
+def _parse_at(raw) -> datetime | None:
+    try:
+        at = datetime.fromisoformat(str(raw).replace("Z", "+00:00"))
+    except ValueError:
+        return None
+    return at if at.tzinfo else None  # a time without a zone can't be placed in the user's day
+
+
+def _check(con, user: dict, e: dict, now: datetime, owned_pieces: dict, words: list) -> tuple:
+    """One event → (row values, None) or (None, the reason it's rejected)."""
+    kind, surface = e.get("kind"), e.get("surface") or "reader"
+    if not isinstance(e.get("id"), str) or not 8 <= len(e["id"]) <= 64:
+        return None, "id"
+    if kind not in KINDS or surface not in ("reader", "practice"):
+        return None, "kind"
+    at = _parse_at(e.get("at"))
+    if at is None:
+        return None, "at"
+    if at > now + FUTURE:
+        return None, "future"
+    if at < now - LATE:
+        return None, "too old"
+    word, word_id, piece_id, exercise = None, None, None, None
+    if surface == "reader":
+        piece_id = e.get("piece_id")
+        if piece_id not in owned_pieces:
+            ok = piece_id and con.execute("SELECT 1 FROM pieces WHERE id=? AND user_id=?",
+                                          (piece_id, user["id"])).fetchone() is not None
+            owned_pieces[piece_id] = ok
+        if not owned_pieces[piece_id]:
+            return None, "piece"
+        if kind != "open":
+            word = (e.get("word") or "").strip().lower()[:60]
+            if not word:
+                return None, "word"
+            word_id = db.match_word(word, words)
+    else:
+        exercise, word_id = e.get("exercise"), e.get("word_id")
+        if kind != "shown" or exercise not in EXERCISES:
+            return None, "kind"
+        if not any(w[0] == word_id for w in words):
+            return None, "word"
+        word = next(w[1] for w in words if w[0] == word_id)
+    day = db.day_of(at, db.zone(user["tz"]) or TZ)
+    return (user["id"], e["id"], kind, surface, piece_id, exercise, word, word_id,
+            at.astimezone(timezone.utc).isoformat(timespec="microseconds"), day, db.now()), None
+
+
+def ingest(con, user: dict, events: list) -> dict:
+    """A batch from the phone's queue. Each event is kept, ignored as a resend (same id), or rejected with a
+    reason; all three are final, so the phone drops them from its queue either way."""
+    now = datetime.now(timezone.utc)
+    words = con.execute("SELECT id, word FROM words WHERE user_id=?", (user["id"],)).fetchall()
+    owned, kept, again, rejected = {}, 0, 0, []
+    with db._lock:
+        for e in events:
+            e = e if isinstance(e, dict) else {}
+            row, why = _check(con, user, e, now, owned, words)
+            if why:
+                rejected.append({"id": e.get("id"), "reason": why})
+                continue
+            cur = con.execute("INSERT OR IGNORE INTO events (user_id, client_id, kind, surface, piece_id, exercise, "
+                              "word, word_id, at, day, received_at) VALUES (?,?,?,?,?,?,?,?,?,?,?)", row)
+            kept, again = kept + cur.rowcount, again + (1 - cur.rowcount)
+        con.commit()
+    return {"kept": kept, "duplicates": again, "rejected": rejected}
+
+
+# ---------------------------------------------------------------- streaks (D74)
+
+def active_days(con, user_id: str) -> list:
+    """Days that count (D74): the user answered a practice exercise or read a piece. Sorted, distinct.
+    (Later: a day saved with points joins this list as its own fact.)"""
+    return [r[0] for r in con.execute(
+        "SELECT day FROM practice_attempts WHERE user_id=? UNION "
+        "SELECT day FROM events WHERE user_id=? AND kind='open' ORDER BY 1", (user_id, user_id))]
+
+
+def runs(days: list) -> list:
+    """Consecutive days → [(first, last, length)], oldest first ("gaps and islands")."""
+    out = []
+    for d in days:
+        if out and date.fromisoformat(d) - date.fromisoformat(out[-1][1]) == timedelta(days=1):
+            out[-1] = (out[-1][0], d, out[-1][2] + 1)
+        else:
+            out.append((d, d, 1))
+    return out
+
+
+def streak(days: list, today: str) -> dict:
+    """Current streak = the run ending today or yesterday (today isn't over yet); a missed day resets it (no
+    protection until points exist, D74). Best = the longest run. Total = every day that counted."""
+    rs = runs(days)
+    yesterday = (date.fromisoformat(today) - timedelta(days=1)).isoformat()
+    current = rs[-1][2] if rs and rs[-1][1] in (today, yesterday) else 0
+    return {"current": current, "best": max((r[2] for r in rs), default=0),
+            "today_counts": bool(days) and days[-1] == today, "total_days": len(days)}
+
+
+# ---------------------------------------------------------------- what the app asks for
+
+def user_stats(con, user: dict) -> dict:
+    uid, day = user["id"], user["day"]
+    one = lambda sql: con.execute(sql, (uid, day)).fetchone()[0]
+    return {"day": day, "streak": streak(active_days(con, uid), day),
+            "today": {"answers": one("SELECT COUNT(*) FROM practice_attempts WHERE user_id=? AND day=?"),
+                      "words_practised": one("SELECT COUNT(DISTINCT word_id) FROM practice_attempts "
+                                             "WHERE user_id=? AND day=?"),
+                      "pieces_read": one("SELECT COUNT(DISTINCT piece_id) FROM events "
+                                         "WHERE user_id=? AND day=? AND kind='open'"),
+                      "words_shown": one("SELECT COUNT(DISTINCT word_id) FROM events "
+                                         "WHERE user_id=? AND day=? AND kind='shown' AND word_id IS NOT NULL")}}
+
+
+def _result(a) -> str:
+    if a["kind"] == "write":
+        return a["verdict"] or "unjudged"
+    if a["kind"] == "hangman":
+        return "won" if a["correct"] else "lost"
+    return "right" if a["correct"] else "wrong"
+
+
+def word_stats(con, user: dict, word_id: int) -> dict | None:
+    """One word's history. "Shown" counts once per piece per day in the reader and once per exercise per day
+    in practice (D74; the rule is applied here, the raw events are all kept)."""
+    w = con.execute("SELECT * FROM words WHERE id=? AND user_id=? AND status!='deleted'",
+                    (word_id, user["id"])).fetchone()
+    if w is None:
+        return None
+    one = lambda sql: con.execute(sql, (user["id"], word_id)).fetchone()[0]
+    attempts = con.execute("SELECT * FROM practice_attempts WHERE user_id=? AND word_id=? ORDER BY id",
+                           (user["id"], word_id)).fetchall()
+    answers = {}
+    for a in attempts:
+        k = answers.setdefault(a["kind"], {"tries": 0})
+        k["tries"] += 1
+        k[_result(a)] = k.get(_result(a), 0) + 1
+    changes = [dict(r) for r in con.execute(
+        "SELECT day, kind, status_before, status_after FROM word_log WHERE user_id=? AND word_id=? ORDER BY id",
+        (user["id"], word_id))]
+    retained = [c["day"] for c in changes if c["kind"] == "retained"]
+    return {
+        "word_id": word_id, "word": w["word"], "status": w["status"], "added": w["day"], "box": w["box"],
+        "shown": {"reader": one("SELECT COUNT(*) FROM (SELECT DISTINCT day, piece_id FROM events WHERE user_id=? "
+                                "AND word_id=? AND kind='shown' AND surface='reader')"),
+                  "practice": one("SELECT COUNT(*) FROM (SELECT DISTINCT day, exercise FROM events WHERE user_id=? "
+                                  "AND word_id=? AND kind='shown' AND surface='practice')")},
+        "taps": one("SELECT COUNT(*) FROM events WHERE user_id=? AND word_id=? AND kind='tap'"),
+        "answers": answers,
+        "first_practised": attempts[0]["day"] if attempts else None,
+        "last_practised": attempts[-1]["day"] if attempts else None,
+        "history": [{"day": a["day"], "kind": a["kind"], "result": _result(a), "box_before": a["box_before"],
+                     "box_after": a["box_after"]} for a in attempts],
+        "changes": changes,
+        "retained_on": retained[-1] if retained else None,
+        "times_relearned": sum(c["status_before"] == "retained" and c["status_after"] == "learning" for c in changes),
+    }
