@@ -6,7 +6,7 @@ first. Decisions live in PRD.md's log (D1–D74); this file is the narrative tim
 
 ---
 
-## NOW (as of 2026-11-13)
+## NOW (as of 2026-11-15)
 
 **Phase: MVP build (Phase 2) — M1–M6 built and verified on the founder's phone; Sign in
 with Apple live; membership active; M8 (monetization) and M9 (TestFlight) remain.**
@@ -22,9 +22,10 @@ usage). Code schedules the words; the list stays unlimited; the user marks retai
 scan done (docs/poc2-transform.md §10): AI-graded sentences already ship elsewhere (VORCA,
 ReadUnbound), so the combination with the transform is the differentiator.
 **Next up: TD-20 (sentence-judge eval) → UX-16 (exercise screens).** Founder to-do: try ReadUnbound.
-**2026-11-13 (UX-25): streaks and stats — research done, design not decided.** docs/streaks-stats-research.md
-(competitors, streak evidence, data-model practice). PRD's "no streaks" line marked superseded. Waiting on founder:
-streak rule, protection, daily vs weekly, what counts as shown.
+**2026-11-15 (D74): streaks and stats — data built, no screens yet.** Daily streak = a day with a practice
+answer or a read; no protection until points exist; "shown" only in the reader (≥ half the word for 1 s) and practice.
+Server records facts (review log, word_log, one events table from the phone) and works out `/v1/stats` and
+`/v1/words/{id}/stats` on request. **Needs a fresh install from Xcode**, then the founder checks the numbers. Stats UI next.
 **2026-11-11 (D73): fill-in sentences rotate through 24 settings** — a word's new sentences are each written in one of
 three settings offered (work, history, sport, food…), so they stop being near-copies. Server only; live now. **OpenRouter
 key replaced by the founder 11-11:** Gemma is the primary again (it had been on the Flash-Lite fallback since 10-26); TD-25 = an alert.
@@ -269,6 +270,23 @@ all needed for TestFlight and none waits on a decision.**
 vacation coding ends). Home Mac: clone normally with personal credentials; recreate
 `.env.local` (4 API keys — gitignored, never on GitHub) and `data/retain.db` refills
 itself via the fetchers.
+
+### 2026-11-15 — Streaks and stats: data model built (D74)
+
+- Founder decided D74: daily streak on read or practice (not app opens, not saves); no protection until points
+  buy a save; a never-resetting total of days; "shown" only in reader and practice. Rejected "due" framing:
+  practice is one prioritised list (D66) — saved as a standing memory.
+- Best-practice review before building (founder asked): three fixes folded in — all phone-reported behaviour in
+  one `events` table, stored raw with counting rules applied on read, and each answer saved in one transaction
+  with its schedule change. Filed TD-26 (account deletion + foreign keys) and TD-27 (duplicate answers on retry).
+- Server: `src/service/stats.py`; `practice_attempts` gains box before/after, due after, sentence id, seconds;
+  new `word_log`; `events` rebuilt (88 taps kept, 63 matched to a word); 279 words backfilled with "added";
+  `POST /v1/events`, `GET /v1/stats`, `GET /v1/words/{id}/stats`. Live DB backed up first
+  (data/service.db.bak-2026-11-15). Tests: 113 pass (8 new). Service restarted, healthy.
+- App: `EventQueue` (one file per event in the app group, after Apple TN2408), reader visibility script and 10 s
+  read, practice shown + answer seconds, taps through the queue. iOS unit tests: the 7 new ones pass; one old
+  failure is TD-24's date bug (not rerun on old code).
+- Not verified yet: on device (needs a fresh install from Xcode).
 
 ### 2026-11-13 — Streaks and stats: research (UX-25)
 

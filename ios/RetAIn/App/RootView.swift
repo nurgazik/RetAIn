@@ -22,7 +22,11 @@ struct RootView: View {
                 tab = "words"; openWordId = id
             }
             // Keep the widget's word copy fresh even if the Words tab is never opened.
-            .onChange(of: scenePhase, initial: true) { _, phase in if phase == .active { Task { await cacheWords() } } }
+            .onChange(of: scenePhase, initial: true) { _, phase in
+                guard phase == .active else { return }
+                Task { await cacheWords() }
+                Task { await EventQueue.shared.flush() }  // D74: anything queued offline or by an extension
+            }
         } else {
             SignInView()
         }

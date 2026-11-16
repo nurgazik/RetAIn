@@ -100,6 +100,31 @@ enum PieceHTML {
               try { window.webkit.messageHandlers.tap.postMessage(m.textContent.trim()); } catch (err) {}
             });
           });
+          // D74: a highlighted word counts as shown once at least half of it has been on screen for a
+          // continuous second; reported once per word per opening. Leaving the page stops the clocks; coming
+          // back observes again so words still on screen start a fresh second.
+          (function () {
+            const sent = new Set(), clocks = new Map();
+            const report = m => {
+              const w = m.textContent.trim().toLowerCase();
+              if (!w || sent.has(w)) return;
+              sent.add(w);
+              try { window.webkit.messageHandlers.seen.postMessage(w); } catch (err) {}
+            };
+            const stop = m => { clearTimeout(clocks.get(m)); clocks.delete(m); };
+            const io = new IntersectionObserver(entries => entries.forEach(e => {
+              if (e.isIntersecting && e.intersectionRatio >= 0.5) {
+                if (!clocks.has(e.target)) clocks.set(e.target, setTimeout(() => { clocks.delete(e.target); report(e.target); }, 1000));
+              } else { stop(e.target); }
+            }), {threshold: [0, 0.5, 1]});
+            const watch = () => document.querySelectorAll('mark').forEach(m => io.observe(m));
+            document.addEventListener('visibilitychange', () => {
+              clocks.forEach((t, m) => stop(m));
+              io.disconnect();
+              if (!document.hidden) watch();
+            });
+            watch();
+          })();
           function showAt(html, x, y) {
             document.getElementById('hint').style.display = 'none';
             pop.innerHTML = html;

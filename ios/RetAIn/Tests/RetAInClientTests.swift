@@ -48,7 +48,9 @@ final class RetAInClientTests: XCTestCase {
         let p = try XCTUnwrap(piece)
         XCTAssertEqual(p.status, "done")
         XCTAssertNotNil(p.bodyHtml)
-        try await RetAInClient.shared.tap(pieceId: p.id, word: p.wordsUsed?.first ?? "bolster")
+        let tap = EventQueue.Event(id: EventQueue.newId(), kind: "tap", surface: "reader", at: EventQueue.now(),
+                                   pieceId: p.id, word: p.wordsUsed?.first ?? "bolster")
+        try await RetAInClient.shared.postEvents([tap, tap])  // D74: a resend is ignored by the server
         let list = try await RetAInClient.shared.pieces()
         XCTAssertTrue(list.contains { $0.id == p.id })
     }

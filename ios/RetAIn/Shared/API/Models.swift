@@ -95,6 +95,9 @@ struct TransformAccepted: Codable { let pieceId: String; let eventsUrl: String }
 
 enum TransformEvent { case phase(String), piece(Piece), error(String) }
 
+/// The server's answer to a batch of events (D74).
+struct EventsResult: Codable { let kept: Int; let duplicates: Int }
+
 enum APIError: LocalizedError {
     case http(Int, String), noSession, decode(String)
     var errorDescription: String? {

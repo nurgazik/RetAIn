@@ -84,14 +84,19 @@ final class RetAInClient {
                                body: ["word_id": wordId, "guesses": guesses.map(String.init), "hint": hint, "seconds": seconds]),
                        as: HangmanResult.self)
     }
-    func practiceFill(wordId: Int, answer: String) async throws -> FillResult {
-        try await send(request("v1/practice/fill", method: "POST", body: ["word_id": wordId, "answer": answer]), as: FillResult.self)
+    /// `seconds`: from the exercise appearing to this answer (D74).
+    func practiceFill(wordId: Int, answer: String, seconds: Double? = nil) async throws -> FillResult {
+        var body: [String: Any] = ["word_id": wordId, "answer": answer]
+        if let seconds { body["seconds"] = seconds }
+        return try await send(request("v1/practice/fill", method: "POST", body: body), as: FillResult.self)
     }
     func practiceHint(wordId: Int) async throws -> HintResult {
         try await send(request("v1/practice/hint", method: "POST", body: ["word_id": wordId]), as: HintResult.self)
     }
-    func practiceWrite(wordId: Int, sentence: String) async throws -> WriteResult {
-        try await send(request("v1/practice/write", method: "POST", body: ["word_id": wordId, "sentence": sentence]), as: WriteResult.self)
+    func practiceWrite(wordId: Int, sentence: String, seconds: Double? = nil) async throws -> WriteResult {
+        var body: [String: Any] = ["word_id": wordId, "sentence": sentence]
+        if let seconds { body["seconds"] = seconds }
+        return try await send(request("v1/practice/write", method: "POST", body: body), as: WriteResult.self)
     }
 
     // MARK: transform
@@ -141,8 +146,11 @@ final class RetAInClient {
         try await send(request("v1/pieces", query: [URLQueryItem(name: "limit", value: String(limit))]), as: PiecesEnvelope.self).pieces
     }
     func piece(_ id: String) async throws -> Piece { try await send(request("v1/pieces/\(id)"), as: Piece.self) }
-    private struct OK: Decodable { let ok: Bool }
-    func tap(pieceId: String, word: String) async throws {
-        _ = try await send(request("v1/pieces/\(pieceId)/taps", method: "POST", body: ["word": word]), as: OK.self)
+
+    // MARK: events and stats (D74)
+    /// A batch from the event queue; the server keeps, ignores (resent) or rejects each one.
+    func postEvents(_ events: [EventQueue.Event]) async throws {
+        let list = try JSONSerialization.jsonObject(with: JSONEncoder().encode(events))
+        _ = try await send(request("v1/events", method: "POST", body: ["events": list]), as: EventsResult.self)
     }
 }

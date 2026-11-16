@@ -17,9 +17,10 @@ struct ReaderView: View {
                                                   dek: piece.dek, byline: piece.byline, siteName: piece.siteName,
                                                   published: piece.published),
                              onTap: { text in
-                                 Task { try? await RetAInClient.shared.tap(pieceId: piece.id, word: text) }
+                                 EventQueue.shared.tap(pieceId: piece.id, word: text)  // D74: queued, dated when tapped
                                  shown = Self.match(text, in: words)
-                             })
+                             },
+                             onSeen: { text in EventQueue.shared.shownInReader(pieceId: piece.id, word: text) })
                 .ignoresSafeArea(edges: .bottom)
             } else {
                 ProgressView()
@@ -47,6 +48,10 @@ struct ReaderView: View {
         .task {
             words = (try? await RetAInClient.shared.words()) ?? []
             loaded = true
+        }
+        .task(id: piece.id) {  // D74: a read counts once the piece has been on screen for 10 s (an accidental open doesn't)
+            try? await Task.sleep(for: .seconds(10))
+            if !Task.isCancelled { EventQueue.shared.opened(pieceId: piece.id) }
         }
     }
 

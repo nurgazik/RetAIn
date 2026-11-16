@@ -297,3 +297,44 @@ Tests: an 8 pm Pacific read and a 1 am read count toward the same day; 4 am star
 one; a Toronto header gives Toronto's day; an invalid header is ignored; flying west never
 moves the day back; no row is written with an empty `day`. The widget on the founder's phone
 shows the same day's set as `/v1/me`. All service and iOS tests pass.
+
+
+# Streaks and stats (D74) — built 2026-11-15
+
+Research: docs/streaks-stats-research.md. Diagram: diagrams/infra-streaks-and-shown.md.
+
+**Principle:** facts are stored once and never changed; every stat is worked out on request.
+Server-decided changes have their own logs; everything the phone reports goes in one `events` table.
+
+**Tables**
+- `practice_attempts` (existing, now the review log): + `box_before`, `box_after`, `due_after`,
+  `sentence_id`, `seconds`. The answer and the schedule change (`words.box`, `due_day`) are written in
+  one transaction (`practice.record`). Rows before 2026-11-15 have NULL before/after.
+- `word_log` (new): `kind` added | saved-again | retained | learn-again | deleted, status and box before
+  and after, written in the same transaction as the change (`stats.log_word`). Older words got an
+  `added` row from their save date; earlier status changes weren't kept.
+- `events` (rebuilt): `client_id` (unique; the phone's id), `kind` tap | open | shown, `surface`
+  reader | practice, `piece_id` / `exercise`, `word` (as printed) + `word_id` (matched by the six-letter
+  stem rule, `db.match_word`), `at` (when it happened), `day`, `received_at`. The 88 older taps were
+  copied across. Raw: counting rules are applied when read.
+
+**API**
+- `POST /v1/events {events: [...]}` → `{kept, duplicates, rejected: [{id, reason}]}`. Checked one by one
+  (a bad event never blocks the batch); dated from `at` in the user's timezone; rejected when more than
+  10 minutes in the future or 3 days old, or the piece / word isn't the user's.
+- `GET /v1/stats` → `{day, streak: {current, best, today_counts, total_days}, today: {answers,
+  words_practised, pieces_read, words_shown}}`.
+- `GET /v1/words/{id}/stats` → added, box, shown `{reader, practice}`, taps, answers per exercise,
+  first/last practised, history (each answer with box before/after), changes (word_log),
+  retained_on, times_relearned.
+- `POST /v1/practice/fill` and `/write` accept `seconds`. `POST /v1/pieces/{id}/taps` stays for older
+  builds (dated on arrival).
+
+**App:** `EventQueue` (Shared/Store): one JSON file per event in the app group's `events/` folder; sent in
+batches of 200, 2 s after the last event and whenever the app comes to the front; a network failure or
+401 keeps the files, any other 4xx drops the batch. Reader: an IntersectionObserver (≥ 50% for a
+continuous second) posts `seen`; the piece counts as read after 10 s on screen. Practice: an exercise
+appearing posts `shown` and starts the answer clock.
+
+**Not in this build:** stats screens (UX later), points and streak saves, account deletion with enforced
+foreign keys (TD-26), duplicate practice answers on retry (TD-27).

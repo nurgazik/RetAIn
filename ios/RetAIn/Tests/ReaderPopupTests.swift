@@ -43,6 +43,36 @@ final class ReaderPopupTests: XCTestCase {
         XCTAssertEqual(pad, "55vh", "the last lines can scroll above the sheet")
     }
 
+    /// D74: a highlight counts as shown after a continuous second at least half on screen, once per word;
+    /// a highlight below the screen is never reported.
+    func testWordOnScreenIsSeenAfterASecondOnce() async throws {
+        let body = "<p>We <mark>bolster</mark> it, <mark>Bolster</mark> again.</p><div style=\"height:3000px\"></div>"
+            + "<p>Far <mark>galvanize</mark> below.</p>"
+        let html = PieceHTML.page(title: "T", label: "Your read", body: body, attrib: "attrib")
+        let cfg = WKWebViewConfiguration()
+        let sink = Log()
+        cfg.userContentController.add(sink, name: "seen")
+        let web = WKWebView(frame: CGRect(x: 0, y: 0, width: 390, height: 800), configuration: cfg)
+        let window = UIWindow(frame: web.frame)  // on screen, so the page lays out and observes
+        window.addSubview(web); window.isHidden = false
+        let nav = NavSink()
+        web.navigationDelegate = nav
+        web.loadHTMLString(html, baseURL: nil)
+        try await nav.wait()
+        try await Task.sleep(nanoseconds: 400_000_000)
+        XCTAssertEqual(sink.seen, [], "not before a second")
+        try await Task.sleep(nanoseconds: 1_200_000_000)
+        XCTAssertEqual(sink.seen, ["bolster"], "once, and only the word on screen")
+        window.isHidden = true
+    }
+
+    final class Log: NSObject, WKScriptMessageHandler {
+        var seen: [String] = []
+        func userContentController(_ c: WKUserContentController, didReceive m: WKScriptMessage) {
+            if let w = m.body as? String { seen.append(w) }
+        }
+    }
+
     /// D40: tapping the sentence reveals the original; tapping the word inside it closes that
     /// popup (the card opens natively instead, D48).
     func testSentenceTapRevealsOriginalWordTapShowsMeaning() async throws {

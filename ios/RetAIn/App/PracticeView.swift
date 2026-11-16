@@ -4,7 +4,7 @@ import SwiftUI
 /// Opens on a chooser: the user picks fill-in or sentences, in any order, and may skip either (D57).
 /// One list, no limit (D66): every learning word, due ones first; the user goes as far as they like, in
 /// rounds of five with a checkpoint between them. Words so far sit below, with Mark retained.
-enum PracticeExercise: Equatable {
+enum PracticeExercise: String, Equatable {
     case fill, write, hangman
 
     /// Whether this word still has this exercise to do today.
@@ -68,6 +68,7 @@ struct PracticeView: View {
     @State private var meaningShown: PracticeItem.Wrong?
     @State private var card: Word?                   // the solved word's card, opened from the gap (D65)
     @State private var inputError: String?
+    @State private var appearedAt = Date()          // when the exercise on screen appeared: answers carry the time (D74)
     @State private var askReminder = false
     @FocusState private var typing: Bool
     @Environment(\.scenePhase) private var scenePhase
@@ -126,6 +127,10 @@ struct PracticeView: View {
                     }
                 }
                 .scrollDismissesKeyboard(.interactively)
+                .task(id: "\(exercise.rawValue)-\(set.items[i].wordId)") {  // D74: this exercise appeared = shown
+                    appearedAt = Date()
+                    EventQueue.shared.shownInPractice(exercise: exercise.rawValue, wordId: set.items[i].wordId)
+                }
             }
         } else {
             ScrollView { chooser(set) }
@@ -438,7 +443,8 @@ struct PracticeView: View {
     private func submitFill(_ item: PracticeItem) async {
         busy = true; defer { busy = false }
         do {
-            let r = try await RetAInClient.shared.practiceFill(wordId: item.wordId, answer: answer)
+            let r = try await RetAInClient.shared.practiceFill(wordId: item.wordId, answer: answer,
+                                                            seconds: Date().timeIntervalSince(appearedAt))
             inputError = nil; shown = index(item)
             if r.correct {  // done; ✓ in the summary only if right first time (D58)
                 withAnimation(.spring(response: 0.35, dampingFraction: 0.6)) { fillResult = r }
@@ -477,7 +483,8 @@ struct PracticeView: View {
     private func submitWrite(_ item: PracticeItem) async {
         busy = true; defer { busy = false }
         do {
-            let r = try await RetAInClient.shared.practiceWrite(wordId: item.wordId, sentence: answer)
+            let r = try await RetAInClient.shared.practiceWrite(wordId: item.wordId, sentence: answer,
+                                                             seconds: Date().timeIntervalSince(appearedAt))
             writeResult = r; inputError = nil; shown = index(item)
             update(item.wordId) { $0.attempts.write = .init(correct: nil, verdict: r.verdict, reason: r.reason, fix: r.fix, answer: answer) }
         } catch APIError.http(422, let message) { inputError = message }
